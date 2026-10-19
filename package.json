@@ -1,0 +1,16 @@
+{
+  "name": "masked-spire",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Masked Spire: a three-hero roguelike deckbuilder with solo play and 2-player online co-op.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "8.18.0"
+  }
+}
