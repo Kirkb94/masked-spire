@@ -557,6 +557,133 @@ button { font: inherit; color: inherit; }
 .rg.s-slam .sfx-slam, .rg.s-smash .sfx-slam, .rg.s-foot .sfx-foot, .rg.sn-fury .sfx-fury, .rg.sn-iron .sfx-iron, .rg.sn-calm .sfx-calm, .rg.s-stance .sfx-ring { display: inline; }
 .rg .pt-aura, .rg .sfx-calm .halo { animation: none !important; }
 .rg.lite .pt-armF, .rg.lite .pt-armB, .rg.lite .pt-wep, .rg.lite .pt-tail, .rg.lite .pt-jaw { animation: none; }
+/* Rotated tablets and short panes: never pin the control dock over the battlefield, and let the stage use the width */
+@media (max-height: 720px) { .dock { position: static; margin: 0; padding: 0; background: none; box-shadow: none; } }
+@media (orientation: landscape) and (min-width: 641px) and (max-width: 1100px) {
+  .stage { grid-template-columns: minmax(150px, 210px) minmax(0, 1fr); gap: 12px; padding: 12px; }
+  .stage.duel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .herobox { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+  .herobox .portrait { width: 100%; }
+  .enemy, .enemy.boss { width: min(236px, 30vw); min-width: 160px; }
+  .enemy.boss { width: min(300px, 38vw); }
+  .enemies { gap: 10px; }
+  .controls { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .controls .endwrap { grid-column: auto; display: block; }
+}
+@media (max-width: 860px) and (orientation: portrait) { .enemies { gap: 12px; } .hand { justify-content: flex-start; } }
+/* ---------- Sound panel ---------- */
+.sndfloat { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); z-index: 40; min-height: 40px; padding: 6px 12px; display: flex; gap: 6px; align-items: center; font-size: 16px; }
+.btn.snd { display: inline-flex; gap: 6px; align-items: center; }
+.sndpanel { position: fixed; top: calc(64px + env(safe-area-inset-top, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); z-index: 41; background: var(--panel); border: 1px solid var(--gold); border-radius: 10px; padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px #000A; font-size: 17px; }
+.sndpanel[hidden] { display: none; }
+.sndpanel label { display: flex; align-items: center; gap: 10px; }
+.sndpanel input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--gold); }
+.sndpanel input[type=range] { width: 130px; accent-color: var(--gold); }
+
+/* ---------- Map art ---------- */
+.mapcard .mapwrap { max-width: 540px; height: auto; border-radius: 14px; overflow: hidden; border: 1px solid #000A; box-shadow: inset 0 0 40px #000B, 0 6px 22px #0008; background: #0C0A12; }
+.mapart, .mapfx, .mapfog { position: absolute; left: 0; width: 100%; pointer-events: none; }
+.mapart { top: 0; height: 100%; }
+.mapfx { top: 0; height: 100%; overflow: hidden; z-index: 1; }
+.mapfog { top: 0; z-index: 2; }
+.act1 .mapfog { background: linear-gradient(to bottom, rgba(8, 23, 27, .8), rgba(8, 23, 27, .62) 75%, rgba(8, 23, 27, 0)); }
+.act2 .mapfog { background: linear-gradient(to bottom, rgba(23, 11, 8, .8), rgba(23, 11, 8, .62) 75%, rgba(23, 11, 8, 0)); }
+.act3 .mapfog { background: linear-gradient(to bottom, rgba(10, 6, 20, .8), rgba(10, 6, 20, .62) 75%, rgba(10, 6, 20, 0)); }
+.mapwrap svg.edges { z-index: 1; overflow: visible; }
+.me-shadow { fill: none; stroke: #000; stroke-opacity: .45; stroke-width: 7; stroke-linecap: round; }
+.me-dash { fill: none; stroke: #E0D2A8; stroke-opacity: .5; stroke-width: 3; stroke-dasharray: 2 7; stroke-linecap: round; }
+.me-hot { fill: none; stroke: #E8BE52; stroke-width: 3.5; stroke-dasharray: 8 6; stroke-linecap: round; animation: me-flow 1s linear infinite; }
+.me-lit { fill: none; stroke: #5FE6E2; stroke-width: 3.5; stroke-linecap: round; filter: drop-shadow(0 0 4px #5FE6E2); }
+@keyframes me-flow { to { stroke-dashoffset: -28; } }
+.mapcard .node { z-index: 3; width: 54px; height: 54px; border-width: 3px; background: radial-gradient(circle at 35% 30%, #4A3E5E, #1F1830 75%); box-shadow: 0 3px 8px #000A, inset 0 0 0 2px #0006; color: var(--ink); }
+.mapcard .node svg { width: 33px; height: 33px; }
+.node.t-fight { background: radial-gradient(circle at 35% 30%, #8A3440, #3A141C 78%); border-color: #C4646E; }
+.node.t-elite { background: radial-gradient(circle at 35% 30%, #6A3AA8, #26123F 78%); border-color: #B58AF0; box-shadow: 0 0 12px #8A5AD066, 0 3px 8px #000A, inset 0 0 0 2px #0006; }
+.node.t-rest { background: radial-gradient(circle at 35% 30%, #8A5A2A, #3A2210 78%); border-color: #E89A3A; }
+.node.t-shop { background: radial-gradient(circle at 35% 30%, #7A6A2A, #342A10 78%); border-color: #E8BE52; }
+.node.t-treasure { background: radial-gradient(circle at 35% 30%, #8A6A2A, #3A2A10 78%); border-color: #F0CE6A; }
+.mapcard .node.bossnode { width: 80px; height: 80px; border-width: 4px; background: radial-gradient(circle at 35% 30%, #2A4A6A, #0E1A2E 78%); border-color: #6FD0FF; box-shadow: 0 0 18px #6FD0FF66, 0 4px 10px #000A; }
+.act2 .node.bossnode { background: radial-gradient(circle at 35% 30%, #6A4A22, #2A1608 78%); border-color: #F0CE6A; box-shadow: 0 0 18px #E8BE5266, 0 4px 10px #000A; }
+.act3 .node.bossnode { background: radial-gradient(circle at 35% 30%, #4A2A8A, #150A2E 78%); border-color: #B49AFF; box-shadow: 0 0 20px #8A6AFF88, 0 4px 10px #000A; }
+.mapcard .node.bossnode svg { width: 52px; height: 52px; }
+.mapcard .node.done { background: radial-gradient(circle at 35% 30%, #3A3548, #1A1624 78%); border-color: #5A5068; filter: saturate(.45) brightness(.8); }
+.node.done::after { content: "✓"; position: absolute; right: -3px; bottom: -3px; width: 20px; height: 20px; border-radius: 50%; background: #2D8E8A; color: #fff; font-size: 13px; line-height: 1; display: grid; place-items: center; border: 2px solid #0A1A1A; font-family: var(--body); }
+.node.avail:hover { transform: translate(-50%, -50%) scale(1.1); }
+.mapcard .node.cur { box-shadow: 0 0 0 4px var(--teal), 0 3px 8px #000A; }
+.maptok { position: absolute; width: 42px; z-index: 4; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 3px 4px #000C); }
+.maptok .portrait { width: 42px; height: 42px; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--gold); animation: tokbob 1.8s ease-in-out infinite; }
+.maptok.other .portrait { border-color: var(--teal); width: 34px; height: 34px; }
+.maptok.walk .portrait { animation: tokhop .5s ease-in-out 2; }
+@keyframes tokbob { 50% { transform: translateY(-4px); } }
+@keyframes tokhop { 50% { transform: translateY(-12px); } }
+.mp { position: absolute; width: var(--s); height: var(--s); border-radius: 50%; opacity: 0; animation-duration: var(--p); animation-delay: calc(var(--ph) + var(--d)); animation-iteration-count: infinite; animation-timing-function: ease-in-out; }
+.mp1 { background: #D6FFB0; box-shadow: 0 0 7px 2px #B6FF8A88; animation-name: mp-ff; }
+.mp2 { background: #FFB45A; box-shadow: 0 0 6px 1px #FF8A2A99; animation-name: mp-ember; animation-timing-function: ease-out; }
+.mp3 { background: #D2C2FF; box-shadow: 0 0 7px 2px #9A7AFF88; animation-name: mp-mote; }
+@keyframes mp-ff { 0%, 100% { opacity: 0; transform: translate(0, 0); } 20%, 80% { opacity: .9; } 50% { transform: translate(14px, -18px); } }
+@keyframes mp-ember { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: .95; } 100% { opacity: 0; transform: translate(24px, -90px); } }
+@keyframes mp-mote { 0%, 100% { opacity: 0; transform: translateY(0); } 50% { opacity: .85; transform: translate(-10px, -26px); } }
+.mgear { transform-box: fill-box; transform-origin: center; animation: mg-spin var(--p) linear infinite; animation-direction: var(--d); }
+.mfloat { transform-box: fill-box; transform-origin: center; animation: mg-float var(--p) ease-in-out infinite; animation-delay: var(--d); }
+@keyframes mg-spin { to { transform: rotate(360deg); } }
+@keyframes mg-float { 50% { transform: translateY(-9px) rotate(4deg); } }
+.legend svg { width: 22px; height: 22px; }
+
+/* ---------- Chest + victory ---------- */
+.victory .center { text-align: center; }
+.vstage { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: end; gap: 10px; padding: 14px 14px 4px; border-radius: 12px; border: 1px solid var(--line); overflow: hidden; min-height: 220px; background: radial-gradient(circle at 28% 62%, #FFFFFF18 0%, transparent 38%), radial-gradient(ellipse at 70% 100%, var(--vg, #3A2C10) 0%, #17121D 75%); }
+.vstage.tier-iron { --vg: #1E2E4A; } .vstage.tier-gold { --vg: #4A3610; }
+.vstage.solo { grid-template-columns: 1fr; justify-items: center; }
+.vheroes { display: flex; gap: 10px; justify-content: center; align-items: flex-end; z-index: 1; }
+.vheroes .portrait { width: min(120px, 28vw); aspect-ratio: 3 / 4; }
+.vchest { display: flex; justify-content: center; position: relative; z-index: 1; }
+.chestbtn { background: none; border: 0; padding: 0; position: relative; cursor: pointer; width: min(250px, 100%); display: block; color: var(--ink); }
+.chestbtn.open { cursor: default; }
+.chestsvg { width: 100%; height: auto; display: block; overflow: visible; }
+.vhint { display: block; margin-top: -4px; text-align: center; font-family: var(--display); font-size: 19px; color: var(--gold); text-shadow: 0 2px 4px #000; animation: vhint 1.6s ease-in-out infinite; }
+@keyframes vhint { 50% { opacity: .5; } }
+.ch-glow, .ch-rays, .ch-coin, .ch-spark, .ch-relic, .ch-loot { opacity: 0; }
+.ch-coin, .ch-spark, .ch-relic { transform-box: fill-box; transform-origin: center; }
+.ch-all { transform-box: fill-box; transform-origin: 50% 100%; }
+.chestbtn:not(.open) .ch-all { animation: ch-idle 2.6s ease-in-out infinite; }
+.chestbtn:not(.open):hover .ch-lock, .chestbtn:not(.open):focus-visible .ch-lock { filter: brightness(1.4); }
+.opened .ch-all { animation: ch-shake .35s ease-in-out calc(0s - var(--ce)) both; }
+.opened .ch-lid { transform-box: view-box; transform-origin: 40px 94px; animation: ch-lid .7s cubic-bezier(.3, .9, .4, 1.1) calc(.3s - var(--ce)) both; }
+.opened .ch-glow { --fo: 1; animation: ch-fade .5s ease-out calc(.55s - var(--ce)) both; }
+.opened .ch-rays { --fo: .55; animation: ch-fade .7s ease-out calc(.5s - var(--ce)) both; }
+.opened .ch-spin { transform-box: fill-box; transform-origin: center; animation: ch-rot 12s linear infinite; animation-delay: var(--ph); }
+.opened .ch-loot { animation: ch-loot .6s ease-out calc(.5s - var(--ce)) both; }
+.opened .ch-coin { animation: ch-coin 1.1s ease-out calc(var(--dl) - var(--ce)) both; }
+.opened .ch-spark { animation: ch-spark 1.1s ease-out calc(var(--dl) - var(--ce)) both; }
+.opened .ch-relic { animation: ch-relic 1.2s cubic-bezier(.2, .8, .3, 1) calc(.7s - var(--ce)) both; }
+.ch-bob { transform-box: fill-box; transform-origin: center; animation: ch-bob 2.4s ease-in-out infinite; animation-delay: var(--ph); }
+@keyframes ch-idle { 0%, 40%, 100% { transform: rotate(0); } 8% { transform: rotate(-2.2deg); } 16% { transform: rotate(2.2deg); } 24% { transform: rotate(-1.4deg); } 32% { transform: rotate(.8deg); } }
+@keyframes ch-shake { 0%, 100% { transform: translate(0); } 20% { transform: translate(-3px, 1px); } 40% { transform: translate(3px, -1px); } 60% { transform: translate(-2px, 0); } 80% { transform: translate(2px, 0); } }
+@keyframes ch-lid { 0% { transform: rotate(0); } 60% { transform: rotate(-112deg); } 80% { transform: rotate(-90deg); } 100% { transform: rotate(-97deg); } }
+@keyframes ch-fade { from { opacity: 0; } to { opacity: var(--fo, 1); } }
+@keyframes ch-loot { from { opacity: 0; transform: translateY(16px) scale(.8); } to { opacity: 1; transform: none; } }
+@keyframes ch-coin { 0% { opacity: 0; transform: translate(0, 0) scale(.6); } 12% { opacity: 1; } 55% { transform: translate(var(--dx), var(--dy)) scale(1) rotate(200deg); } 100% { opacity: 0; transform: translate(calc(var(--dx) * 1.1), calc(var(--dy) + 90px)) scale(.9) rotate(400deg); } }
+@keyframes ch-spark { 0% { opacity: 0; transform: translate(0, 0) scale(0); } 25% { opacity: 1; transform: translate(calc(var(--dx) * .5), calc(var(--dy) * .5)) scale(var(--sc)); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); } }
+@keyframes ch-relic { 0% { opacity: 0; transform: translateY(10px) scale(.2); } 40% { opacity: 1; } 100% { opacity: 1; transform: translateY(-62px) scale(1.15); } }
+@keyframes ch-bob { 50% { transform: translateY(-5px); } }
+@keyframes ch-rot { to { transform: rotate(360deg); } }
+.reveal { animation: reveal .5s ease calc(1.2s - var(--rc, 0s)) both; display: flex; flex-direction: column; gap: 14px; }
+@keyframes reveal { from { opacity: 0; visibility: hidden; transform: translateY(10px); } to { opacity: 1; visibility: visible; transform: none; } }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 2; }
+.confetti i { position: absolute; top: -14px; width: 8px; height: 14px; background: var(--c); opacity: 0; animation: conf var(--dr) ease-in calc(var(--dl) - var(--ce, 0s)) both; }
+.confetti.loop i { animation: conf var(--dr) ease-in var(--dl) infinite; }
+@keyframes conf { 0% { opacity: 1; transform: translate(0, 0) rotate(0); } 100% { opacity: 0; transform: translate(var(--sw), 280px) rotate(var(--rx)); } }
+.rg.cheer .rgw { animation: rg-hop 1s ease-in-out infinite; }
+.rg.cheer .pt-armF, .rg.cheer .pt-wep { animation: rg-cheer 1s ease-in-out infinite; }
+.rg.cheer .pt-head { animation: rg-cheerh 1s ease-in-out infinite; }
+@keyframes rg-hop { 0%, 100% { transform: none; } 40% { transform: translateY(-8px); } }
+@keyframes rg-cheer { 0%, 100% { transform: rotate(calc(var(--f) * 12deg)); } 40% { transform: rotate(calc(var(--f) * 150deg)); } }
+@keyframes rg-cheerh { 40% { transform: translateY(-1px) rotate(calc(var(--f) * -6deg)); } }
+@media (max-width: 640px) { .vstage { grid-template-columns: 1fr; justify-items: center; } .vheroes .portrait { width: min(96px, 26vw); } }
+@media (prefers-reduced-motion: reduce) {
+  .mp, .mgear, .mfloat, .ch-spin, .ch-bob, .me-hot, .maptok .portrait, .rg.cheer .rgw, .rg.cheer .pt-armF, .rg.cheer .pt-wep, .rg.cheer .pt-head, .chestbtn:not(.open) .ch-all, .vhint, .confetti i { animation: none; }
+  .mp { opacity: .45; } .confetti { display: none; }
+}
 </style>
 </head>
 <body>
@@ -1090,6 +1217,721 @@ const CL = { role: 'none', V: null, sel: null, overlay: null, lastFx: 0, seen: f
 })();
 CL.net = { state: '', peers: 0, err: '' };
 let toastTimer = null;
+/* ---------- Audio: synthesized soundtrack and effects (Web Audio, no files) ---------- */
+const SND = (function () {
+  const AK = 'masked-spire-audio';
+  const prefs = { music: true, sfx: true, vol: 0.6 };
+  try { const s = JSON.parse(localStorage.getItem(AK) || 'null'); if (s && typeof s === 'object') { if (typeof s.music === 'boolean') prefs.music = s.music; if (typeof s.sfx === 'boolean') prefs.sfx = s.sfx; if (typeof s.vol === 'number') prefs.vol = Math.max(0, Math.min(1, s.vol)); } } catch (e) {}
+  const savePrefs = () => { try { localStorage.setItem(AK, JSON.stringify(prefs)); } catch (e) {} };
+  const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+  const hs = (i, s) => { const x = Math.sin(i * 127.1 + (s || 0) * 311.7) * 43758.5453; return x - Math.floor(x); };
+
+  /* ----- voice factory: bound to a context and an output node (so the same code can render offline for tests) ----- */
+  const nbufs = new WeakMap();
+  function voices(ac, out) {
+    let nb = nbufs.get(ac);
+    if (!nb) {
+      nb = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+      const d = nb.getChannelData(0); let seed = 1;
+      for (let i = 0; i < d.length; i++) { seed = (seed * 16807) % 2147483647; d[i] = (seed / 1073741823) - 1; }
+      nbufs.set(ac, nb);
+    }
+    const panner = p => { if (!p || !ac.createStereoPanner) return out; const n = ac.createStereoPanner(); n.pan.value = p; n.connect(out); return n; };
+    function env(g, t, v, a, d, r) {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, v), t + Math.max(0.003, a));
+      g.gain.setValueAtTime(Math.max(0.0002, v), t + Math.max(0.004, d));
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d + r);
+    }
+    /* o: t,f,f2,d,a,r,v,type,det,lp,lp2,q,vib:[rate,cents],parts:[[ratio,amp]],pan,fm */
+    function tone(o) {
+      const t = o.t, d = o.d || 0.3, a = o.a == null ? 0.01 : o.a, r = o.r == null ? d * 0.5 : o.r, v = o.v == null ? 0.15 : o.v;
+      const g = ac.createGain(); env(g, t, v, a, d, r);
+      let tail = g;
+      if (o.lp) {
+        const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = o.q || 0.7;
+        f.frequency.setValueAtTime(o.lp, t); if (o.lp2) f.frequency.exponentialRampToValueAtTime(o.lp2, t + d + r * 0.5);
+        f.connect(g); tail = f;
+      }
+      g.connect(panner(o.pan));
+      const parts = o.parts || [[1, 1]];
+      const end = t + d + r + 0.06;
+      parts.forEach(pt => {
+        const os = ac.createOscillator(); os.type = o.type || 'sine';
+        const f1 = o.f * pt[0];
+        os.frequency.setValueAtTime(f1, t);
+        if (o.f2) os.frequency.exponentialRampToValueAtTime(Math.max(20, o.f2 * pt[0]), t + d);
+        if (o.det) os.detune.value = o.det;
+        if (o.vib) { const lf = ac.createOscillator(), lg = ac.createGain(); lf.frequency.value = o.vib[0]; lg.gain.value = o.vib[1]; lf.connect(lg); lg.connect(os.detune); lf.start(t); lf.stop(end); }
+        if (parts.length > 1) { const pg = ac.createGain(); pg.gain.value = pt[1]; os.connect(pg); pg.connect(tail); } else os.connect(tail);
+        os.start(t); os.stop(end);
+      });
+    }
+    /* o: t,d,a,r,v,type:'bp'|'lp'|'hp',f,f2,q,pan */
+    function noise(o) {
+      const t = o.t, d = o.d || 0.2, a = o.a == null ? 0.005 : o.a, r = o.r == null ? d * 0.4 : o.r, v = o.v == null ? 0.15 : o.v;
+      const s = ac.createBufferSource(); s.buffer = nb; s.loop = true;
+      const f = ac.createBiquadFilter(); f.type = o.type === 'lp' ? 'lowpass' : o.type === 'hp' ? 'highpass' : 'bandpass';
+      f.Q.value = o.q || 1; f.frequency.setValueAtTime(o.f || 1000, t);
+      if (o.f2) f.frequency.exponentialRampToValueAtTime(Math.max(30, o.f2), t + d);
+      const g = ac.createGain(); env(g, t, v, a, d, r);
+      s.connect(f); f.connect(g); g.connect(panner(o.pan));
+      s.start(t, hs(t * 7.7, 3) * 1.5); s.stop(t + d + r + 0.06);
+    }
+    /* formant "voice": saw through two band-pass filters */
+    function vowel(o) {
+      const t = o.t, d = o.d, v = o.v == null ? 0.05 : o.v;
+      const g = ac.createGain(); env(g, t, v, o.a == null ? d * 0.4 : o.a, d, o.r == null ? d * 0.5 : o.r);
+      g.connect(panner(o.pan));
+      const fm = o.fm || [650, 1100];
+      const bands = fm.map((fr, i) => { const b = ac.createBiquadFilter(); b.type = 'bandpass'; b.frequency.value = fr; b.Q.value = 4; const bg = ac.createGain(); bg.gain.value = i ? 0.6 : 1; b.connect(bg); bg.connect(g); return b; });
+      const end = t + d + (o.r == null ? d * 0.5 : o.r) + 0.06;
+      [-7, 6].forEach(c => {
+        const os = ac.createOscillator(); os.type = 'sawtooth'; os.frequency.setValueAtTime(o.f, t); if (o.f2) os.frequency.linearRampToValueAtTime(o.f2, t + d); os.detune.value = c;
+        const lf = ac.createOscillator(), lg = ac.createGain(); lf.frequency.value = o.vr || 5; lg.gain.value = o.vc == null ? 12 : o.vc; lf.connect(lg); lg.connect(os.detune); lf.start(t); lf.stop(end);
+        bands.forEach(b => os.connect(b)); os.start(t); os.stop(end);
+      });
+    }
+    return { tone, noise, vowel };
+  }
+
+  /* ----- instruments built on voices ----- */
+  const BELL = [[1, 1], [2.76, 0.45], [5.4, 0.22], [8.9, 0.1]];
+  const INH = [[1, 1], [1.59, 0.6], [2.14, 0.5], [2.92, 0.4], [4.07, 0.25]];
+  const pad = (V, t, notes, d, v, lp, type) => notes.forEach(n => { [-9, 8].forEach(c => V.tone({ t, f: mf(n), d, a: d * 0.4, r: d * 0.45, v, type: type || 'sawtooth', det: c, lp: lp || 800, lp2: (lp || 800) * 0.6 })); });
+  const bell = (V, t, n, v, d) => V.tone({ t, f: mf(n), d: d || 1.6, a: 0.004, r: 0.2, v, parts: BELL });
+  const pluck = (V, t, n, v) => V.tone({ t, f: mf(n), d: 0.08, a: 0.004, r: 0.45, v, type: 'triangle', lp: 2400 });
+  const thump = (V, t, v, f) => { V.tone({ t, f: f || 95, f2: 38, d: 0.14, a: 0.003, r: 0.22, v, type: 'sine' }); V.noise({ t, d: 0.05, type: 'lp', f: 400, v: v * 0.5, r: 0.06 }); };
+  const metal = (V, t, v, base) => { V.noise({ t, d: 0.05, type: 'bp', f: 3200, q: 3, v: v * 0.7, r: 0.12 }); V.tone({ t, f: base || 780, d: 0.06, r: 0.3, v: v * 0.6, type: 'square', lp: 4000, parts: [[1, 1], [1.47, 0.6], [2.09, 0.4]] }); };
+  const brass = (V, t, notes, d, v, lp) => notes.forEach(n => { V.tone({ t, f: mf(n), d, a: 0.05, r: 0.25, v, type: 'sawtooth', lp: lp || 1500, lp2: (lp || 1500) * 2.4, q: 1.2 }); V.tone({ t, f: mf(n), d, a: 0.05, r: 0.25, v: v * 0.6, type: 'sawtooth', det: 8, lp: lp || 1500, lp2: (lp || 1500) * 2.4 }); });
+
+  /* ----- music tracks: step(c) is called once per 16th note ----- */
+  const BPM = { menu: [70, 70, 70], a1: [54, 78, 92], a2: [76, 100, 116], a3: [48, 66, 80] };
+  const MODE = { calm: 0, fight: 1, boss: 2 };
+  const MENU_CH = [[50, 57, 62, 65], [46, 53, 58, 62], [43, 55, 58, 62], [45, 57, 61, 64]];
+  const MENU_R = [38, 34, 31, 33];
+  const A1_CH = [[40, 52, 59, 64], [36, 48, 55, 64], [43, 55, 59, 62], [38, 50, 57, 62]];
+  const A1_PENT = [64, 67, 69, 71, 74, 76, 79];
+  const A2_CH = [[45, 57, 60, 64], [46, 58, 62, 65], [41, 57, 60, 65], [40, 56, 59, 64]];
+  const A2_LEAD = [69, 70, 73, 72, 69, 67, 68, 65];
+  const A3_CH = [[38, 45, 50, 53, 57], [34, 46, 53, 56, 61], [43, 50, 55, 58, 62], [45, 52, 57, 60, 64]];
+  const A3_FM = [[600, 1040], [450, 800], [800, 1150], [350, 700]];
+
+  const TRACKS = {
+    menu(c) {
+      const { V, t, i, sd } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = MENU_CH[ci];
+      if (i % 32 === 0) { pad(V, t, ch, sd * 32, 0.028, 900); pad(V, t, ch.map(n => n + 12), sd * 32, 0.012, 1400, 'triangle'); V.tone({ t, f: mf(MENU_R[ci]), d: sd * 32, a: 1.5, r: 1.5, v: 0.1, type: 'sine' }); }
+      if (st % 2 === 0) pluck(V, t, ch[(st / 2 + bar) % 4] + 12 + (st % 8 === 0 ? 12 : 0), 0.045);
+      if ((st === 0 || st === 6 || st === 10 || st === 13) && hs(i, 1) > 0.42) bell(V, t, [74, 77, 79, 81, 84, 86][Math.floor(hs(i, 2) * 6)], 0.05, 2);
+      if (st === 0 && bar % 4 === 0) V.noise({ t, d: sd * 14, a: sd * 6, r: sd * 6, type: 'bp', f: 500, f2: 900, q: 0.8, v: 0.012 });
+    },
+    a1(c) {
+      const { V, t, i, sd, mi } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = A1_CH[ci];
+      if (i % 32 === 0) { pad(V, t, ch, sd * 32, mi ? 0.032 : 0.026, 650, 'triangle'); V.tone({ t, f: mf(ch[0] - 12), d: sd * 32, a: 2, r: 2, v: 0.09, type: 'sine' }); }
+      if (st === 0) V.noise({ t, d: sd * 12, a: sd * 6, r: sd * 6, type: 'bp', f: 320, f2: 760, q: 0.9, v: mi ? 0.016 : 0.022 });
+      if (st % 4 === 0 && hs(i, 4) > (mi ? 0.62 : 0.55)) { const n = A1_PENT[Math.floor(hs(i, 5) * 7)]; pluck(V, t, n, 0.06); pluck(V, t + sd * 3, n, 0.025); }
+      if (st === 8 && hs(bar, 6) > 0.6) bell(V, t, 88 + Math.floor(hs(bar, 7) * 3) * 2, 0.025, 2.5);
+      if (mi) {
+        if ([0, 8, 11].includes(st)) thump(V, t, 0.2, 85);
+        if (st === 4 || st === 12) V.noise({ t, d: 0.05, type: 'bp', f: 700, q: 2, v: 0.05, r: 0.08 });
+        if (st % 2 === 1) pluck(V, t, ch[(st >> 1) % 4] + 24, 0.02);
+      }
+      if (mi === 2) {
+        if (st === 0) bell(V, t, 40, 0.16, 3.2);
+        if ([0, 6, 10].includes(st)) brass(V, t, [ch[0], ch[1]], sd * 3, 0.03, 900);
+        if (bar % 4 === 3 && st === 0) V.noise({ t, d: sd * 16, a: sd * 14, r: 0.2, type: 'hp', f: 1200, f2: 7000, v: 0.04 });
+        if ([2, 4, 6, 8, 10, 12, 14].includes(st) && bar % 2) thump(V, t, 0.12, 110);
+      }
+    },
+    a2(c) {
+      const { V, t, i, sd, mi } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = A2_CH[ci];
+      if (i % 32 === 0) { pad(V, t, ch, sd * 32, 0.022, 560); pad(V, t, [ch[0] - 12], sd * 32, 0.05, 220); }
+      const bs = mi ? [0, 3, 6, 8, 11, 14] : [0, 8];
+      if (bs.includes(st)) V.tone({ t, f: mf(ch[0] - 12), d: sd * 1.5, a: 0.01, r: 0.15, v: mi ? 0.1 : 0.07, type: 'sawtooth', lp: 380 });
+      const mp = mi ? [2, 4, 6, 10, 12, 14] : [4, 12];
+      if (mp.includes(st) || (!mi && hs(i, 8) > 0.9)) metal(V, t, mi ? 0.1 : 0.06, 700 + hs(i, 9) * 500);
+      if (mi && st % 2 === 1) V.noise({ t, d: 0.01, type: 'hp', f: 6000, v: 0.025, r: 0.02 });
+      if (st % 4 === 0 && hs(i, 10) > (mi ? 0.5 : 0.62)) { const n = A2_LEAD[Math.floor(hs(i, 11) * 8)]; brass(V, t, [n + 12], sd * 3.2, 0.022, 1300); }
+      if (mi && [0, 8, 10].includes(st)) thump(V, t, st === 8 ? 0.1 : 0.17, st === 8 ? 60 : 80);
+      if (mi === 2 && [3, 6, 12, 14].includes(st)) thump(V, t, 0.1, 70);
+      if (mi === 2) { if (st === 0) { V.tone({ t, f: 110, d: 0.1, r: 1.2, v: 0.16, type: 'square', lp: 3000, parts: INH }); } if (st === 14) V.noise({ t, d: sd * 2, a: sd * 1.8, r: 0.1, type: 'hp', f: 2000, f2: 8000, v: 0.04 }); if ([0, 6, 10].includes(st)) brass(V, t, [ch[0] + 12, ch[1] + 12], sd * 2.4, 0.026, 1700); }
+    },
+    a3(c) {
+      const { V, t, i, sd, mi } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = A3_CH[ci];
+      if (i % 32 === 0) {
+        ch.forEach((n, k) => V.vowel({ t, f: mf(n + 12), d: sd * 30, v: mi ? 0.02 : 0.016, fm: A3_FM[(ci + k) % 4], a: sd * 8, r: sd * 6 }));
+        V.tone({ t, f: mf(ch[0] - 12), d: sd * 32, a: 3, r: 3, v: 0.11, type: 'sine' });
+        V.tone({ t, f: mf(ch[0] - 12) * 1.5, d: sd * 32, a: 4, r: 3, v: 0.03, type: 'sine' });
+        if (mi === 2) V.tone({ t, f: mf(ch[0] + 6), d: sd * 32, a: 2, r: 2, v: 0.018, type: 'sawtooth', lp: 500 });
+      }
+      if (st % 4 === 2 && hs(i, 12) > 0.6) { const n = ch[Math.floor(hs(i, 13) * ch.length)] + 36; V.tone({ t, f: mf(n), d: 0.05, a: 0.01, r: 2.4, v: 0.03, parts: [[1, 1], [1.004, 0.8], [2.01, 0.2]] }); }
+      if (mi) { if (st === 0 || st === 3) thump(V, t, st ? 0.14 : 0.22, 70); if (mi === 2 && [6, 8, 10, 12, 14].includes(st)) thump(V, t, 0.13, 65); }
+      if (mi === 2) { if (st === 0 && bar % 2 === 0) brass(V, t, [ch[0], ch[2]], sd * 4, 0.03, 700); if (st === 0 && bar % 4 === 3) V.noise({ t, d: sd * 16, a: sd * 15, r: 0.2, type: 'bp', f: 800, f2: 5000, q: 0.7, v: 0.04 }); }
+    }
+  };
+
+  /* ----- one-shot stingers: [offset, midi notes, duration, kind] ----- */
+  const STING = {
+    win: { len: 2.8, ev: [[0, [62], 0.25, 'b'], [0.2, [66], 0.25, 'b'], [0.4, [69], 0.25, 'b'], [0.6, [74, 78, 81], 1.6, 'b'], [0.6, [86], 1.8, 'bell'], [0.9, [93], 1.8, 'bell']] },
+    clear: { len: 6, ev: [[0, [55, 62], 0.4, 'b'], [0.4, [59, 66], 0.4, 'b'], [0.8, [62, 69], 0.4, 'b'], [1.2, [67, 74, 79], 1.8, 'b'], [1.9, [71, 78, 83], 0.5, 'b'], [2.4, [74, 81, 86], 2.6, 'b'], [1.2, [91], 2.4, 'bell'], [2.4, [98], 3, 'bell'], [0, [38], 5, 'drone']] },
+    final: { len: 9, ev: [[0, [50, 57], 0.5, 'b'], [0.5, [54, 61], 0.5, 'b'], [1, [57, 64], 0.5, 'b'], [1.5, [62, 69], 1.2, 'b'], [2.8, [59, 66, 71], 0.5, 'b'], [3.3, [62, 69, 74], 0.5, 'b'], [3.8, [66, 73, 78], 0.5, 'b'], [4.3, [69, 76, 81], 3.8, 'b'], [4.3, [93], 4, 'bell'], [5.5, [98], 4, 'bell'], [6.5, [105], 3, 'bell'], [0, [38], 8, 'drone']] },
+    defeat: { len: 6, ev: [[0, [57, 60, 64], 1.2, 'pad'], [1.2, [55, 58, 62], 1.2, 'pad'], [2.4, [53, 56, 60], 1.4, 'pad'], [3.8, [50, 53, 57], 2.2, 'pad'], [0, [33], 0.1, 'bell'], [2.4, [28], 0.1, 'bell'], [3.8, [26], 0.1, 'bell']] }
+  };
+  function playSting(V, t, name) {
+    const s = STING[name]; if (!s) return;
+    s.ev.forEach(([o, notes, d, k]) => {
+      const tt = t + o;
+      if (k === 'b') brass(V, tt, notes, d, 0.05, 1700);
+      else if (k === 'bell') notes.forEach(n => bell(V, tt, n, 0.06, d));
+      else if (k === 'drone') V.tone({ t: tt, f: mf(notes[0]), d, a: 0.6, r: 1.2, v: 0.12, type: 'sawtooth', lp: 220 });
+      else if (k === 'pad') pad(V, tt, notes, d, 0.05, 700, 'triangle');
+    });
+    if (name === 'clear' || name === 'final') { thump(V, t, 0.3, 70); thump(V, t + 1.2, 0.25, 70); thump(V, t + 2.4, 0.3, 65); }
+  }
+
+  /* ----- sound effects ----- */
+  const HERO = {
+    duelist: {
+      swing(V, t) { V.noise({ t, d: 0.15, a: 0.01, type: 'bp', f: 2200, f2: 7500, q: 1.3, v: 0.2, r: 0.05 }); V.tone({ t: t + 0.06, f: 2100, d: 0.03, a: 0.002, r: 0.3, v: 0.08, parts: BELL }); },
+      hit(V, t) { V.noise({ t, d: 0.05, type: 'hp', f: 3500, v: 0.2, r: 0.07 }); V.tone({ t, f: 1500, d: 0.03, r: 0.25, v: 0.1, type: 'triangle', parts: [[1, 1], [1.5, 0.5], [2.4, 0.3]] }); },
+      guard(V, t) { V.tone({ t, f: 1700, d: 0.03, r: 0.3, v: 0.12, type: 'triangle', parts: [[1, 1], [2.2, 0.5]] }); V.tone({ t: t + 0.08, f: 2300, d: 0.03, r: 0.35, v: 0.1, type: 'triangle', parts: [[1, 1], [2.2, 0.5]] }); },
+      buff(V, t) { [880, 1175, 1480, 1760].forEach((f, k) => V.tone({ t: t + k * 0.06, f, d: 0.05, a: 0.005, r: 0.3, v: 0.07, parts: BELL })); },
+      hurt(V, t) { V.tone({ t, f: 420, f2: 260, d: 0.13, a: 0.01, r: 0.1, v: 0.12, type: 'sawtooth', lp: 1400 }); V.noise({ t, d: 0.08, type: 'bp', f: 1200, v: 0.07 }); },
+      foot(V, t) { V.noise({ t, d: 0.28, a: 0.02, type: 'bp', f: 350, f2: 4200, q: 0.9, v: 0.2, r: 0.08 }); V.tone({ t: t + 0.2, f: 1600, d: 0.03, r: 0.2, v: 0.05, parts: BELL }); }
+    },
+    bulwark: {
+      swing(V, t) { V.noise({ t, d: 0.3, a: 0.06, type: 'bp', f: 220, f2: 900, q: 0.8, v: 0.22, r: 0.1 }); V.tone({ t, f: 110, f2: 70, d: 0.25, a: 0.05, r: 0.1, v: 0.12, type: 'sawtooth', lp: 400 }); },
+      hit(V, t) { V.tone({ t, f: 170, d: 0.05, r: 0.7, v: 0.18, type: 'square', lp: 2600, parts: INH }); thump(V, t, 0.32, 80); },
+      guard(V, t) { V.tone({ t, f: 330, d: 0.05, r: 1.1, v: 0.14, parts: INH, type: 'triangle' }); thump(V, t, 0.2, 90); },
+      buff(V, t) { V.noise({ t, d: 0.5, a: 0.15, type: 'lp', f: 300, f2: 120, v: 0.22, r: 0.25 }); V.tone({ t, f: 65, d: 0.5, a: 0.15, r: 0.3, v: 0.14, type: 'sine' }); },
+      hurt(V, t) { V.tone({ t, f: 140, d: 0.04, r: 0.5, v: 0.14, type: 'square', lp: 1800, parts: INH }); V.noise({ t, d: 0.08, type: 'lp', f: 700, v: 0.12 }); },
+      foot(V, t) { thump(V, t, 0.2, 75); }
+    },
+    brute: {
+      swing(V, t) { V.tone({ t, f: 120, f2: 55, d: 0.34, a: 0.05, r: 0.15, v: 0.2, type: 'sawtooth', lp: 650, lp2: 220 }); V.noise({ t, d: 0.3, a: 0.03, type: 'bp', f: 300, f2: 1400, q: 0.8, v: 0.16, r: 0.08 }); },
+      hit(V, t) { V.noise({ t, d: 0.14, type: 'lp', f: 2200, f2: 300, v: 0.3, r: 0.12 }); thump(V, t, 0.38, 70); V.tone({ t, f: 90, f2: 45, d: 0.12, r: 0.2, v: 0.16, type: 'sawtooth', lp: 500 }); },
+      guard(V, t) { V.noise({ t, d: 0.08, type: 'bp', f: 900, q: 1.5, v: 0.18, r: 0.12 }); V.tone({ t, f: 200, d: 0.04, r: 0.5, v: 0.1, type: 'square', lp: 1800, parts: INH }); },
+      buff(V, t) { V.tone({ t, f: 70, f2: 150, d: 0.5, a: 0.1, r: 0.25, v: 0.17, type: 'sawtooth', lp: 500, lp2: 1400 }); for (let k = 0; k < 8; k++) V.noise({ t: t + 0.05 + k * 0.06 + hs(k, 21) * 0.04, d: 0.015, type: 'hp', f: 3000, v: 0.05, r: 0.03 }); },
+      hurt(V, t) { V.tone({ t, f: 200, f2: 85, d: 0.2, a: 0.01, r: 0.12, v: 0.2, type: 'sawtooth', lp: 900 }); V.noise({ t, d: 0.1, type: 'bp', f: 800, v: 0.1 }); },
+      foot(V, t) { thump(V, t, 0.2, 75); }
+    }
+  };
+  const STANCE_SFX = {
+    fury(V, t) { V.tone({ t, f: 80, f2: 190, d: 0.6, a: 0.05, r: 0.3, v: 0.22, type: 'sawtooth', lp: 500, lp2: 2400 }); V.noise({ t, d: 0.7, a: 0.1, type: 'bp', f: 500, f2: 3000, q: 0.7, v: 0.1, r: 0.2 }); },
+    iron(V, t) { V.tone({ t, f: 150, d: 0.05, r: 1.2, v: 0.17, type: 'square', lp: 2200, parts: INH }); thump(V, t, 0.25, 70); },
+    calm(V, t) { [523, 659, 784].forEach((f, k) => V.tone({ t: t + k * 0.1, f, d: 0.2, a: 0.05, r: 0.9, v: 0.06, type: 'sine' })); }
+  };
+  /* enemy voice archetypes: each has atk / hit / die; p = pitch multiplier */
+  const ARCH = {
+    insect: {
+      atk(V, t, p) { V.tone({ t, f: 300 * p, f2: 560 * p, d: 0.12, a: 0.01, r: 0.05, v: 0.1, type: 'sawtooth', lp: 2600, vib: [60, 300] }); },
+      hit(V, t, p) { V.tone({ t, f: 1300 * p, f2: 700 * p, d: 0.06, a: 0.004, r: 0.05, v: 0.09, type: 'square', lp: 3000 }); },
+      die(V, t, p) { V.tone({ t, f: 520 * p, f2: 90, d: 0.4, a: 0.01, r: 0.15, v: 0.1, type: 'sawtooth', lp: 1800, vib: [50, 400] }); }
+    },
+    bird: {
+      atk(V, t, p) { [0, 0.15].forEach(o => V.vowel({ t: t + o, f: 620 * p, f2: 420 * p, d: 0.1, a: 0.01, r: 0.05, v: 0.12, fm: [1000, 2200], vc: 30, vr: 14 })); },
+      hit(V, t, p) { V.vowel({ t, f: 900 * p, f2: 500 * p, d: 0.08, a: 0.005, r: 0.04, v: 0.1, fm: [1200, 2400] }); },
+      die(V, t, p) { V.vowel({ t, f: 700 * p, f2: 200 * p, d: 0.45, a: 0.01, r: 0.15, v: 0.11, fm: [900, 2000], vc: 40, vr: 12 }); }
+    },
+    wood: {
+      atk(V, t, p) { V.tone({ t, f: 140 * p, f2: 330 * p, d: 0.26, a: 0.03, r: 0.06, v: 0.12, type: 'sawtooth', lp: 700, q: 6, vib: [22, 80] }); V.tone({ t: t + 0.24, f: 190 * p, d: 0.02, r: 0.1, v: 0.14, type: 'triangle', lp: 900 }); },
+      hit(V, t, p) { V.tone({ t, f: 210 * p, f2: 140 * p, d: 0.03, r: 0.09, v: 0.16, type: 'triangle', lp: 1200 }); V.noise({ t, d: 0.03, type: 'bp', f: 1500, v: 0.07 }); },
+      die(V, t, p) { V.noise({ t, d: 0.08, type: 'hp', f: 900, v: 0.2, r: 0.1 }); for (let k = 0; k < 5; k++) V.tone({ t: t + 0.06 + k * 0.07, f: (260 - k * 25) * p, d: 0.02, r: 0.08, v: 0.1, type: 'triangle', lp: 1000 }); }
+    },
+    slime: {
+      atk(V, t, p) { V.tone({ t, f: 120 * p, f2: 340 * p, d: 0.22, a: 0.02, r: 0.06, v: 0.13, type: 'sine', vib: [18, 500] }); V.noise({ t, d: 0.18, type: 'lp', f: 600, f2: 1400, v: 0.07 }); },
+      hit(V, t, p) { V.tone({ t, f: 340 * p, f2: 110 * p, d: 0.08, a: 0.005, r: 0.06, v: 0.14, vib: [30, 500] }); },
+      die(V, t, p) { V.tone({ t, f: 300 * p, f2: 50, d: 0.5, a: 0.01, r: 0.2, v: 0.14, vib: [14, 700] }); V.noise({ t: t + 0.1, d: 0.3, type: 'lp', f: 500, v: 0.06 }); }
+    },
+    imp: {
+      atk(V, t, p) { for (let k = 0; k < 5; k++) V.tone({ t: t + k * 0.05, f: (900 + (k % 2) * 300) * p, d: 0.03, a: 0.003, r: 0.03, v: 0.08, type: 'square', lp: 3500 }); },
+      hit(V, t, p) { V.tone({ t, f: 1100 * p, f2: 500 * p, d: 0.1, a: 0.005, r: 0.05, v: 0.1, type: 'square', lp: 3000 }); },
+      die(V, t, p) { for (let k = 0; k < 4; k++) V.tone({ t: t + k * 0.08, f: (1000 - k * 170) * p, d: 0.05, a: 0.004, r: 0.04, v: 0.09, type: 'square', lp: 3000 }); }
+    },
+    chant: {
+      atk(V, t, p) { V.vowel({ t, f: 110 * p, f2: 140 * p, d: 0.4, a: 0.12, r: 0.2, v: 0.11, fm: [600, 1000], vc: 20 }); },
+      hit(V, t, p) { V.vowel({ t, f: 170 * p, f2: 110 * p, d: 0.1, a: 0.01, r: 0.1, v: 0.1, fm: [500, 900] }); },
+      die(V, t, p) { V.vowel({ t, f: 150 * p, f2: 70 * p, d: 0.6, a: 0.02, r: 0.4, v: 0.1, fm: [450, 800], vc: 30 }); }
+    },
+    beast: {
+      atk(V, t, p) { V.tone({ t, f: 95 * p, f2: 70 * p, d: 0.38, a: 0.04, r: 0.1, v: 0.18, type: 'sawtooth', lp: 700, vib: [28, 120] }); V.noise({ t, d: 0.3, type: 'bp', f: 500, q: 0.8, v: 0.06 }); },
+      hit(V, t, p) { V.tone({ t, f: 380 * p, f2: 170 * p, d: 0.12, a: 0.005, r: 0.08, v: 0.14, type: 'sawtooth', lp: 1500 }); },
+      die(V, t, p) { V.tone({ t, f: 260 * p, f2: 55, d: 0.6, a: 0.02, r: 0.25, v: 0.15, type: 'sawtooth', lp: 900, vib: [20, 200] }); }
+    },
+    mech: {
+      atk(V, t, p) { metal(V, t, 0.16, 520 * p); V.tone({ t: t + 0.02, f: 220 * p, f2: 480 * p, d: 0.18, a: 0.02, r: 0.06, v: 0.06, type: 'sawtooth', lp: 1200 }); },
+      hit(V, t, p) { metal(V, t, 0.14, 900 * p); },
+      die(V, t, p) { V.noise({ t, d: 0.5, type: 'bp', f: 2500, f2: 200, q: 1.2, v: 0.14, r: 0.2 }); V.tone({ t, f: 300 * p, f2: 40, d: 0.55, a: 0.01, r: 0.25, v: 0.12, type: 'square', lp: 900 }); metal(V, t + 0.3, 0.1, 400 * p); }
+    },
+    chain: {
+      atk(V, t, p) { [0, 0.07, 0.15].forEach((o, k) => metal(V, t + o, 0.1, (1100 + k * 150) * p)); V.tone({ t: t + 0.18, f: 160, d: 0.03, r: 0.5, v: 0.12, parts: INH, type: 'triangle' }); },
+      hit(V, t, p) { metal(V, t, 0.12, 1300 * p); metal(V, t + 0.05, 0.08, 1000 * p); },
+      die(V, t, p) { for (let k = 0; k < 6; k++) metal(V, t + k * 0.06, 0.09 - k * 0.01, (1400 - k * 130) * p); }
+    },
+    fire: {
+      atk(V, t, p) { V.noise({ t, d: 0.5, a: 0.1, type: 'bp', f: 250 * p, f2: 1600 * p, q: 0.7, v: 0.22, r: 0.15 }); for (let k = 0; k < 8; k++) V.noise({ t: t + k * 0.05, d: 0.012, type: 'hp', f: 3500, v: 0.06, r: 0.02 }); },
+      hit(V, t, p) { V.noise({ t, d: 0.1, type: 'bp', f: 900, q: 1, v: 0.15, r: 0.08 }); },
+      die(V, t, p) { V.noise({ t, d: 0.6, type: 'bp', f: 1400, f2: 120, q: 0.7, v: 0.2, r: 0.25 }); }
+    },
+    ghost: {
+      atk(V, t, p) { V.tone({ t, f: 380 * p, f2: 700 * p, d: 0.5, a: 0.12, r: 0.3, v: 0.09, type: 'sine', vib: [6, 40], parts: [[1, 1], [1.5, 0.35]] }); },
+      hit(V, t, p) { V.tone({ t, f: 800 * p, f2: 400 * p, d: 0.1, a: 0.01, r: 0.2, v: 0.08, vib: [8, 60] }); },
+      die(V, t, p) { V.tone({ t, f: 500 * p, f2: 1400 * p, d: 0.7, a: 0.05, r: 0.4, v: 0.08, vib: [7, 80], parts: [[1, 1], [2, 0.3]] }); }
+    },
+    glass: {
+      atk(V, t, p) { [0, 0.07, 0.14].forEach((o, k) => V.tone({ t: t + o, f: (1600 + k * 450) * p, d: 0.04, a: 0.003, r: 0.5, v: 0.07, parts: BELL })); },
+      hit(V, t, p) { V.tone({ t, f: 2100 * p, d: 0.02, r: 0.3, v: 0.1, parts: BELL }); },
+      die(V, t, p) { V.noise({ t, d: 0.06, type: 'hp', f: 3000, v: 0.2, r: 0.12 }); for (let k = 0; k < 7; k++) V.tone({ t: t + 0.03 + k * 0.045, f: (2000 + hs(k, 31) * 2600) * p, d: 0.015, r: 0.25, v: 0.06, parts: BELL }); }
+    },
+    bone: {
+      atk(V, t, p) { for (let k = 0; k < 7; k++) V.noise({ t: t + k * 0.04 + hs(k, 41) * 0.02, d: 0.012, type: 'bp', f: 1800 + hs(k, 42) * 1800, q: 4, v: 0.1, r: 0.03 }); },
+      hit(V, t, p) { V.noise({ t, d: 0.02, type: 'bp', f: 1400 * p, q: 3, v: 0.16, r: 0.05 }); V.tone({ t, f: 300 * p, d: 0.02, r: 0.08, v: 0.08, type: 'triangle' }); },
+      die(V, t, p) { for (let k = 0; k < 12; k++) V.noise({ t: t + k * 0.04 + hs(k, 43) * 0.03, d: 0.012, type: 'bp', f: 1000 + hs(k, 44) * 2200, q: 4, v: 0.1, r: 0.03 }); }
+    },
+    stomp: {
+      atk(V, t, p) { thump(V, t + 0.08, 0.36, 60 * p); V.noise({ t, d: 0.3, a: 0.05, type: 'lp', f: 200, f2: 90, v: 0.14 }); },
+      hit(V, t, p) { thump(V, t, 0.26, 80 * p); V.tone({ t, f: 140 * p, d: 0.04, r: 0.6, v: 0.08, parts: INH, type: 'triangle' }); },
+      die(V, t, p) { thump(V, t, 0.4, 55 * p); thump(V, t + 0.25, 0.3, 45 * p); V.noise({ t, d: 0.7, type: 'lp', f: 600, f2: 80, v: 0.15, r: 0.2 }); }
+    },
+    choral: {
+      atk(V, t, p) { [0, 4, 7].forEach(n => V.vowel({ t, f: 196 * p * Math.pow(2, n / 12), d: 0.5, a: 0.15, r: 0.25, v: 0.05, fm: [700, 1200], vc: 25 })); },
+      hit(V, t, p) { V.vowel({ t, f: 300 * p, f2: 200 * p, d: 0.1, a: 0.01, r: 0.1, v: 0.09, fm: [800, 1300] }); },
+      die(V, t, p) { [0, 3, 7].forEach(n => V.vowel({ t, f: 220 * p * Math.pow(2, n / 12), f2: 110 * p, d: 0.8, a: 0.05, r: 0.5, v: 0.05, fm: [600, 1000], vc: 35 })); }
+    },
+    bell: {
+      atk(V, t, p) { V.tone({ t, f: 196 * p, d: 0.05, a: 0.004, r: 2.2, v: 0.22, parts: BELL }); thump(V, t, 0.12, 55); },
+      hit(V, t, p) { V.tone({ t, f: 440 * p, d: 0.03, r: 0.6, v: 0.1, parts: BELL }); },
+      die(V, t, p) { V.tone({ t, f: 150 * p, d: 0.05, r: 3, v: 0.26, parts: BELL }); V.tone({ t: t + 0.5, f: 110 * p, d: 0.05, r: 3, v: 0.2, parts: BELL }); }
+    },
+    void: {
+      atk(V, t, p) { V.tone({ t, f: 90 * p, f2: 140 * p, d: 0.5, a: 0.2, r: 0.2, v: 0.14, type: 'sawtooth', lp: 400, lp2: 1500 }); V.noise({ t, d: 0.5, a: 0.2, type: 'bp', f: 2500, f2: 800, q: 2, v: 0.06 }); },
+      hit(V, t, p) { V.tone({ t, f: 200 * p, f2: 90 * p, d: 0.1, a: 0.005, r: 0.15, v: 0.12, type: 'sawtooth', lp: 900 }); },
+      die(V, t, p) { V.tone({ t, f: 180 * p, f2: 30, d: 0.8, a: 0.02, r: 0.4, v: 0.16, type: 'sawtooth', lp: 600, vib: [10, 200] }); V.noise({ t, d: 0.7, type: 'bp', f: 3000, f2: 200, q: 1, v: 0.08 }); }
+    },
+    paper: {
+      atk(V, t, p) { for (let k = 0; k < 5; k++) V.noise({ t: t + k * 0.05, d: 0.04, type: 'hp', f: 4000 + hs(k, 51) * 2000, v: 0.09, r: 0.05 }); metal(V, t + 0.28, 0.08, 1500); },
+      hit(V, t, p) { V.noise({ t, d: 0.06, type: 'hp', f: 3500, v: 0.12, r: 0.08 }); },
+      die(V, t, p) { for (let k = 0; k < 9; k++) V.noise({ t: t + k * 0.05 + hs(k, 52) * 0.02, d: 0.05, type: 'hp', f: 3000 + hs(k, 53) * 3000, v: 0.09, r: 0.06 }); }
+    }
+  };
+  /* which archetype + pitch each enemy uses */
+  const EVOICE = {
+    moth: ['insect', 1], rootling: ['wood', 1], crow: ['bird', 1], leech: ['slime', 1.2], imp: ['imp', 1], acolyte: ['chant', 1.1], ogre: ['beast', 0.7], puppet: ['wood', 1.4], stag: ['beast', 1.25], bell: ['bell', 1],
+    hound: ['beast', 1.5], mimic: ['wood', 0.7], wraith: ['ghost', 1], gear: ['mech', 0.9], cultist: ['chant', 0.9], jailer: ['chain', 0.8], furnace: ['fire', 0.7], matriarch: ['chant', 1.5], ledger: ['paper', 1], cog: ['mech', 0.5],
+    voidsentry: ['void', 1.1], mirror: ['glass', 1], ossuary: ['bone', 1], seer: ['ghost', 1.5], colossus: ['stomp', 1], nullmask: ['void', 0.8], unwritten: ['paper', 0.7], choir: ['choral', 1.2], eclipse: ['void', 0.6], spire: ['choral', 0.6]
+  };
+
+  /* per-sound loudness trim, measured offline so every voice lands at a similar peak */
+  const NORM = {"hero":{"duelist":{"swing":1.75,"hit":0.95,"guard":2.38,"buff":2.24,"hurt":2.72,"foot":1.84},"bulwark":{"swing":2.09,"hit":0.52,"guard":0.86,"buff":2.32,"hurt":1.05,"foot":1.74},"brute":{"swing":1.51,"hit":0.59,"guard":1.35,"buff":1.74,"hurt":1.63,"foot":1.74}},"enemy":{"insect":{"atk":3.61,"hit":3.74,"die":3.48},"bird":{"atk":5,"hit":5,"die":3.47},"wood":{"atk":1.42,"hit":2.14,"die":1.2},"slime":{"atk":2.52,"hit":2.86,"die":2.52},"imp":{"atk":4.19,"hit":3.37,"die":3.74},"chant":{"atk":5,"hit":3.96,"die":4.07},"beast":{"atk":1.94,"hit":2.6,"die":2.34},"mech":{"atk":1.62,"hit":1.97,"die":1.65},"chain":{"atk":1.25,"hit":1.67,"die":2.15},"fire":{"atk":0.45,"hit":5,"die":3.43},"ghost":{"atk":3.3,"hit":5,"die":3.86},"glass":{"atk":2.07,"hit":2.37,"die":1.08},"bone":{"atk":5,"hit":4.07,"die":5},"stomp":{"atk":1.02,"hit":1.08,"die":0.88},"choral":{"atk":4.81,"hit":5,"die":4.61},"bell":{"atk":0.88,"hit":2.29,"die":0.89},"void":{"atk":2.39,"hit":3.01,"die":1.93},"paper":{"atk":0.48,"hit":1.93,"die":2.47}}};
+  /* ----- live engine ----- */
+  let ac = null, master = null, musicBus = null, sfxBus = null, sV = null, curBus = null;
+  let want = { key: 'menu', mode: 'calm' }, playing = null, timer = null, nextT = 0, stepI = 0, duckUntil = 0;
+  const hasAC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
+  function ensure() {
+    if (ac) return ac;
+    if (!hasAC) return null;
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      master = ac.createGain(); master.gain.value = prefs.vol;
+      const comp = ac.createDynamicsCompressor(); comp.threshold.value = -14; comp.knee.value = 18; comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.2;
+      master.connect(comp); comp.connect(ac.destination);
+      musicBus = ac.createGain(); musicBus.gain.value = 0.55; musicBus.connect(master);
+      sfxBus = ac.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(master);
+      sV = voices(ac, sfxBus);
+    } catch (e) { ac = null; }
+    return ac;
+  }
+  function unlock() {
+    if (!ensure()) return;
+    if (ac.state === 'suspended') ac.resume().then(sync).catch(() => {});
+    sync();
+  }
+  function stopMusic() {
+    if (timer) { clearInterval(timer); timer = null; }
+    if (curBus && ac) { const b = curBus; try { b.gain.cancelScheduledValues(ac.currentTime); b.gain.setTargetAtTime(0, ac.currentTime, 0.35); } catch (e) {} setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 2500); }
+    curBus = null; playing = null;
+  }
+  function startMusic(key, mode) {
+    stopMusic();
+    if (!ac || !prefs.music || ac.state !== 'running') return;
+    const bus = ac.createGain(); bus.gain.setValueAtTime(0, ac.currentTime); bus.gain.setTargetAtTime(1, ac.currentTime + 0.05, 0.6); bus.connect(musicBus);
+    curBus = bus; playing = { key, mode }; const V = voices(ac, bus), mi = MODE[mode] || 0, tr = TRACKS[key], sd = 60 / BPM[key][mi] / 4;
+    stepI = 0; nextT = ac.currentTime + 0.12;
+    const pump = () => {
+      if (!ac || curBus !== bus) return;
+      while (nextT < ac.currentTime + 1.4) { try { tr({ V, t: nextT, i: stepI, sd, mi }); } catch (e) {} nextT += sd; stepI++; }
+    };
+    pump(); timer = setInterval(pump, 150);
+  }
+  function sync() {
+    if (!ac || ac.state !== 'running') return;
+    if (!prefs.music || want.key === 'none' || !TRACKS[want.key]) { if (playing) stopMusic(); return; }
+    if (!playing || playing.key !== want.key || playing.mode !== want.mode) startMusic(want.key, want.mode);
+  }
+  function scene(key, mode) { want = { key, mode: mode || 'calm' }; sync(); }
+  function duck(sec) {
+    if (!ac || !musicBus) return;
+    const t = ac.currentTime; musicBus.gain.cancelScheduledValues(t); musicBus.gain.setTargetAtTime(0.1, t, 0.1); musicBus.gain.setTargetAtTime(0.55, t + sec, 0.8);
+  }
+  function stinger(name) {
+    if (!ac || !prefs.sfx && !prefs.music || ac.state !== 'running') return;
+    const s = STING[name]; if (!s) return;
+    if (prefs.music) duck(s.len * 0.8);
+    const out = ac.createGain(); out.gain.value = 1; out.connect(prefs.music ? master : sfxBus);
+    playSting(voices(ac, out), ac.currentTime + 0.05, name);
+  }
+  const ok = () => ac && prefs.sfx && ac.state === 'running';
+  function gv(g) { const n = ac.createGain(); n.gain.value = g; n.connect(sfxBus); return voices(ac, n); }
+  function hero(h, kind, delay) {
+    if (!ok()) return; const H = HERO[h]; if (!H) return;
+    if (kind.indexOf('stance:') === 0) { const f = STANCE_SFX[kind.slice(7)]; if (f) f(sV, ac.currentTime + 0.02); return; }
+    if (H[kind]) H[kind](gv((NORM.hero[h] || {})[kind] || 1), ac.currentTime + 0.02 + (delay || 0));
+  }
+  function enemy(key, kind, delay) {
+    if (!ok()) return; const ev = EVOICE[key] || ['beast', 1], A = ARCH[ev[0]];
+    if (A && A[kind]) A[kind](gv((NORM.enemy[ev[0]] || {})[kind] || 1), ac.currentTime + 0.02 + (delay || 0), ev[1]);
+  }
+  const UI = {
+    click(V, t) { V.tone({ t, f: 520, d: 0.02, a: 0.003, r: 0.06, v: 0.05, type: 'triangle' }); },
+    card(V, t) { V.noise({ t, d: 0.05, type: 'bp', f: 1800, q: 1, v: 0.07, r: 0.04 }); V.tone({ t, f: 330, d: 0.02, r: 0.07, v: 0.05, type: 'triangle' }); },
+    node(V, t) { V.tone({ t, f: 392, d: 0.04, r: 0.3, v: 0.07, parts: BELL }); V.tone({ t: t + 0.08, f: 587, d: 0.04, r: 0.4, v: 0.06, parts: BELL }); },
+    step(V, t) { V.noise({ t, d: 0.04, type: 'lp', f: 600, v: 0.1, r: 0.05 }); V.noise({ t: t + 0.18, d: 0.04, type: 'lp', f: 550, v: 0.09, r: 0.05 }); V.noise({ t: t + 0.36, d: 0.04, type: 'lp', f: 600, v: 0.08, r: 0.05 }); },
+    coin(V, t) { for (let k = 0; k < 6; k++) { const tt = t + k * 0.055 + hs(k, 61) * 0.02; V.tone({ t: tt, f: 1900 + hs(k, 62) * 900, d: 0.01, a: 0.002, r: 0.18, v: 0.07, type: 'square', lp: 5000, parts: [[1, 1], [1.5, 0.4]] }); } },
+    relic(V, t) { [784, 988, 1175, 1568, 1976].forEach((f, k) => V.tone({ t: t + k * 0.07, f, d: 0.05, r: 0.9, v: 0.06, parts: BELL })); },
+    lid(V, t) { V.tone({ t, f: 90, f2: 160, d: 0.28, a: 0.02, r: 0.08, v: 0.09, type: 'sawtooth', lp: 500, q: 5, vib: [24, 120] }); },
+    thud(V, t) { thump(V, t, 0.3, 90); V.noise({ t, d: 0.08, type: 'lp', f: 900, v: 0.12 }); },
+    burst(V, t) { V.noise({ t, d: 0.5, a: 0.01, type: 'hp', f: 2500, f2: 9000, v: 0.14, r: 0.3 }); [1047, 1319, 1568, 2093].forEach((f, k) => V.tone({ t: t + k * 0.06, f, d: 0.06, r: 1.1, v: 0.06, parts: BELL })); },
+    turn(V, t) { V.tone({ t, f: 660, d: 0.04, r: 0.5, v: 0.06, parts: BELL }); },
+    enemyturn(V, t) { V.tone({ t, f: 110, d: 0.04, r: 0.6, v: 0.1, parts: INH, type: 'triangle' }); },
+    toll(V, t) { V.tone({ t, f: 98, d: 0.05, a: 0.004, r: 3.2, v: 0.28, parts: BELL }); },
+    phase(V, t) { V.noise({ t, d: 1, a: 0.05, type: 'bp', f: 200, f2: 6000, q: 0.6, v: 0.2, r: 0.4 }); thump(V, t, 0.4, 55); V.tone({ t, f: 60, f2: 25, d: 1, a: 0.05, r: 0.4, v: 0.25, type: 'sawtooth', lp: 300 }); },
+    bad(V, t) { V.tone({ t, f: 180, f2: 120, d: 0.2, a: 0.01, r: 0.1, v: 0.08, type: 'square', lp: 700 }); }
+  };
+  function ui(name, delay) { if (!ok() || !UI[name]) return; UI[name](sV, ac.currentTime + 0.01 + (delay || 0)); }
+
+  /* ----- settings panel ----- */
+  function applyVol() { if (master && ac) master.gain.setTargetAtTime(prefs.vol, ac.currentTime, 0.05); }
+  function setPref(k, v) { prefs[k] = v; savePrefs(); if (k === 'vol') applyVol(); if (k === 'music') { if (!v) stopMusic(); else { unlock(); sync(); } } syncPanel(); }
+  let panel = null;
+  const SPK = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8 L7 8 L12 4 L12 16 L7 12 L3 12Z"/><path d="M15 7 Q17.5 10 15 13"/></svg>';
+  function syncPanel() {
+    if (!panel) return;
+    panel.querySelector('[data-k="music"]').checked = prefs.music;
+    panel.querySelector('[data-k="sfx"]').checked = prefs.sfx;
+    panel.querySelector('[data-k="vol"]').value = Math.round(prefs.vol * 100);
+  }
+  function togglePanel() {
+    if (!panel) {
+      panel = document.createElement('div'); panel.id = 'sndpanel'; panel.className = 'sndpanel'; panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Sound settings');
+      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Volume <input type="range" min="0" max="100" step="5" data-k="vol" aria-label="Volume"></label>';
+      panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx') setPref(k, e.target.checked); });
+      panel.addEventListener('input', e => { if (e.target.getAttribute('data-k') === 'vol') setPref('vol', Number(e.target.value) / 100); });
+      document.body.appendChild(panel);
+    }
+    panel.hidden = !panel.hidden; syncPanel(); unlock();
+  }
+  if (typeof document !== 'undefined') {
+    const first = () => { unlock(); };
+    ['pointerdown', 'keydown', 'touchend'].forEach(ev => document.addEventListener(ev, first, { passive: true }));
+    document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume().then(sync).catch(() => {}); });
+  }
+  return { prefs, scene, stinger, hero, enemy, ui, togglePanel, unlock, SPK, _t: { voices, TRACKS, STING, playSting, BPM, MODE, HERO, ARCH, EVOICE, UI }, get ctx() { return ac; }, get playing() { return playing; } };
+})();
+
+/* ---------- Scenery, map art, chest and victory (client only) ---------- */
+const sceneRng = seed => { let s = (seed * 9301 + 49297) % 2147483647 || 1; return () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; };
+const f1 = n => Math.round(n * 10) / 10;
+const pineP = (x, y, w, h) => 'M' + f1(x) + ' ' + f1(y - h) + ' L' + f1(x + w * .34) + ' ' + f1(y - h * .56) + ' L' + f1(x + w * .17) + ' ' + f1(y - h * .56) + ' L' + f1(x + w * .46) + ' ' + f1(y - h * .22) + ' L' + f1(x + w * .22) + ' ' + f1(y - h * .22) + ' L' + f1(x + w * .5) + ' ' + f1(y) +
+  ' L' + f1(x - w * .5) + ' ' + f1(y) + ' L' + f1(x - w * .22) + ' ' + f1(y - h * .22) + ' L' + f1(x - w * .46) + ' ' + f1(y - h * .22) + ' L' + f1(x - w * .17) + ' ' + f1(y - h * .56) + ' L' + f1(x - w * .34) + ' ' + f1(y - h * .56) + 'Z';
+function gearP(cx, cy, R, r, n) {
+  let d = '';
+  for (let i = 0; i < n * 2; i++) { const a = i / (n * 2) * Math.PI * 2, rr = i % 2 ? r : R, a2 = a + (Math.PI / n) * 0.5; d += (i ? 'L' : 'M') + f1(cx + Math.cos(a) * rr) + ' ' + f1(cy + Math.sin(a) * rr) + 'L' + f1(cx + Math.cos(a2) * rr) + ' ' + f1(cy + Math.sin(a2) * rr); }
+  return d + 'Z';
+}
+const maskP = '<path d="M-10 -12 Q0 -17 10 -12 Q14 0 8 10 Q0 18 -8 10 Q-14 0 -10 -12Z"/>';
+const maskEyes = '<path d="M-7 -3 Q-4 -6.5 -1 -3 Q-4 0 -7 -3Z M1 -3 Q4 -6.5 7 -3 Q4 0 1 -3Z M-4 6 Q0 8.5 4 6 Q0 7 -4 6Z" fill="#0A0614"/>';
+const shardP = (x, y, w, h) => 'M' + f1(x) + ' ' + f1(y - h) + ' L' + f1(x + w / 2) + ' ' + f1(y - h * .3) + ' L' + f1(x + w * .3) + ' ' + f1(y) + ' L' + f1(x - w * .35) + ' ' + f1(y) + ' L' + f1(x - w / 2) + ' ' + f1(y - h * .4) + 'Z';
+
+/* big map backdrop per act: sky, depth bands, props, landmarks (W = 400 units) */
+function actScene(act, H) {
+  const R = sceneRng(act * 77 + 5);
+  let s = '';
+  if (act === 1) {
+    s += '<defs><linearGradient id="m1s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#08171B"/><stop offset=".5" stop-color="#11302E"/><stop offset="1" stop-color="#1F4337"/></linearGradient><radialGradient id="m1m"><stop offset="0" stop-color="#DFF6EA" stop-opacity=".5"/><stop offset="1" stop-color="#DFF6EA" stop-opacity="0"/></radialGradient><radialGradient id="m1l"><stop offset="0" stop-color="#FFD98A" stop-opacity=".9"/><stop offset="1" stop-color="#FFD98A" stop-opacity="0"/></radialGradient></defs>';
+    s += '<rect width="400" height="' + H + '" fill="url(#m1s)"/><circle cx="318" cy="64" r="70" fill="url(#m1m)"/><circle cx="318" cy="64" r="24" fill="#DDF3E6" opacity=".22"/>';
+    for (let k = 0; k < 7; k++) {
+      const y0 = 150 + k * 100, col = ['#12332F', '#102C2B', '#0E2626', '#0C2121', '#0A1C1E', '#09191B', '#08161A'][k];
+      for (let j = 0; j < 11; j++) { const x = (j + R() * .8) * 40 - 10, h = 60 + R() * 70 + k * 6, w = 30 + R() * 26; s += '<path d="' + pineP(x, y0 + R() * 14, w, h) + '" fill="' + col + '"/>'; }
+      s += '<ellipse cx="' + f1(120 + R() * 160) + '" cy="' + (y0 + 8) + '" rx="190" ry="16" fill="#BEE8DA" opacity=".05"/>';
+    }
+    [[-6, 120], [398, 230], [-8, 360], [402, 470], [-4, 600], [404, 690]].forEach(([x, y], k) => {
+      s += '<path d="' + pineP(x, y + 90, 96, 230) + '" fill="#071518"/>';
+      s += '<g transform="translate(' + (x < 200 ? 34 : 366) + ' ' + (y + (k % 2 ? -10 : 20)) + ')"><line x1="0" y1="-18" x2="0" y2="-6" stroke="#4A3A2A" stroke-width="1.2"/><circle r="22" fill="url(#m1l)"/><rect x="-3.5" y="-6" width="7" height="10" rx="2" fill="#FFD27A" opacity=".95"/></g>';
+    });
+    [[70, 330], [335, 560], [60, 640]].forEach(([x, y]) => { s += '<g transform="translate(' + x + ' ' + y + ')"><path d="M-9 0 L-8 -20 L8 -20 L9 0Z" fill="#26343A"/><path d="M-4 -8 L0 -14 L4 -8" stroke="#5FE6E2" stroke-width="1.2" fill="none" opacity=".7"/></g>'; });
+    for (let k = 0; k < 9; k++) { const x = 8 + R() * 384, y = 140 + R() * (H - 200); s += '<g transform="translate(' + f1(x) + ' ' + f1(y) + ')" opacity=".75"><circle r="9" fill="#6EE8C6" opacity=".18"/><rect x="-.8" y="0" width="1.6" height="6" fill="#9CB8A8"/><path d="M-5 0 Q0 -7 5 0Z" fill="#7FE8C8"/></g>'; }
+    s += '<path d="M150 118 Q150 40 200 34 Q250 40 250 118 L232 118 Q232 62 200 58 Q168 62 168 118Z" fill="#050F12"/><path d="M168 118 Q168 64 200 60 Q232 64 232 118Z" fill="#1A4A52" opacity=".35"/>';
+    s += '<rect y="' + (H - 60) + '" width="400" height="60" fill="#06100F" opacity=".7"/>';
+  } else if (act === 2) {
+    s += '<defs><linearGradient id="m2s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#170B08"/><stop offset=".5" stop-color="#341A10"/><stop offset="1" stop-color="#4D2C19"/></linearGradient><radialGradient id="m2l"><stop offset="0" stop-color="#FFB45A" stop-opacity=".9"/><stop offset="1" stop-color="#FFB45A" stop-opacity="0"/></radialGradient></defs>';
+    s += '<rect width="400" height="' + H + '" fill="url(#m2s)"/>';
+    for (let j = 0; j < 9; j++) { const x = j * 46 + R() * 20, h = 50 + R() * 70; s += '<rect x="' + f1(x) + '" y="' + f1(130 - h) + '" width="' + f1(14 + R() * 12) + '" height="' + f1(h + 30) + '" fill="#0F0705"/><ellipse cx="' + f1(x + 12) + '" cy="' + f1(120 - h) + '" rx="26" ry="12" fill="#6A4A3A" opacity=".18"/>'; }
+    for (let k = 0; k < 7; k++) {
+      const y0 = 190 + k * 95;
+      for (let j = 0; j < 4; j++) {
+        const x = j * 100 + 20 + R() * 40, w = 46 + R() * 22, aw = R() > .5 ? '#9A3A24' : '#C28A3A';
+        s += '<g opacity="' + f1(.55 + k * .05) + '"><rect x="' + f1(x) + '" y="' + f1(y0 - 34) + '" width="' + f1(w) + '" height="34" fill="#1B0E09"/><path d="M' + f1(x - 5) + ' ' + f1(y0 - 34) + ' L' + f1(x + w / 2) + ' ' + f1(y0 - 54) + ' L' + f1(x + w + 5) + ' ' + f1(y0 - 34) + 'Z" fill="' + aw + '" opacity=".85"/><circle cx="' + f1(x + w / 2) + '" cy="' + f1(y0 - 26) + '" r="17" fill="url(#m2l)"/></g>';
+      }
+      s += '<path d="M0 ' + (y0 - 70) + ' Q100 ' + (y0 - 52) + ' 200 ' + (y0 - 70) + ' T400 ' + (y0 - 70) + '" fill="none" stroke="#6A5A4A" stroke-width="2" stroke-dasharray="3 3" opacity=".55"/>';
+    }
+    [[40, 250, 54, 1], [360, 420, 70, -1], [60, 560, 46, -1], [346, 650, 38, 1], [336, 150, 40, -1]].forEach(([x, y, r, d]) => { s += '<g transform="translate(' + x + ' ' + y + ')" opacity=".22"><g class="mgear" style="--d:' + (d > 0 ? 'normal' : 'reverse') + ';--p:' + (60 + r) + 's"><path d="' + gearP(0, 0, r, r * .8, 10) + '" fill="#9A6A38"/><circle r="' + f1(r * .42) + '" fill="#2A150C"/></g></g>'; });
+    s += '<g transform="translate(200 70)" opacity=".3"><circle r="64" fill="#2A150C"/><circle r="56" fill="none" stroke="#C28A3A" stroke-width="3"/><path d="M0 -48 L0 0 L28 14" stroke="#E8BE52" stroke-width="4" fill="none" stroke-linecap="round"/><g class="mgear" style="--p:90s;--d:normal"><path d="' + gearP(0, 0, 78, 66, 14) + '" fill="none" stroke="#9A6A38" stroke-width="5"/></g></g>';
+    s += '<rect y="' + (H - 60) + '" width="400" height="60" fill="#100805" opacity=".7"/>';
+  } else {
+    s += '<defs><linearGradient id="m3s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A0614"/><stop offset=".55" stop-color="#1A0F33"/><stop offset="1" stop-color="#301A55"/></linearGradient><radialGradient id="m3v"><stop offset="0" stop-color="#8A6AFF" stop-opacity=".6"/><stop offset=".5" stop-color="#4A2A9A" stop-opacity=".3"/><stop offset="1" stop-color="#4A2A9A" stop-opacity="0"/></radialGradient><linearGradient id="m3c" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#2A1A5A"/><stop offset="1" stop-color="#8FD4FF"/></linearGradient></defs>';
+    s += '<rect width="400" height="' + H + '" fill="url(#m3s)"/>';
+    for (let k = 0; k < 80; k++) s += '<circle cx="' + f1(R() * 400) + '" cy="' + f1(R() * H * .8) + '" r="' + f1(.4 + R() * 1.1) + '" fill="#E8E0FF" opacity="' + f1(.2 + R() * .6) + '"/>';
+    s += '<circle cx="200" cy="68" r="120" fill="url(#m3v)"/><ellipse cx="200" cy="68" rx="56" ry="30" fill="none" stroke="#B49AFF" stroke-width="2" opacity=".5"/><ellipse cx="200" cy="68" rx="34" ry="16" fill="#05020C" opacity=".8"/>';
+    for (let k = 0; k < 8; k++) { const x = 20 + R() * 360, y = 110 + k * 80 + R() * 40, sz = 22 + R() * 34; s += '<g transform="translate(' + f1(x) + ' ' + f1(y) + ') rotate(' + f1(R() * 40 - 20) + ') scale(' + f1(sz / 16) + ')" opacity="' + f1(.14 + R() * .2) + '"><g class="mfloat" style="--p:' + (6 + k % 3 * 2) + 's;--d:' + f1(-R() * 12) + 's"><g fill="#CFC4F0">' + maskP + '</g>' + maskEyes + '</g></g>'; }
+    [[18, 700], [382, 640], [30, 520], [372, 420], [14, 330], [388, 250], [44, 170]].forEach(([x, y]) => { s += '<path d="' + shardP(x, y, 26 + R() * 14, 90 + R() * 80) + '" fill="url(#m3c)" opacity=".55"/>'; });
+    [[60, 400], [340, 330], [70, 620], [330, 560]].forEach(([x, y]) => { s += '<g transform="translate(' + x + ' ' + y + ')" opacity=".5"><rect x="-8" y="-70" width="16" height="70" fill="#150B2A"/><rect x="-13" y="-76" width="26" height="8" fill="#1E1040"/><rect x="-12" y="-4" width="24" height="6" fill="#1E1040"/></g>'; });
+    s += '<ellipse cx="200" cy="' + (H - 20) + '" rx="260" ry="50" fill="#7A5ACD" opacity=".16"/><ellipse cx="120" cy="' + (H * .55) + '" rx="220" ry="18" fill="#B49AFF" opacity=".05"/>';
+  }
+  return s;
+}
+const MAPICON = {
+  fight: '<svg viewBox="0 0 32 32" aria-hidden="true"><g stroke-linecap="round" fill="none"><path d="M6 5 L22 21" stroke="#F2F6FB" stroke-width="3.2"/><path d="M26 5 L10 21" stroke="#C6D2E4" stroke-width="3.2"/><path d="M4 18 L12 26 M28 18 L20 26" stroke="#E8BE52" stroke-width="3"/><path d="M3 29 L8 24 M29 29 L24 24" stroke="#8A5A28" stroke-width="3"/></g></svg>',
+  elite: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M9 11 Q2 9 3 2 Q8 4 12 9Z M23 11 Q30 9 29 2 Q24 4 20 9Z" fill="#E8D8A8"/><path d="M8 14 Q8 6 16 6 Q24 6 24 14 L24 20 Q24 26 16 28 Q8 26 8 20Z" fill="#C9B8E8" stroke="#3A2A5A" stroke-width="1.4"/><path d="M11 15 L15 17.5 L11 19Z M21 15 L17 17.5 L21 19Z" fill="#FF4A5E"/><path d="M13 23 L19 23 M14 26 L18 26 M16 20 L16 22" stroke="#3A2A5A" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  rest: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 26 L27 21 M5 21 L27 26" stroke="#8A5A28" stroke-width="3.4" stroke-linecap="round"/><path d="M16 3 Q24 12 21 19 Q19 23 16 23 Q11 23 10 18 Q9 13 13 10 Q13 14 16 14 Q15 8 16 3Z" fill="#FF8A2A"/><path d="M16 12 Q20 17 18 20 Q17 22 15 22 Q12 21 13 17 Q15 18 16 12Z" fill="#FFE27A"/></svg>',
+  shop: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 6 L21 6 L19 10 L13 10Z" fill="#8A6030"/><path d="M9 11 Q4 20 8 26 Q16 30 24 26 Q28 20 23 11Z" fill="#C9A060" stroke="#5A3A18" stroke-width="1.2"/><circle cx="16" cy="19" r="5" fill="#E8BE52" stroke="#8E6A20" stroke-width="1.2"/><path d="M16 16 L16 22 M14 17.5 Q16 16 18 17.5 Q18 19 16 19 Q14 19 14 20.5 Q16 22 18 20.5" stroke="#8E6A20" stroke-width="1.1" fill="none"/></svg>',
+  treasure: '<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="15" width="24" height="12" rx="1.5" fill="#9A6A32" stroke="#4A2A10" stroke-width="1.2"/><path d="M4 15 Q4 6 16 6 Q28 6 28 15Z" fill="#B8823E" stroke="#4A2A10" stroke-width="1.2"/><path d="M10 7 L10 27 M22 7 L22 27" stroke="#D9D2C4" stroke-width="2"/><rect x="13.5" y="14" width="5" height="6" rx="1" fill="#E8BE52" stroke="#6A4A10"/></svg>',
+  boss1: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 L16 6 M16 6 Q8 8 8 17 L6 24 L26 24 L24 17 Q24 8 16 6Z" fill="#9FD8E8" stroke="#1D4A5A" stroke-width="1.4"/><circle cx="16" cy="27" r="2.6" fill="#E8BE52"/><path d="M12 12 Q12 9 16 9" stroke="#fff" stroke-width="1.4" fill="none" opacity=".6"/></svg>',
+  boss2: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 14 L9 6 L13 12 L16 4 L19 12 L23 6 L27 14Z" fill="#E8BE52" stroke="#6A4A10" stroke-width="1.2"/><path d="' + gearP(16, 21, 9, 7.2, 8) + '" fill="#B8823E" stroke="#4A2A10" stroke-width="1"/><circle cx="16" cy="21" r="3.2" fill="#2A150C"/></svg>',
+  boss3: '<svg viewBox="0 0 32 32" aria-hidden="true"><g transform="translate(16 16) scale(1.35)"><g fill="#EDE6FA" stroke="#3A2A5A" stroke-width="1">' + maskP + '</g>' + maskEyes + '</g><path d="M16 1 L16 4 M8 3 L10 6 M24 3 L22 6" stroke="#B49AFF" stroke-width="1.5" stroke-linecap="round"/></svg>'
+};
+
+/* battle backdrops as data-URI backgrounds (no layout impact) */
+const SCN = {};
+function sceneryBG(act, boss, duel) {
+  const key = (duel ? 'd' : act) + (boss ? 'b' : '');
+  if (SCN[key]) return SCN[key];
+  const R = sceneRng(act * 31 + (boss ? 7 : 1) + (duel ? 50 : 0));
+  let s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" preserveAspectRatio="xMidYMax slice">';
+  if (duel) {
+    s += '<defs><radialGradient id="g" cx=".5" cy="1"><stop offset="0" stop-color="#7A2A3A" stop-opacity=".7"/><stop offset="1" stop-color="#7A2A3A" stop-opacity="0"/></radialGradient></defs><rect width="800" height="400" fill="url(#g)"/>';
+    for (let k = 0; k < 7; k++) s += '<rect x="' + (k * 120 - 10) + '" y="' + (90 + (k % 2) * 30) + '" width="34" height="320" fill="#1A0A12" opacity=".7"/><rect x="' + (k * 120 - 16) + '" y="' + (84 + (k % 2) * 30) + '" width="46" height="12" fill="#2A1220" opacity=".8"/>';
+  } else if (act === 1) {
+    s += '<defs><radialGradient id="g" cx=".5" cy="1"><stop offset="0" stop-color="#2F6A56" stop-opacity="' + (boss ? .5 : .3) + '"/><stop offset="1" stop-color="#2F6A56" stop-opacity="0"/></radialGradient></defs><rect width="800" height="400" fill="url(#g)"/><circle cx="640" cy="70" r="28" fill="#DDF3E6" opacity=".12"/>';
+    for (let k = 0; k < 3; k++) { for (let j = 0; j < 14; j++) { const x = j * 62 + R() * 30 - 20, h = 90 + R() * 80 + k * 24; s += '<path d="' + pineP(x, 410 + k * 12, 60 + R() * 30, h) + '" fill="' + ['#173B35', '#10302C', '#0A2422'][k] + '" opacity="' + (.32 + k * .16) + '"/>'; } s += '<ellipse cx="400" cy="' + (350 + k * 14) + '" rx="460" ry="22" fill="#BEE8DA" opacity=".05"/>'; }
+    if (boss) s += '<path d="M280 400 L280 150 Q280 60 400 50 Q520 60 520 150 L520 400 L488 400 L488 160 Q488 96 400 90 Q312 96 312 160 L312 400Z" fill="#050F12" opacity=".55"/>';
+  } else if (act === 2) {
+    s += '<defs><radialGradient id="g" cx=".5" cy="1"><stop offset="0" stop-color="#C26A2A" stop-opacity="' + (boss ? .5 : .3) + '"/><stop offset="1" stop-color="#C26A2A" stop-opacity="0"/></radialGradient></defs><rect width="800" height="400" fill="url(#g)"/>';
+    for (let j = 0; j < 12; j++) { const x = j * 70 + R() * 20, h = 80 + R() * 110; s += '<rect x="' + f1(x) + '" y="' + f1(330 - h) + '" width="' + f1(18 + R() * 14) + '" height="' + f1(h + 90) + '" fill="#120805" opacity=".55"/>'; }
+    for (let j = 0; j < 5; j++) { const x = j * 170 + 20 + R() * 40; s += '<g opacity=".5"><path d="M' + x + ' 400 L' + x + ' 300 L' + (x + 100) + ' 300 L' + (x + 100) + ' 400Z" fill="#1B0E09"/><path d="M' + (x - 8) + ' 300 L' + (x + 50) + ' 262 L' + (x + 108) + ' 300Z" fill="' + (j % 2 ? '#9A3A24' : '#C28A3A') + '" opacity=".7"/><circle cx="' + (x + 50) + ' " cy="318" r="26" fill="#FFB45A" opacity=".18"/></g>'; }
+    s += '<g transform="translate(' + (boss ? 400 : 700) + ' 130)" opacity=".22"><path d="' + gearP(0, 0, boss ? 120 : 70, boss ? 100 : 58, 14) + '" fill="#9A6A38"/><circle r="' + (boss ? 50 : 28) + '" fill="#1B0E09"/></g>';
+  } else {
+    s += '<defs><radialGradient id="g" cx=".5" cy="1"><stop offset="0" stop-color="#6A4ACD" stop-opacity="' + (boss ? .55 : .32) + '"/><stop offset="1" stop-color="#6A4ACD" stop-opacity="0"/></radialGradient><linearGradient id="c" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#2A1A5A"/><stop offset="1" stop-color="#8FD4FF"/></linearGradient></defs><rect width="800" height="400" fill="url(#g)"/>';
+    for (let k = 0; k < 50; k++) s += '<circle cx="' + f1(R() * 800) + '" cy="' + f1(R() * 300) + '" r="' + f1(.5 + R()) + '" fill="#E8E0FF" opacity="' + f1(.2 + R() * .5) + '"/>';
+    for (let k = 0; k < 7; k++) s += '<path d="' + shardP(k * 125 + R() * 40, 410, 30 + R() * 22, 110 + R() * 150) + '" fill="url(#c)" opacity="' + f1(.3 + R() * .2) + '"/>';
+    for (let k = 0; k < 6; k++) s += '<g transform="translate(' + f1(60 + R() * 680) + ' ' + f1(40 + R() * 150) + ') scale(' + f1(1 + R() * 1.6) + ')" opacity="' + f1(.13 + R() * .13) + '"><g fill="#CFC4F0">' + maskP + '</g>' + maskEyes + '</g>';
+    if (boss) s += '<ellipse cx="400" cy="120" rx="150" ry="70" fill="none" stroke="#B49AFF" stroke-width="2" opacity=".3"/><ellipse cx="400" cy="120" rx="80" ry="34" fill="#05020C" opacity=".6"/>';
+  }
+  s += '</svg>';
+  return (SCN[key] = "url('data:image/svg+xml;utf8," + encodeURIComponent(s).replace(/'/g, '%27') + "')");
+}
+
+/* ----- the map ----- */
+const NODE_T = ['fight', 'elite', 'rest', 'shop', 'treasure'];
+function mapParticles(act) {
+  const R = sceneRng(act * 13 + 3); let s = '';
+  const n = act === 2 ? 22 : 16;
+  for (let k = 0; k < n; k++) {
+    s += '<i class="mp mp' + act + '" style="left:' + f1(R() * 100) + '%;top:' + f1(8 + R() * 90) + '%;--d:' + (-Math.floor(R() * 12)) + 's;--p:' + [6, 8, 12][k % 3] + 's;--s:' + f1(2 + R() * 3) + 'px"></i>';
+  }
+  return s;
+}
+function mapEdge(x1, y1, x2, y2, seed) {
+  const sg = sceneRng(seed * 7 + 1), o = (sg() - .5) * 24;
+  return 'M' + x1 + ' ' + y1 + ' C ' + f1(x1 + o) + ' ' + f1(y1 + (y2 - y1) * .35) + ', ' + f1(x2 - o) + ' ' + f1(y1 + (y2 - y1) * .65) + ', ' + x2 + ' ' + y2;
+}
+function mapHTML(V) {
+  const H = (ROWS + 1) * 74 + 106;
+  const y = r => H - 104 - r * 74;
+  const x = l => (l + 0.5) * 100;
+  const isAv = k => V.av.includes(k);
+  const myVote = V.P[V.me].vt, oVote = V.n > 1 ? V.P[1 - V.me].vt : null;
+  const rows = V.map, Act = ACTS[V.act - 1];
+  const cur = V.pos ? { r: V.pos.r, l: V.pos.l } : null;
+  const ex = 200, ey = H - 26;
+  let edges = '', hot = '';
+  const edge = (a, b, lit, hotE, seed) => {
+    const d = mapEdge(a[0], a[1], b[0], b[1], seed);
+    edges += '<path d="' + d + '" class="me-shadow"/>';
+    if (lit) edges += '<path d="' + d + '" class="me-lit"/>';
+    else if (hotE) edges += '<path d="' + d + '" class="me-hot"/>';
+    else edges += '<path d="' + d + '" class="me-dash"/>';
+  };
+  for (let r = 0; r < ROWS - 1; r++) for (let l = 0; l < LANES; l++) for (const n of rows[r][l][1]) {
+    const lit = rows[r][l][2] && rows[r + 1][n][2];
+    const hotE = cur && cur.r === r && cur.l === l && isAv((r + 1) + '-' + n);
+    edge([x(l), y(r)], [x(n), y(r + 1)], lit, hotE, r * 10 + l + n * 3);
+  }
+  for (let l = 0; l < LANES; l++) {
+    const lit = rows[ROWS - 1][l][2] && V.pos && V.pos.r >= ROWS;
+    const hotE = cur && cur.r === ROWS - 1 && cur.l === l && isAv(ROWS + '-0');
+    edge([x(l), y(ROWS - 1)], [200, y(ROWS)], lit, hotE, 90 + l);
+  }
+  if (!cur) for (let l = 0; l < LANES; l++) edge([ex, ey], [x(l), y(0)], false, true, 120 + l);
+  else for (let l = 0; l < LANES; l++) if (rows[0][l][2]) edge([ex, ey], [x(l), y(0)], true, false, 120 + l);
+  const marks = k => (myVote === k ? '<span class="vmark me">You</span>' : '') + (oVote === k ? '<span class="vmark">' + esc(vName(V, 1 - V.me)) + '</span>' : '');
+  let nodes = '';
+  for (let r = 0; r < ROWS; r++) for (let l = 0; l < LANES; l++) {
+    const nd = rows[r][l], k = r + '-' + l, curN = cur && cur.r === r && cur.l === l, a = isAv(k);
+    nodes += '<button type="button" class="node t-' + nd[0] + (a ? ' avail' : '') + (nd[2] ? ' done' : '') + (curN ? ' cur' : '') + (myVote === k ? ' voted' : '') + '" style="left:' + (x(l) / 4) + '%;top:' + (y(r) / H * 100) + '%" data-act="node" data-arg="' + k + '"' + (a ? '' : ' aria-disabled="true"') + ' aria-label="Floor ' + (r + 1) + ': ' + NODE_LABEL[nd[0]] + (a ? ', available' : nd[2] ? ', visited' : '') + '">' + MAPICON[nd[0]] + marks(k) + '</button>';
+  }
+  const bk = ROWS + '-0';
+  nodes += '<button type="button" class="node t-boss bossnode' + (isAv(bk) ? ' avail' : '') + (myVote === bk ? ' voted' : '') + '" style="left:50%;top:' + (y(ROWS) / H * 100) + '%" data-act="node" data-arg="' + bk + '"' + (isAv(bk) ? '' : ' aria-disabled="true"') + ' aria-label="Floor ' + (ROWS + 1) + ': ' + esc(EN[Act.boss].n) + '">' + MAPICON['boss' + V.act] + marks(bk) + '</button>';
+  /* heroes walking the path */
+  const tpos = (pr) => pr ? { l: x(pr.l) / 4, t: y(pr.r) / H * 100 } : { l: 50, t: ey / H * 100 };
+  const here = V.pos ? (V.pos.r >= ROWS ? { l: 50, t: y(ROWS) / H * 100 } : tpos(V.pos)) : tpos(null);
+  const tkey = V.act + ':' + (V.pos ? V.pos.r + '-' + V.pos.l : 'start');
+  if (!V.pos) CL.tokAt = null;
+  let from = here;
+  const pt = CL.tokAt;
+  const moving = pt && pt.act === V.act && pt.key !== tkey;
+  if (moving) from = pt.pos;
+  CL.tokNext = { act: V.act, key: tkey, pos: here };
+  const toks = V.P.map((q, i) => '<div class="maptok' + (i === V.me ? '' : ' other') + '" data-to="' + f1(here.l) + ',' + f1(here.t) + '" style="left:' + f1(from.l) + '%;top:' + f1(from.t) + '%;' + (V.n > 1 ? 'margin-left:' + (i ? 12 : -12) + 'px;' : '') + '">' + portraitHTML(q.h, 'tk') + '</div>').join('');
+  const fogRow = cur ? Math.min(ROWS, cur.r + 3) : 3;
+  const fogH = Math.max(0, Math.min(100, (y(fogRow) + 20) / H * 100));
+  const coopNote = V.n > 1 ? '<p class="muted" style="margin:0">Both players pick the same node to move on. ' + (myVote && oVote !== myVote ? 'Waiting for your partner…' : oVote && oVote !== myVote ? 'Your partner chose a node: tap it to agree.' : '') + '</p>' : '';
+  const ph = '-' + f1((Date.now() / 1000) % 24) + 's';
+  return '<section class="mapcard act' + V.act + '" aria-label="Act ' + ROMAN[V.act - 1] + ' map"><div class="row"><div style="display:flex;flex-direction:column;gap:2px"><span class="actbanner">Act ' + ROMAN[V.act - 1] + ' of III</span><h2>' + esc(Act.n) + '</h2></div><span class="muted">Climb from the bottom. Glowing nodes are your next choices. Boss: ' + esc(EN[Act.boss].n) + '.</span></div>' + coopNote +
+    '<div class="mapwrap" style="aspect-ratio:400 / ' + H + ';--ph:' + ph + '">' +
+    '<svg class="mapart" viewBox="0 0 400 ' + H + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + actScene(V.act, H) + '</svg>' +
+    '<div class="mapfx" aria-hidden="true">' + mapParticles(V.act) + '</div>' +
+    '<svg class="edges" viewBox="0 0 400 ' + H + '" aria-hidden="true">' + edges + '<g class="mgate" transform="translate(' + ex + ' ' + ey + ')"><circle r="7" fill="#1A1424" stroke="#E8BE52" stroke-width="1.5"/></g></svg>' +
+    '<div class="mapfog" style="height:' + f1(fogH) + '%" aria-hidden="true"></div>' + nodes + toks + '</div>' +
+    '<div class="legend">' + ['fight', 'elite', 'rest', 'shop', 'treasure'].map(k => '<span>' + MAPICON[k] + NODE_LABEL[k] + '</span>').join('') + '<span>' + MAPICON['boss' + V.act] + 'Boss</span></div></section>';
+}
+/* after the map is in the DOM: slide the hero token along to the new node */
+function mapAfterPaint() {
+  const nx = CL.tokNext; if (!nx) return;
+  const toks = document.querySelectorAll('.maptok');
+  if (!toks.length) return;
+  const moving = CL.tokAt && CL.tokAt.act === nx.act && CL.tokAt.key !== nx.key;
+  if (moving && !REDUCE) {
+    void document.body.offsetWidth;
+    toks.forEach(t => { const [l, tp] = t.dataset.to.split(','); t.style.transition = 'left 1s ease-in-out, top 1s ease-in-out'; t.style.left = l + '%'; t.style.top = tp + '%'; t.classList.add('walk'); });
+    SND.ui('step'); SND.ui('step', 0.54);
+    setTimeout(() => toks.forEach(t => t.classList.remove('walk')), 1050);
+  }
+  CL.tokAt = nx; CL.tokNext = null;
+}
+
+/* ----- chest + victory ----- */
+const CHEST_TIER = {
+  wood: { body: '#8A5426', body2: '#6B3F1C', band: '#CFC8B8', lock: '#E8BE52', glow: '#FFD772', lid: '#A5682F' },
+  iron: { body: '#454E6A', body2: '#303650', band: '#A8C0DE', lock: '#8FD4FF', glow: '#9FDCFF', lid: '#5A6685' },
+  gold: { body: '#B8892A', body2: '#8A6418', band: '#F6DC86', lock: '#9A5AF0', glow: '#FFE9A0', lid: '#D2A23A' }
+};
+function chestSVG(tier, relic) {
+  const c = CHEST_TIER[tier] || CHEST_TIER.wood, R = sceneRng(tier.length * 11 + 2);
+  let coins = '', sparks = '', rays = '';
+  for (let k = 0; k < 11; k++) { const a = -Math.PI / 2 + (k / 10 - .5) * 2.1, d = 70 + R() * 60; coins += '<g transform="translate(100 88)"><g class="ch-coin" style="--dx:' + f1(Math.cos(a) * d) + 'px;--dy:' + f1(Math.sin(a) * d - 18) + 'px;--dl:' + f1(.52 + R() * .2) + 's"><circle r="5.2" fill="#E8BE52" stroke="#8E6A20" stroke-width="1.2"/><circle r="2.6" fill="none" stroke="#B8902A" stroke-width=".9"/></g></g>'; }
+  for (let k = 0; k < 14; k++) { const a = R() * Math.PI * 2, d = 40 + R() * 70; sparks += '<g transform="translate(100 84)"><path class="ch-spark" d="M0-7 L1.8-1.8 L7 0 L1.8 1.8 L0 7 L-1.8 1.8 L-7 0 L-1.8-1.8Z" fill="' + (k % 3 ? c.glow : '#FFFFFF') + '" style="--dx:' + f1(Math.cos(a) * d) + 'px;--dy:' + f1(Math.sin(a) * d * .8 - 28) + 'px;--dl:' + f1(.55 + R() * .5) + 's;--sc:' + f1(.5 + R() * .9) + '"/></g>'; }
+  for (let k = 0; k < 10; k++) { rays += '<path d="M0 0 L' + f1(Math.cos(k / 10 * 6.283 - .08) * 150) + ' ' + f1(Math.sin(k / 10 * 6.283 - .08) * 150) + ' L' + f1(Math.cos(k / 10 * 6.283 + .08) * 150) + ' ' + f1(Math.sin(k / 10 * 6.283 + .08) * 150) + 'Z" fill="url(#chg)"/>'; }
+  const gem = relic ? '<g transform="translate(100 82)"><g class="ch-relic"><g class="ch-bob"><circle r="22" fill="url(#chg)"/><path d="M0 -12 L9 -3 L5 11 L-5 11 L-9 -3Z" fill="' + c.lock + '" stroke="#fff" stroke-width="1.2" stroke-opacity=".8"/><path d="M-9 -3 L9 -3 M0 -12 L-3 -3 L0 11 L3 -3Z" stroke="#fff" stroke-opacity=".55" stroke-width=".9" fill="none"/></g></g></g>' : '';
+  return '<svg viewBox="-30 -60 260 230" class="chestsvg" aria-hidden="true"><defs><radialGradient id="chg"><stop offset="0" stop-color="' + c.glow + '" stop-opacity=".95"/><stop offset="1" stop-color="' + c.glow + '" stop-opacity="0"/></radialGradient></defs>' +
+    '<ellipse cx="100" cy="153" rx="78" ry="9" fill="#000" opacity=".45"/>' +
+    '<g transform="translate(100 88)"><g class="ch-spin"><g class="ch-rays">' + rays + '</g></g></g>' +
+    '<g class="ch-all">' +
+    '<g class="ch-glow"><ellipse cx="100" cy="90" rx="78" ry="26" fill="url(#chg)"/></g>' +
+    '<rect x="42" y="86" width="116" height="16" rx="3" fill="#150B06"/>' +
+    '<g class="ch-loot"><ellipse cx="100" cy="92" rx="54" ry="9" fill="#C9962A"/><circle cx="72" cy="86" r="8" fill="#E8BE52" stroke="#8E6A20" stroke-width="1.2"/><circle cx="92" cy="82" r="8" fill="#F0CE6A" stroke="#8E6A20" stroke-width="1.2"/><circle cx="114" cy="84" r="8" fill="#E8BE52" stroke="#8E6A20" stroke-width="1.2"/><circle cx="132" cy="87" r="7" fill="#F0CE6A" stroke="#8E6A20" stroke-width="1.2"/><path d="M100 70 L108 80 L104 92 L96 92 L92 80Z" fill="' + c.lock + '" stroke="#fff" stroke-opacity=".6"/></g>' +
+    '<rect x="40" y="94" width="120" height="58" rx="5" fill="' + c.body + '" stroke="#2A150A" stroke-width="2"/>' +
+    '<path d="M60 94 L60 152 M80 94 L80 152 M100 94 L100 152 M120 94 L120 152 M140 94 L140 152" stroke="' + c.body2 + '" stroke-width="1.6"/>' +
+    '<rect x="40" y="94" width="120" height="8" fill="' + c.body2 + '" opacity=".7"/>' +
+    '<rect x="48" y="94" width="10" height="58" fill="' + c.band + '" stroke="#2A150A" stroke-width="1.2"/><rect x="142" y="94" width="10" height="58" fill="' + c.band + '" stroke="#2A150A" stroke-width="1.2"/>' +
+    '<rect x="40" y="143" width="120" height="9" rx="3" fill="' + c.band + '" opacity=".75" stroke="#2A150A" stroke-width="1.2"/>' +
+    '<rect x="91" y="100" width="18" height="22" rx="4" fill="' + c.lock + '" stroke="#2A150A" stroke-width="1.6" class="ch-lock"/><circle cx="100" cy="108" r="3" fill="#2A150A"/><rect x="98.6" y="108" width="2.8" height="8" rx="1" fill="#2A150A"/>' +
+    '<g class="ch-lid"><path d="M40 94 Q40 60 100 58 Q160 60 160 94Z" fill="' + c.lid + '" stroke="#2A150A" stroke-width="2"/><path d="M60 94 Q60 66 78 62 M100 94 L100 58 M140 94 Q140 66 122 62" stroke="' + c.body2 + '" stroke-width="1.6" fill="none"/><rect x="48" y="62" width="10" height="32" fill="' + c.band + '" stroke="#2A150A" stroke-width="1.2" transform="skewX(-3)"/><rect x="142" y="62" width="10" height="32" fill="' + c.band + '" stroke="#2A150A" stroke-width="1.2" transform="skewX(3)"/><path d="M62 70 Q80 60 100 60" stroke="#fff" stroke-opacity=".3" stroke-width="3" fill="none" stroke-linecap="round"/></g>' +
+    '</g>' + coins + sparks + gem + '</svg>';
+}
+function heroCheer(V) {
+  return '<div class="vheroes">' + V.P.map(q => portraitHTML(q.h, 'vp', true, undefined, 'cheer')).join('') + '</div>';
+}
+function confettiHTML(loop) {
+  const R = sceneRng(99), cols = ['#E8BE52', '#5FE6E2', '#E04A5E', '#B49AFF', '#F6EEE2'];
+  let s = '';
+  for (let k = 0; k < 26; k++) s += '<i style="left:' + f1(R() * 100) + '%;--c:' + cols[k % 5] + ';--dl:' + f1(.35 + R() * .9) + 's;--dr:' + f1(1.6 + R() * 1.2) + 's;--rx:' + Math.round(R() * 720 - 360) + 'deg;--sw:' + Math.round(R() * 60 - 30) + 'px"></i>';
+  return '<div class="confetti' + (loop ? ' loop' : '') + '" aria-hidden="true">' + s + '</div>';
+}
+function chestStage(V, tier, relic, key, title) {
+  const c = CL.chest && CL.chest.key === key ? CL.chest : null;
+  const ce = c ? (REDUCE ? 9 : Math.min(9, (performance.now() - c.t) / 1000)) : 0;
+  CL.curChest = { key, relic: !!relic };
+  const ph = '-' + f1((Date.now() / 1000) % 12) + 's';
+  const inner = chestSVG(tier, relic);
+  return { open: !!c, ce, html: '<div class="vstage tier-' + tier + (c ? ' opened' : '') + '" style="--ce:' + f1(ce) + 's;--ph:' + ph + '">' + heroCheer(V) +
+    '<div class="vchest">' + (c ? '<div class="chestbtn open">' + inner + '</div>' : '<button type="button" class="chestbtn" data-act="chest" aria-label="Open the ' + esc(title || 'chest') + '">' + inner + '<span class="vhint">Tap to open</span></button>') + '</div>' + (c ? confettiHTML() : '') + '</div>' };
+}
+function chestSfx(relic) {
+  SND.ui('lid', 0.1); SND.ui('thud', 0.65); SND.ui('burst', 0.55); SND.ui('coin', 0.75); if (relic) SND.ui('relic', 1.15);
+}
+
+/* ----- audio: map game state onto music scenes and event sounds ----- */
+function sndSync(V, prev) {
+  const scr = V ? V.scr : 'title';
+  const was = CL.sndScr; CL.sndScr = scr;
+  if (!V || scr === 'lobby') { SND.scene('menu'); return; }
+  const ak = 'a' + Math.min(3, Math.max(1, V.act || 1));
+  let key = ak, mode = 'calm';
+  if (scr === 'combat' && V.cb) { mode = V.cb.duel || V.cb.k === 'boss' ? 'boss' : 'fight'; if (V.cb.duel) key = 'a3'; }
+  else if (scr === 'duelintro' || scr === 'duelend') key = 'a3';
+  else if (scr === 'victory') key = 'menu';
+  else if (scr === 'defeat') key = 'none';
+  SND.scene(key, mode);
+  if (was && was !== scr) {
+    if (scr === 'reward') SND.stinger('win');
+    else if (scr === 'actclear' || scr === 'duelend') SND.stinger('clear');
+    else if (scr === 'victory') SND.stinger('final');
+    else if (scr === 'defeat') SND.stinger('defeat');
+    else if (scr === 'treasure') SND.ui('thud');
+  }
+  if (!V.cb || scr !== 'combat') return;
+  const c = V.cb, me = V.P[V.me].h;
+  if (CL.sndT !== undefined && c.t !== CL.sndT && !c.duel) SND.ui('turn');
+  CL.sndT = c.t;
+  c.en.forEach(e => {
+    if (e.ac > prev) SND.enemy(e.key, 'atk');
+    if (e.ds > prev) SND.enemy(e.key, 'die', 0.12);
+    const pk = V.act + ':' + V.floor + ':' + e.idx;
+    CL.sndP2 = CL.sndP2 || {};
+    if (e.p2 && !CL.sndP2[pk]) { CL.sndP2[pk] = 1; if (CL.seen && prev > 0) SND.ui('phase'); }
+  });
+  if (c.toll && !CL.sndToll) SND.ui('toll');
+  CL.sndToll = c.toll;
+  CL.sndSn = CL.sndSn || {};
+  c.S.forEach(s => {
+    const h = V.P[s.pi].h;
+    if (s.an && s.an[0] > prev) {
+      const k = s.an[1];
+      if (k === 'lunge' || k === 'slam' || k === 'smash') { SND.hero(h, 'swing'); CL.sndHero = h; }
+      else if (k === 'guard') SND.hero(h, 'guard'); else if (k === 'buff') SND.hero(h, 'buff'); else if (k === 'hurt') SND.hero(h, 'hurt', 0.12);
+    }
+    if (s.fw && s.fw[0] > prev && s.fw[1] > 0) SND.hero(h, 'foot');
+    const was2 = CL.sndSn[s.pi]; CL.sndSn[s.pi] = s.sn || '';
+    if (s.sn && was2 !== undefined && s.sn !== was2 && h === 'brute') SND.hero(h, 'stance:' + s.sn);
+  });
+  let n = 0;
+  (V.fx || []).forEach(f => {
+    if (f.s <= prev || !f.x || f.t[0] !== 'e') return;
+    if (f.x[0] === '−') { SND.hero(CL.sndHero || me, 'hit', 0.08 + 0.09 * n); SND.enemy(((c.en.find(e => 'e' + e.idx === f.t) || {}).key) || 'moth', 'hit', 0.1 + 0.09 * n); n++; }
+    else if (f.x === 'Blocked') { SND.hero(CL.sndHero || me, 'guard', 0.06 + 0.09 * n); n++; }
+  });
+}
+
 function toast(msg) {
   let t = document.getElementById('toast');
   if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
@@ -1127,7 +1969,7 @@ function topbar(V) {
     '<span class="stat" title="Act and floor">' + ICON.floor + 'Act ' + ROMAN[V.act - 1] + ' · Floor ' + V.floor + '/' + (ROWS + 1) + '</span>' + partner +
     '<span class="relics">' + me.rl.map(r => '<span class="chip" title="' + esc(RELICS[r].d) + '">' + esc(RELICS[r].n) + '</span>').join('') + '</span>' +
     '<span class="spacer"></span>' + (V.code ? '<span class="chip code" title="Room code">Room ' + esc(V.code.toUpperCase()) + '</span>' : '') +
-    '<button type="button" class="btn" data-act="deck">Deck (' + V.deck.length + ')</button></header>';
+    '<button type="button" class="btn snd" data-act="snd" aria-label="Sound settings">' + SND.SPK + ' Sound</button><button type="button" class="btn" data-act="deck">Deck (' + V.deck.length + ')</button></header>';
 }
 function bigShield(n, pop, id) {
   return '<span class="bigshield' + (n ? '' : ' empty') + (n && pop ? ' pop' : '') + '"' + (id ? ' id="' + id + '"' : '') + ' aria-hidden="true">' +
@@ -1298,7 +2140,7 @@ function combatHTML(V, prev) {
   const selCard = CL.sel != null ? cb.hand.find(h => h[0] === CL.sel) : null;
   const actStage = ACTS[V.act - 1].stage;
   return '<section class="battle" aria-label="Battle">' +
-    '<div class="stage' + (duel ? ' duel' : '') + '" style="background:radial-gradient(ellipse at 50% 100%, ' + (duel ? '#3A1420' : actStage) + ' 0%, #15121A 70%)">' + left +
+    '<div class="stage' + (duel ? ' duel' : '') + '" style="background:' + sceneryBG(V.act, cb.k === 'boss', !!duel) + ' center bottom / cover no-repeat, radial-gradient(ellipse at 50% 100%, ' + (duel ? '#3A1420' : actStage) + ' 0%, #15121A 70%)">' + left +
     '<div class="enemies">' + right + '</div></div>' +
     '<div class="lastlog" aria-live="polite">' + esc(cb.logs[0] || '') + '</div>' +
     '<div class="dock"><div class="controls"><div class="energy" title="Energy">' + s.energy + '<small>energy</small></div>' +
@@ -1307,35 +2149,6 @@ function combatHTML(V, prev) {
     '<div class="hint" aria-live="polite">' + (selCard ? 'Choose a target for ' + esc(CARDS[selCard[1]].n) + ' (tap the card again to cancel)' : '') + '</div>' +
     '<div class="hand" aria-label="Your hand">' + (hand || '<span class="muted">' + (cb.busy ? 'Resolving…' : waiting ? 'Waiting for your partner to end their turn…' : 'Your hand is empty.') + '</span>') + '</div></div>' +
     '<details class="log"><summary>Battle log</summary><ol>' + cb.logs.map(l => '<li>' + esc(l) + '</li>').join('') + '</ol></details></section>';
-}
-function mapHTML(V) {
-  const H = (ROWS + 1) * 74 + 40;
-  const y = r => H - 38 - r * 74;
-  const x = l => (l + 0.5) * 100;
-  const isAv = k => V.av.includes(k);
-  const myVote = V.P[V.me].vt, oVote = V.n > 1 ? V.P[1 - V.me].vt : null;
-  const rows = V.map;
-  let edges = '';
-  for (let r = 0; r < ROWS - 1; r++) for (let l = 0; l < LANES; l++) for (const n of rows[r][l][1]) {
-    const lit = rows[r][l][2] && rows[r + 1][n][2];
-    edges += '<line x1="' + x(l) + '" y1="' + y(r) + '" x2="' + x(n) + '" y2="' + y(r + 1) + '" stroke="' + (lit ? '#5FE6E2' : '#5A5066') + '" stroke-width="2" stroke-dasharray="' + (lit ? '0' : '4 5') + '" vector-effect="non-scaling-stroke"/>';
-  }
-  for (let l = 0; l < LANES; l++) edges += '<line x1="' + x(l) + '" y1="' + y(ROWS - 1) + '" x2="200" y2="' + y(ROWS) + '" stroke="#5A5066" stroke-width="2" stroke-dasharray="4 5" vector-effect="non-scaling-stroke"/>';
-  const marks = k => (myVote === k ? '<span class="vmark me">You</span>' : '') + (oVote === k ? '<span class="vmark">' + esc(vName(V, 1 - V.me)) + '</span>' : '');
-  let nodes = '';
-  for (let r = 0; r < ROWS; r++) for (let l = 0; l < LANES; l++) {
-    const nd = rows[r][l], k = r + '-' + l;
-    const cur = V.pos && V.pos.r === r && V.pos.l === l;
-    const a = isAv(k);
-    nodes += '<button type="button" class="node' + (a ? ' avail' : '') + (nd[2] ? ' done' : '') + (cur ? ' cur' : '') + (myVote === k ? ' voted' : '') + '" style="left:' + (x(l) / 4) + '%;top:' + (y(r) / H * 100) + '%" data-act="node" data-arg="' + k + '"' + (a ? '' : ' aria-disabled="true"') + ' aria-label="Floor ' + (r + 1) + ': ' + NODE_LABEL[nd[0]] + (a ? ', available' : '') + '">' + ICON[nd[0]] + marks(k) + '</button>';
-  }
-  const bk = ROWS + '-0';
-  const Act = ACTS[V.act - 1];
-  nodes += '<button type="button" class="node bossnode' + (isAv(bk) ? ' avail' : '') + (myVote === bk ? ' voted' : '') + '" style="left:50%;top:' + (y(ROWS) / H * 100) + '%" data-act="node" data-arg="' + bk + '" aria-label="Floor ' + (ROWS + 1) + ': ' + esc(EN[Act.boss].n) + '">' + ICON.boss + marks(bk) + '</button>';
-  const coopNote = V.n > 1 ? '<p class="muted" style="margin:0">Both players pick the same node to move on. ' + (myVote && oVote !== myVote ? 'Waiting for your partner…' : oVote && oVote !== myVote ? 'Your partner chose a node: tap it to agree.' : '') + '</p>' : '';
-  return '<section class="mapcard" aria-label="Act ' + ROMAN[V.act - 1] + ' map"><div class="row"><div style="display:flex;flex-direction:column;gap:2px"><span class="actbanner">Act ' + ROMAN[V.act - 1] + ' of III</span><h2>' + esc(Act.n) + '</h2></div><span class="muted">Climb from the bottom. Glowing nodes are your next choices. Boss: ' + esc(EN[Act.boss].n) + '.</span></div>' + coopNote +
-    '<div class="mapwrap" style="height:' + H + 'px"><svg class="edges" viewBox="0 0 400 ' + H + '" preserveAspectRatio="none" aria-hidden="true">' + edges + '</svg>' + nodes + '</div>' +
-    '<div class="legend">' + ['fight', 'elite', 'rest', 'shop', 'treasure', 'boss'].map(k => '<span>' + ICON[k] + NODE_LABEL[k] + '</span>').join('') + '</div></section>';
 }
 function waitNote(V) {
   if (V.n < 2) return '';
@@ -1349,18 +2162,20 @@ function doneBtn(V, label) {
   return me.dn ? '<button type="button" class="btn" disabled>Waiting…</button>' : '<button type="button" class="btn primary" data-act="done">' + label + '</button>';
 }
 function rewardHTML(V) {
-  const rw = V.rw;
-  return '<section class="panel"><h2>Victory</h2><p class="muted">The path ahead is clear. You catch your breath (+2 HP).</p>' +
-    '<div class="relicrow"><span><b>+' + rw.gold + ' gold</b></span>' + (rw.relic ? '<span>New relic: <b>' + esc(RELICS[rw.relic].n) + '</b> · ' + esc(RELICS[rw.relic].d) + '</span>' : '') + '</div>' +
+  const rw = V.rw, st = chestStage(V, rw.relic ? 'iron' : 'wood', rw.relic, 'r:' + V.act + ':' + V.floor, 'chest');
+  const details = '<div class="relicrow"><span><b>+' + rw.gold + ' gold</b></span>' + (rw.relic ? '<span>New relic: <b>' + esc(RELICS[rw.relic].n) + '</b> · ' + esc(RELICS[rw.relic].d) + '</span>' : '') + '</div>' +
     (rw.taken ? '<p>Card added to your deck.</p>' : '<h3>Choose a card to add</h3><div class="cards">' + rw.cards.map((id, i) => cardHTML(id, 'reward', i)).join('') + '</div>') +
-    '<div class="row">' + doneBtn(V, rw.taken ? 'Continue' : 'Skip card') + '</div>' + waitNote(V) + '</section>';
+    '<div class="row">' + doneBtn(V, rw.taken ? 'Continue' : 'Skip card') + '</div>' + waitNote(V);
+  return '<section class="panel victory"><span class="actbanner">Victory</span><h2>The path ahead is clear</h2>' + st.html +
+    (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's"><p class="muted">You catch your breath (+2 HP).</p>' + details + '</div>' : '<p class="muted center">Open the chest to claim your reward.</p>') + '</section>';
 }
 function actclearHTML(V) {
-  const a = V.ac;
-  return '<section class="panel"><span class="actbanner">Act ' + ROMAN[a.act - 1] + ' cleared</span><h2>' + esc(EN[ACTS[a.act - 1].boss].n) + ' is defeated</h2>' +
-    '<p>You rest before the climb. <b>+' + a.healed + ' HP</b>, <b>+' + a.gold + ' gold</b>' + (a.relic ? ', and a relic: <b>' + esc(RELICS[a.relic].n) + '</b> · ' + esc(RELICS[a.relic].d) : '') + '.</p>' +
+  const a = V.ac, st = chestStage(V, 'gold', a.relic, 'c:' + a.act, 'boss chest');
+  const details = '<p>You rest before the climb. <b>+' + a.healed + ' HP</b>, <b>+' + a.gold + ' gold</b>' + (a.relic ? ', and a relic: <b>' + esc(RELICS[a.relic].n) + '</b> · ' + esc(RELICS[a.relic].d) : '') + '.</p>' +
     (a.taken ? '<p>Card added to your deck.</p>' : '<h3>Choose a boss reward card</h3><div class="cards">' + a.cards.map((id, i) => cardHTML(id, 'bossreward', i)).join('') + '</div>') +
-    '<div class="row">' + doneBtn(V, 'Continue to Act ' + ROMAN[a.act] + ': ' + esc(ACTS[a.act].n)) + '</div>' + waitNote(V) + '</section>';
+    '<div class="row">' + doneBtn(V, 'Continue to Act ' + ROMAN[a.act] + ': ' + esc(ACTS[a.act].n)) + '</div>' + waitNote(V);
+  return '<section class="panel victory"><span class="actbanner">Act ' + ROMAN[a.act - 1] + ' cleared</span><h2>' + esc(EN[ACTS[a.act - 1].boss].n) + ' is defeated</h2>' + st.html +
+    (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's">' + details + '</div>' : '<p class="muted center">The boss’s hoard awaits. Open the chest.</p>') + '</section>';
 }
 function restHTML(V) {
   const me = V.P[V.me];
@@ -1377,10 +2192,11 @@ function shopHTML(V) {
     doneBtn(V, 'Leave') + '</div>' + waitNote(V) + '</section>';
 }
 function treasureHTML(V) {
-  const t = V.tr;
-  return '<section class="panel"><h2>Treasure</h2><p>You pry open a dusty chest: <b>+' + t.gold + ' gold</b>.</p>' +
+  const t = V.tr, st = chestStage(V, 'wood', t.relic, 't:' + V.act + ':' + V.floor, 'treasure chest');
+  const details = '<p>You pry open a dusty chest: <b>+' + t.gold + ' gold</b>.</p>' +
     (t.relic ? '<p>Inside lies a relic: <b>' + esc(RELICS[t.relic].n) + '</b> · ' + esc(RELICS[t.relic].d) + '</p>' : '') +
-    '<div class="row">' + doneBtn(V, 'Continue') + '</div>' + waitNote(V) + '</section>';
+    '<div class="row">' + doneBtn(V, 'Continue') + '</div>' + waitNote(V);
+  return '<section class="panel victory"><h2>Treasure</h2>' + st.html + (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's">' + details + '</div>' : '<p class="muted center">A dusty chest sits in the dark. Open it.</p>') + '</section>';
 }
 function duelIntroHTML(V) {
   return '<section class="panel duelintro"><span class="actbanner">The Faceless Spire falls</span><h2>Only one mask may leave</h2>' +
@@ -1391,6 +2207,7 @@ function duelIntroHTML(V) {
 function duelEndHTML(V) {
   const won = V.win === V.me;
   return '<section class="panel"><span class="actbanner">Duel over</span><h2>' + (won ? 'You wear the last mask' : 'Your mask shatters') + '</h2>' +
+    '<div class="vstage solo tier-gold" style="--ce:0s"><div class="vheroes">' + portraitHTML(V.P[V.win].h, 'vp', true, undefined, 'cheer') + '</div>' + confettiHTML(true) + '</div>' +
     '<p>' + esc(vName(V, V.win)) + ' wins the duel and leaves the Masked Spire alone.</p>' +
     '<p class="muted">Enemies defeated: you ' + V.P[V.me].k + ', rival ' + V.P[1 - V.me].k + '.</p>' +
     '<div class="row"><button type="button" class="btn primary" data-act="leave">Back to title</button></div></section>';
@@ -1398,6 +2215,7 @@ function duelEndHTML(V) {
 function endHTML(V, won) {
   const me = V.P[V.me];
   return '<section class="panel"><h2>' + (won ? 'The Spire falls silent' : 'Your mask shatters') + '</h2>' +
+    (won ? '<div class="vstage solo tier-gold" style="--ce:0s">' + heroCheer(V) + confettiHTML(true) + '</div>' : '') +
     '<p>' + (won ? esc(HEROES[me.h].n) + ' conquered all three acts of the Masked Spire.' : (V.n > 1 ? 'Your party fell' : 'You fell') + ' in Act ' + ROMAN[V.act - 1] + ', floor ' + V.floor + '.') + ' Enemies defeated: ' + me.k + '. Deck size: ' + V.deck.length + '.</p>' +
     '<div class="row"><button type="button" class="btn primary" data-act="leave">Back to title</button></div></section>';
 }
@@ -1521,10 +2339,13 @@ function paint(V) {
     else if (V.scr === 'victory') body += endHTML(V, true);
     body += overlayHTML(V);
   }
+  if (!V || V.scr === 'lobby') body = '<button type="button" class="btn sndfloat" data-act="snd" aria-label="Sound settings">' + SND.SPK + ' Sound</button>' + body;
   const focusId = document.activeElement && document.activeElement.id;
   app.innerHTML = body;
   if (focusId === 'joincode') { const el = document.getElementById('joincode'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   if (V) flushFx(V, prev);
+  try { sndSync(V, prev); } catch (e) {}
+  if (V && V.scr === 'map') { try { mapAfterPaint(); } catch (e) {} }
   CL.lastFx = Math.max(prev, maxFx);
 }
 
