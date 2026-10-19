@@ -89,8 +89,6 @@ button { font: inherit; color: inherit; }
 .herobox { position: relative; display: flex; flex-direction: column; gap: 10px; }
 .portrait { position: relative; width: 100%; aspect-ratio: 5 / 6; max-width: 100%; border-radius: 12px; overflow: hidden; background: #1C6670; border: 2px solid #2E8E99; }
 .portrait svg { width: 100%; height: 100%; display: block; }
-.portrait.lunge { animation: lunge .38s ease; }
-.portrait.hurt { animation: hurt .4s ease; }
 .portrait.hurt::after { content: ""; position: absolute; inset: 0; background: #E04A5E; opacity: 0; animation: flash .4s ease; }
 .hname { font-family: var(--display); font-weight: 700; font-size: 22px; }
 .hpline { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -111,9 +109,8 @@ button { font: inherit; color: inherit; }
 .enemy.threat { border-color: #8A3040; }
 .enemy.target { cursor: pointer; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal); }
 .enemy.target:hover { transform: translateY(-4px); }
-.enemy.acting { animation: act .45s ease; z-index: 2; }
-.enemy.hit .art { animation: hit .32s ease; }
-.enemy.dying { animation: die .5s ease forwards; pointer-events: none; }
+.enemy.acting { z-index: 2; }
+.enemy.dying { animation: die 1s ease-in var(--as, 0s) forwards; pointer-events: none; }
 .intentbar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px 10px 0 0; font-weight: 700; }
 .intentbar svg { width: 26px; height: 26px; flex: 0 0 auto; }
 .intentbar .ival { font-family: var(--display); font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -163,7 +160,7 @@ button { font: inherit; color: inherit; }
 @keyframes lunge { 40% { transform: translateX(22px) rotate(2deg); } }
 @keyframes hurt { 30% { transform: translateX(-9px); } 60% { transform: translateX(6px); } }
 @keyframes flash { 20% { opacity: .45; } 100% { opacity: 0; } }
-@keyframes die { to { opacity: 0; transform: translateY(16px) scale(.9); } }
+@keyframes die { 0%, 55% { opacity: 1; } 100% { opacity: 0; transform: translateY(10px); } }
 @keyframes floatup { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.8); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -56px) scale(1); } }
 
 /* Map */
@@ -359,6 +356,207 @@ button { font: inherit; color: inherit; }
 .hcard.chosen { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
 .trio.duo { grid-template-columns: repeat(2, minmax(0, 170px)); justify-content: center; }
 
+/* ---------- Puppet rig animation ----------
+   --dir: -1 for enemies (face left), 1 for heroes (face right). --f: sign for "swing toward the front".
+   Idle loops use periods of 3.2s / 1.6s / .8s so they stay in phase across re-renders (--id is a shared negative delay).
+   --as resumes a one-shot state animation mid-way when the page redraws. */
+.rg { overflow: visible; --dir: -1; --f: 1; --e: cubic-bezier(.3, 0, .2, 1); }
+.rg.hr { --dir: 1; --f: -1; }
+.rg .pt-wingB { --w: -1; }
+.rg .rgw, .rg .pt { transform-box: view-box; transform-origin: var(--o); }
+.rg .rgfx .fx { display: none; opacity: 0; transform-box: fill-box; transform-origin: center; }
+.rg .rgfx .fx-burst path { opacity: 0; transform-box: view-box; }
+.rg .ghost { opacity: 0; transform-box: fill-box; transform-origin: center; }
+.rg.s-phase .ghost { animation: rg-ghost 1.3s ease-in var(--as, 0s) both; }
+@keyframes rg-ghost { 0% { opacity: 1; transform: none; } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--gx), var(--gy)) rotate(var(--gr)) scale(.6); } }
+
+.rg .pt-body { --i: ri-body 3.2s ease-in-out var(--id, 0s) infinite; animation: var(--i); }
+.rg .pt-head { --i: ri-head 3.2s ease-in-out var(--id, 0s) infinite; animation: var(--i); }
+.rg .pt-jaw { --i: ri-jaw 3.2s ease-in-out var(--id, 0s) infinite; animation: var(--i); }
+.rg .pt-armF { --i: ri-armF 3.2s ease-in-out var(--id, 0s) infinite; animation: var(--i); }
+.rg .pt-armB { --i: ri-armB 3.2s ease-in-out var(--id, 0s) infinite; animation: var(--i); }
+.rg .pt-wep { --i: ri-wep 3.2s ease-in-out var(--id, 0s) infinite; animation: var(--i); }
+.rg .pt-tail { --i: ri-tail 1.6s ease-in-out var(--id, 0s) infinite; animation: var(--i); }
+.rg .pt-wing { --i: ri-wing 1.6s ease-in-out var(--id, 0s) infinite; animation: var(--i); }
+.rg .pt-aura { --i: ri-aura 3.2s ease-in-out var(--id, 0s) infinite; animation: var(--i); }
+.rg .rgw.fl-f { animation: ri-float 1.6s ease-in-out var(--id, 0s) infinite; }
+.rg .rgw.fl-s { animation: ri-sway 3.2s ease-in-out var(--id, 0s) infinite; }
+.rg .rgw.fl-f .pt-wing { --i: ri-flap .8s ease-in-out var(--id, 0s) infinite; }
+.rg .rgw.fl-h { animation: ri-float 3.2s ease-in-out var(--id, 0s) infinite; }
+@keyframes ri-body { 50% { transform: scale(1.012, 1.032); } }
+@keyframes ri-head { 50% { transform: translateY(-1.4px) rotate(calc(var(--f) * -1.6deg)); } }
+@keyframes ri-jaw { 30%, 60% { transform: rotate(calc(var(--f) * -3deg)); } }
+@keyframes ri-armF { 50% { transform: rotate(calc(var(--f) * -3deg)); } }
+@keyframes ri-armB { 50% { transform: rotate(calc(var(--f) * 3deg)); } }
+@keyframes ri-wep { 50% { transform: rotate(calc(var(--f) * 2.4deg)); } }
+@keyframes ri-tail { 50% { transform: rotate(calc(var(--f) * -9deg)); } }
+@keyframes ri-wing { 50% { transform: rotate(calc(var(--f) * var(--w, 1) * -4deg)) scaleY(.96); } }
+@keyframes ri-flap { 50% { transform: rotate(calc(var(--f) * var(--w, 1) * -16deg)) scaleY(.82); } }
+@keyframes ri-aura { 50% { transform: scale(1.07); opacity: .7; } }
+@keyframes ri-float { 50% { transform: translateY(-4px); } }
+@keyframes ri-sway { 25% { transform: rotate(1.6deg); } 75% { transform: rotate(-1.6deg); } }
+
+/* gear-like parts spin; tendrils and big limbs sway wide; halos turn */
+.rg.gear .pt-armF { --i: ri-spin 3.2s linear var(--id, 0s) infinite; }
+.rg.gear .pt-armB { --i: ri-spinr 3.2s linear var(--id, 0s) infinite; }
+.rg.spinw .pt-wing { --i: ri-spin 3.2s linear var(--id, 0s) infinite; }
+.rg.big .pt-armF { --i: ri-bigF 3.2s ease-in-out var(--id, 0s) infinite; }
+.rg.big .pt-armB { --i: ri-bigB 3.2s ease-in-out var(--id, 0s) infinite; }
+.rg.gear .pt-armF, .rg.gear .pt-armB, .rg.spinw .pt-wing, .rg.big .pt-armF, .rg.big .pt-armB { animation: var(--i); }
+.rg.p2.gear .pt-armF { --i: ri-spin 1.6s linear var(--id, 0s) infinite; }
+.rg.p2.gear .pt-armB { --i: ri-spinr 1.6s linear var(--id, 0s) infinite; }
+@keyframes ri-spin { to { transform: rotate(360deg); } }
+@keyframes ri-spinr { to { transform: rotate(-360deg); } }
+@keyframes ri-bigF { 25% { transform: rotate(8deg); } 75% { transform: rotate(-8deg); } }
+@keyframes ri-bigB { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+/* ----- attack ----- */
+.rg.s-atk .rgw { animation: rg-lunge .75s var(--e) var(--as, 0s) both; }
+.rg.s-atk .pt-head { animation: var(--i), rg-a-head .75s var(--e) var(--as, 0s) both; }
+.rg.s-atk .pt-armF { animation: var(--i), rg-a-armF .75s var(--e) var(--as, 0s) both; }
+.rg.s-atk .pt-armB { animation: var(--i), rg-a-armB .75s var(--e) var(--as, 0s) both; }
+.rg.s-atk .pt-wep { animation: var(--i), rg-a-wep .75s var(--e) var(--as, 0s) both; }
+.rg.s-atk .pt-jaw { animation: var(--i), rg-a-jaw .75s var(--e) var(--as, 0s) both; }
+.rg.s-atk .pt-tail { animation: var(--i), rg-a-tail .75s var(--e) var(--as, 0s) both; }
+.rg.s-atk .pt-wing { animation: var(--i), rg-a-wing .75s var(--e) var(--as, 0s) both; }
+.rg.s-atk .pt-body { animation: var(--i), rg-a-body .75s var(--e) var(--as, 0s) both; }
+@keyframes rg-lunge { 0% { transform: none; } 28% { transform: translate(calc(var(--dir) * -7px), 1px); } 48% { transform: translate(calc(var(--dir) * 20px), 0) scale(1.05); } 100% { transform: none; } }
+@keyframes rg-a-head { 28% { transform: translateY(2px) rotate(calc(var(--f) * -9deg)); } 48% { transform: translateY(1px) rotate(calc(var(--f) * 11deg)); } }
+@keyframes rg-a-armF { 28% { transform: rotate(calc(var(--f) * -62deg)); } 48% { transform: rotate(calc(var(--f) * 78deg)); } 70% { transform: rotate(calc(var(--f) * 30deg)); } }
+@keyframes rg-a-armB { 28% { transform: rotate(calc(var(--f) * 24deg)); } 48% { transform: rotate(calc(var(--f) * -40deg)); } }
+@keyframes rg-a-wep { 28% { transform: rotate(calc(var(--f) * -72deg)); } 48% { transform: rotate(calc(var(--f) * 92deg)); } 75% { transform: rotate(calc(var(--f) * 40deg)); } }
+@keyframes rg-a-jaw { 28% { transform: rotate(calc(var(--f) * -2deg)); } 48% { transform: rotate(calc(var(--f) * -24deg)); } 62% { transform: rotate(calc(var(--f) * 4deg)); } }
+@keyframes rg-a-tail { 28% { transform: rotate(calc(var(--f) * 24deg)); } 48% { transform: rotate(calc(var(--f) * -36deg)); } }
+@keyframes rg-a-wing { 28% { transform: rotate(calc(var(--f) * var(--w, 1) * -34deg)) scaleY(.7); } 48% { transform: rotate(calc(var(--f) * var(--w, 1) * 24deg)) scaleY(1.1); } }
+@keyframes rg-a-body { 28% { transform: scale(.97, 1.03); } 48% { transform: scale(1.05, .96); } }
+
+/* ----- hit and hurt ----- */
+.rg.s-hit .rgw, .rg.s-hurt .rgw { animation: rg-hit .45s ease var(--as, 0s) both; }
+.rg.s-hit .pt-head, .rg.s-hurt .pt-head { animation: var(--i), rg-h-head .45s ease var(--as, 0s) both; }
+.rg.s-hit .pt-armF, .rg.s-hurt .pt-armF, .rg.s-hit .pt-armB, .rg.s-hurt .pt-armB, .rg.s-hit .pt-wing, .rg.s-hurt .pt-wing { animation: var(--i), rg-h-arm .45s ease var(--as, 0s) both; }
+.rg.s-hit .pt-body, .rg.s-hurt .pt-body { animation: var(--i), rg-h-body .45s ease var(--as, 0s) both; }
+@keyframes rg-hit { 0% { transform: none; filter: none; } 18% { transform: translate(calc(var(--dir) * -9px), 0) rotate(calc(var(--f) * -2deg)); filter: brightness(2.1) saturate(.4); } 55% { transform: translate(calc(var(--dir) * 3px), 0); filter: none; } 100% { transform: none; } }
+@keyframes rg-h-head { 18% { transform: translateY(1px) rotate(calc(var(--f) * -16deg)); } 60% { transform: rotate(calc(var(--f) * 5deg)); } }
+@keyframes rg-h-arm { 18% { transform: rotate(calc(var(--f) * var(--w, 1) * 26deg)); } 60% { transform: rotate(calc(var(--f) * var(--w, 1) * -8deg)); } }
+@keyframes rg-h-body { 18% { transform: scale(.95, 1.04); } 60% { transform: scale(1.02, .98); } }
+
+/* ----- defend / buff / debuff casts ----- */
+.rg.s-def .rgw, .rg.s-guard .rgw { animation: rg-brace .8s var(--e) var(--as, 0s) both; }
+.rg.s-def .pt-armF, .rg.s-guard .pt-armF, .rg.s-def .pt-armB, .rg.s-guard .pt-armB, .rg.s-def .pt-wep, .rg.s-guard .pt-wep { animation: var(--i), rg-c-guard .8s var(--e) var(--as, 0s) both; }
+.rg.s-def .pt-head, .rg.s-guard .pt-head { animation: var(--i), rg-c-tuck .8s var(--e) var(--as, 0s) both; }
+.rg.s-def .fx-def, .rg.s-guard .fx-def { animation: rg-ring .8s ease-out var(--as, 0s) both; }
+.rg.s-buf .rgw, .rg.s-buff .rgw { animation: rg-rise .9s var(--e) var(--as, 0s) both; }
+.rg.s-buf .pt-armF, .rg.s-buff .pt-armF, .rg.s-buf .pt-armB, .rg.s-buff .pt-armB, .rg.s-buf .pt-wep, .rg.s-buff .pt-wep, .rg.s-buf .pt-wing, .rg.s-buff .pt-wing { animation: var(--i), rg-c-raise .9s var(--e) var(--as, 0s) both; }
+.rg.s-buf .pt-head, .rg.s-buff .pt-head { animation: var(--i), rg-c-look .9s var(--e) var(--as, 0s) both; }
+.rg.s-buf .fx-buf, .rg.s-buff .fx-buf { animation: rg-motes .9s ease-out var(--as, 0s) both; }
+.rg.s-buf .fx-buf circle, .rg.s-buff .fx-buf circle { animation: rg-mote .9s ease-out var(--as, 0s) both; }
+.rg.s-deb .rgw { animation: rg-hex .9s var(--e) var(--as, 0s) both; }
+.rg.s-deb .pt-armF, .rg.s-deb .pt-armB, .rg.s-deb .pt-wep, .rg.s-deb .pt-wing { animation: var(--i), rg-c-point .9s var(--e) var(--as, 0s) both; }
+.rg.s-deb .pt-head { animation: var(--i), rg-c-look .9s var(--e) var(--as, 0s) both; }
+.rg.s-deb .fx-deb { animation: rg-spin .9s ease-out var(--as, 0s) both; }
+@keyframes rg-brace { 0% { transform: none; } 30% { transform: scale(1.06, .93); } 60% { transform: scale(1.03, .98); } 100% { transform: none; } }
+@keyframes rg-c-guard { 25%, 70% { transform: rotate(calc(var(--f) * -34deg)); } }
+@keyframes rg-c-tuck { 25%, 70% { transform: translateY(3px) rotate(calc(var(--f) * 4deg)); } }
+@keyframes rg-ring { 0% { opacity: .95; transform: scale(.55); } 100% { opacity: 0; transform: scale(1.35); } }
+@keyframes rg-rise { 0% { transform: none; } 35% { transform: translateY(-9px) scale(.98, 1.05); } 70% { transform: translateY(-2px); } 100% { transform: none; } }
+@keyframes rg-c-raise { 30%, 65% { transform: rotate(calc(var(--f) * var(--w, 1) * -58deg)); } }
+@keyframes rg-c-look { 30%, 65% { transform: translateY(-2px) rotate(calc(var(--f) * 7deg)); } }
+@keyframes rg-motes { 0%, 100% { opacity: 1; } }
+@keyframes rg-mote { 0% { opacity: 0; transform: translateY(8px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translateY(-34px) translateX(calc(var(--k) * 3px - 6px)); } }
+@keyframes rg-hex { 0% { transform: none; } 30% { transform: scale(.97, 1.04) translateX(calc(var(--dir) * 5px)); } 70% { transform: translateX(calc(var(--dir) * 2px)); } 100% { transform: none; } }
+@keyframes rg-c-point { 25%, 65% { transform: rotate(calc(var(--f) * var(--w, 1) * 56deg)); } }
+@keyframes rg-spin { 0% { opacity: 0; transform: scale(.4) rotate(0); } 30% { opacity: .95; } 100% { opacity: 0; transform: scale(1.3) rotate(140deg); } }
+
+/* ----- death: parts fall away from each other ----- */
+.rg.s-die .rgw { animation: rg-die 1s ease-in var(--as, 0s) both; }
+.rg.s-die .pt-head { animation: rg-d-head 1s ease-in var(--as, 0s) both; }
+.rg.s-die .pt-armF, .rg.s-die .pt-armB, .rg.s-die .pt-wep, .rg.s-die .pt-wing { animation: rg-d-arm 1s ease-in var(--as, 0s) both; }
+.rg.s-die .pt-body { animation: rg-d-body 1s ease-in var(--as, 0s) both; }
+.rg.s-die .pt-aura, .rg.s-die .pt-tail, .rg.s-die .pt-jaw { animation: rg-d-arm 1s ease-in var(--as, 0s) both; }
+@keyframes rg-die { 0% { transform: none; filter: brightness(2); opacity: 1; } 20% { filter: none; } 60% { opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
+@keyframes rg-d-head { 40% { transform: translate(calc(var(--dir) * -4px), 5px) rotate(calc(var(--f) * -30deg)); } 100% { transform: translate(calc(var(--dir) * -8px), 26px) rotate(calc(var(--f) * -62deg)); } }
+@keyframes rg-d-arm { 40% { transform: rotate(calc(var(--f) * var(--w, 1) * 38deg)); } 100% { transform: translateY(12px) rotate(calc(var(--f) * var(--w, 1) * 70deg)); } }
+@keyframes rg-d-body { 40% { transform: scale(1.04, .86); } 100% { transform: scale(1.12, .46); } }
+
+/* ----- phase change (boss) ----- */
+.rg.s-phase .rgw { animation: rg-phase 1.5s ease var(--as, 0s) both; }
+.rg.s-phase .pt-head { animation: var(--i), rg-p-head 1.5s ease var(--as, 0s) both; }
+.rg.s-phase .pt-armF, .rg.s-phase .pt-armB, .rg.s-phase .pt-wep, .rg.s-phase .pt-wing { animation: var(--i), rg-p-arm 1.5s ease var(--as, 0s) both; }
+.rg.s-phase .fx-flash { animation: rg-flash 1.5s ease-out var(--as, 0s) both; }
+.rg.s-phase .fx-burst path { animation: rg-shard 1.3s ease-out var(--as, 0s) both; }
+@keyframes rg-phase { 0% { transform: none; } 10%, 30%, 50% { transform: translateX(-4px) scale(1.04); } 20%, 40%, 60% { transform: translateX(4px) scale(1.04); } 75% { transform: scale(1.1); filter: brightness(1.8); } 100% { transform: none; filter: none; } }
+@keyframes rg-p-head { 30% { transform: translateY(-4px) rotate(calc(var(--f) * 10deg)); } 70% { transform: translateY(-3px) rotate(calc(var(--f) * -12deg)); } }
+@keyframes rg-p-arm { 30% { transform: rotate(calc(var(--f) * var(--w, 1) * -50deg)); } 70% { transform: rotate(calc(var(--f) * var(--w, 1) * 40deg)); } }
+@keyframes rg-flash { 0% { opacity: 0; transform: scale(.4); } 45% { opacity: .55; } 100% { opacity: 0; transform: scale(1.1); } }
+@keyframes rg-shard { 0% { opacity: 0; transform: rotate(var(--a)) translateX(4px); } 20% { opacity: 1; } 100% { opacity: 0; transform: rotate(var(--a)) translateX(54px); } }
+
+/* ----- boss: The Weeping Bellwarden tolls ----- */
+.rg.toll .rgw { animation: rg-toll 2.4s ease-in-out var(--id, 0s) infinite; transform-origin: 60px 10px; }
+@keyframes rg-toll { 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } }
+.rg.toll .fx-def { stroke: #6FD0FF; animation: rg-ring 2.4s ease-out var(--id, 0s) infinite; }
+
+/* ----- hero attacks ----- */
+.rg.s-lunge .rgw { animation: rg-dash .7s var(--e) var(--as, 0s) both; }
+.rg.s-lunge .pt-wep, .rg.s-lunge .pt-armF { animation: var(--i), rg-a-wep .7s var(--e) var(--as, 0s) both; }
+.rg.s-lunge .pt-head { animation: var(--i), rg-a-head .7s var(--e) var(--as, 0s) both; }
+.rg.s-lunge .pt-body { animation: var(--i), rg-a-body .7s var(--e) var(--as, 0s) both; }
+@keyframes rg-dash { 0% { transform: none; } 22% { transform: translate(calc(var(--dir) * -6px), 0) skewX(calc(var(--f) * 4deg)); } 40% { transform: translate(calc(var(--dir) * 26px), 0) skewX(calc(var(--f) * -9deg)); } 100% { transform: none; } }
+.rg.s-slam .rgw { animation: rg-slam .9s var(--e) var(--as, 0s) both; }
+.rg.s-slam .pt-armF, .rg.s-slam .pt-wep { animation: var(--i), rg-s-arm .9s var(--e) var(--as, 0s) both; }
+.rg.s-slam .pt-head { animation: var(--i), rg-a-head .9s var(--e) var(--as, 0s) both; }
+.rg.s-slam .sfx-slam, .rg.s-smash .sfx-slam { animation: rg-shock .9s ease-out var(--as, 0s) both; }
+@keyframes rg-slam { 0% { transform: none; } 30% { transform: translate(calc(var(--dir) * -6px), -12px) scale(.98, 1.05); } 48% { transform: translate(calc(var(--dir) * 22px), 4px) scale(1.06, .94); } 100% { transform: none; } }
+@keyframes rg-s-arm { 30% { transform: rotate(calc(var(--f) * -50deg)); } 48% { transform: rotate(calc(var(--f) * 42deg)); } 75% { transform: rotate(calc(var(--f) * 10deg)); } }
+.rg.s-smash .rgw { animation: rg-smash .95s var(--e) var(--as, 0s) both; }
+.rg.s-smash .pt-armF, .rg.s-smash .pt-armB, .rg.s-smash .pt-wep { animation: var(--i), rg-m-arm .95s var(--e) var(--as, 0s) both; }
+.rg.s-smash .pt-head { animation: var(--i), rg-a-head .95s var(--e) var(--as, 0s) both; }
+@keyframes rg-smash { 0% { transform: none; } 35% { transform: translate(calc(var(--dir) * -4px), -14px) scale(.97, 1.07); } 52% { transform: translate(calc(var(--dir) * 14px), 6px) scale(1.08, .92); } 100% { transform: none; } }
+@keyframes rg-m-arm { 35% { transform: rotate(calc(var(--f) * -110deg)); } 52% { transform: rotate(calc(var(--f) * 45deg)); } 80% { transform: rotate(calc(var(--f) * 12deg)); } }
+.rg .sfx { display: none; opacity: 0; transform-box: fill-box; transform-origin: center; }
+@keyframes rg-shock { 0% { opacity: 0; transform: scale(.3); } 45% { opacity: .9; } 100% { opacity: 0; transform: scale(1.6); } }
+/* Duelist Footwork: a dash with speed lines */
+.rg.s-foot .rgw { animation: rg-foot .9s var(--e) var(--as, 0s) both; }
+.rg.s-foot .pt-wep, .rg.s-foot .pt-armF { animation: var(--i), rg-a-wep .9s var(--e) var(--as, 0s) both; }
+.rg.s-foot .sfx-foot { animation: rg-streak .9s ease-out var(--as, 0s) both; }
+@keyframes rg-foot { 0% { transform: none; } 18% { transform: translate(calc(var(--dir) * -10px), 0) skewX(calc(var(--f) * 5deg)); } 36% { transform: translate(calc(var(--dir) * 28px), -2px) skewX(calc(var(--f) * -10deg)); } 60% { transform: translate(calc(var(--dir) * -4px), 0) skewX(calc(var(--f) * 3deg)); } 80% { transform: translate(calc(var(--dir) * 10px), 0); } 100% { transform: none; } }
+@keyframes rg-streak { 0% { opacity: 0; transform: translateX(calc(var(--dir) * -20px)); } 30% { opacity: .9; } 100% { opacity: 0; transform: translateX(calc(var(--dir) * 30px)); } }
+
+/* ----- Brute stances ----- */
+.rg.sn-fury .rgw { filter: drop-shadow(0 0 3px #FF5A1F) saturate(1.25) brightness(1.06); }
+.rg.sn-fury .pt-body { animation: ri-furyb 1.6s ease-in-out var(--id, 0s) infinite; }
+.rg.sn-fury .sfx-fury, .rg.sn-iron .sfx-iron, .rg.sn-calm .sfx-calm { opacity: 1; }
+.rg .sfx-fury path { animation: rg-flame .8s ease-in-out infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; }
+.rg .sfx-fury path:nth-child(2n) { animation-delay: -.3s; animation-duration: .65s; }
+.rg .sfx-fury path:nth-child(3n) { animation-delay: -.55s; }
+.rg.sn-iron .rgw { filter: drop-shadow(0 0 2px #C4CAD2) grayscale(.35) contrast(1.1); }
+.rg.sn-iron .pt-body { animation: none; }
+.rg .sfx-iron .shine { animation: rg-shine 2.4s ease-in-out infinite; }
+.rg.sn-calm .rgw { filter: drop-shadow(0 0 5px #9CF4FF) brightness(1.08); }
+.rg .sfx-calm .halo { animation: ri-aura 3.2s ease-in-out infinite; }
+.rg .sfx-calm .orb2 { animation: rg-orb 3.2s ease-in-out infinite; }
+.rg.s-stance .sfx-ring { animation: rg-ring .9s ease-out var(--as, 0s) both; }
+.rg .sfx-ring { opacity: 0; transform-box: fill-box; transform-origin: center; }
+@keyframes ri-furyb { 50% { transform: scale(1.03, 1.05); } }
+@keyframes rg-flame { 0% { transform: scale(.85, .8) skewX(-4deg); opacity: .75; } 100% { transform: scale(1.1, 1.25) skewX(5deg); opacity: 1; } }
+@keyframes rg-shine { 0% { transform: translateX(-30px); opacity: 0; } 30% { opacity: .9; } 70% { opacity: .9; } 100% { transform: translateX(70px); opacity: 0; } }
+@keyframes rg-orb { 0% { transform: translateY(6px); opacity: 0; } 40% { opacity: .9; } 100% { transform: translateY(-26px); opacity: 0; } }
+/* heroes down in a duel / co-op */
+.rg.dn .rgw { animation: rg-down .8s ease-out both; }
+@keyframes rg-down { to { transform: translateY(14px) scale(1.02, .9); opacity: .4; filter: grayscale(1) brightness(.8); } }
+.duelfoe .rg { transform: scaleX(-1); }
+@media (prefers-reduced-motion: reduce) {
+  .rg *, .rg { animation: none !important; }
+}
+
+.rg .crack { opacity: 0; }
+.rg.p2 .crack { opacity: 1; }
+.rg.p2-cog .rgw { filter: drop-shadow(0 0 4px #FF7A1F) saturate(1.2); }
+.rg.p2-spire .rgw { filter: drop-shadow(0 0 5px #B46AFF); }
+
+/* filters are costly: only draw effects while they are active; keep blurred auras still */
+.rg.s-def .fx-def, .rg.s-guard .fx-def, .rg.s-buf .fx-buf, .rg.s-buff .fx-buf, .rg.s-deb .fx-deb, .rg.s-phase .fx-flash, .rg.s-phase .fx-burst, .rg.toll .fx-def { display: inline; }
+.rg.s-slam .sfx-slam, .rg.s-smash .sfx-slam, .rg.s-foot .sfx-foot, .rg.sn-fury .sfx-fury, .rg.sn-iron .sfx-iron, .rg.sn-calm .sfx-calm, .rg.s-stance .sfx-ring { display: inline; }
+.rg .pt-aura, .rg .sfx-calm .halo { animation: none !important; }
+.rg.lite .pt-armF, .rg.lite .pt-armB, .rg.lite .pt-wep, .rg.lite .pt-tail, .rg.lite .pt-jaw { animation: none; }
 </style>
 </head>
 <body>
@@ -580,12 +778,215 @@ const ART = {
     '<ellipse cx="60" cy="48" rx="8" ry="12" fill="#B46AFF" filter="url(#soft)" opacity=".8"/><circle cx="60" cy="48" r="3" fill="#F0E0FF"/>'
 };
 function idleDelay(seed, period) { return '-' + ((Date.now() + seed * 977) % period) + 'ms'; }
-function enemyArt(e) {
+function idleN(seed) { return '-' + ((Date.now() + seed * 977) % 3200); }
+/* ---------- Puppet rigs ----------
+   Every painted character is split into parts (head, jaw, front arm, back arm, weapon, wing, tail, body, legs)
+   at first use. Each part is a group with its own pivot, so CSS can swing it on its own.
+   Specs give boxes in art coordinates; anything not in a box falls back to simple body-region rules. */
+const RNS = 'http://www.w3.org/2000/svg';
+const RIG_INH = ['stroke', 'stroke-width', 'stroke-linejoin', 'stroke-linecap'];
+const RIG_CACHE = new Map();
+let RIG_MS = null;
+const RIGSPEC = {
+  /* heroes face right */
+  duelist: { hero: 1, lead: 3, p: [['wep', 0, /M8 150 L110 8|M18 140 Q14 122/], ['tail', 0, /M90 82 Q112 80/]], piv: { wep: [26, 128] } },
+  bulwark: { hero: 1, lead: 3, p: [['wep', [-20, 70, 48, 150]]], piv: { wep: [44, 112] } },
+  brute: { hero: 1, lead: 3, p: [] },
+  /* enemies face left. Boxes are in art coordinates and must fully contain a piece to claim it. */
+  moth: { fl: 'fl-f', auto: 0, p: [['head', [38, 16, 82, 56]], ['body', [48, 52, 72, 80]], ['wing', [0, 0, 61, 100]], ['wingB', [59, 0, 121, 100]]] },
+  rootling: { auto: 0, p: [['head', [30, 0, 90, 74]], ['legs', [20, 76, 100, 100]]] },
+  crow: { auto: 0, p: [['head', [58, 22, 118, 56]], ['wing', [0, 50, 50, 90]], ['wingB', [80, 44, 120, 84]], ['legs', [50, 78, 80, 98]]] },
+  leech: { auto: 0, p: [['head', [66, 26, 100, 70]]] },
+  imp: { auto: 0, p: [['head', [34, 24, 86, 76]], ['wep', [80, 62, 108, 86]], ['legs', [40, 84, 80, 100]], ['armF', [20, 60, 46, 90]], ['armB', [76, 60, 100, 90]]] },
+  acolyte: { auto: 0, p: [['head', [44, 0, 76, 62]]] },
+  ogre: { auto: 0, p: [['head', [18, 16, 102, 86]], ['wep', [96, 10, 120, 100]]], piv: { wep: [112, 84] } },
+  puppet: { fl: 'fl-s', auto: 0, g: /M8 6 L112 6|cx="8" cy="6"|cx="112" cy="6"|stroke="#E8DCC4" stroke-width="\.8"/, p: [['head', [40, 16, 82, 56]], ['armF', [28, 60, 52, 90]], ['armB', [68, 60, 92, 90]]] },
+  stag: { auto: 0, p: [['head', [-2, 0, 60, 56]], ['legs', [34, 72, 98, 100]]] },
+  bell: { fl: 'fl-s', auto: 0, p: [['head', [40, 26, 80, 84]], ['armF', [10, 30, 34, 92]], ['armB', [86, 30, 110, 92]]], piv: { armF: [22, 34], armB: [98, 34] } },
+  hound: { auto: 0, p: [['head', [10, 16, 48, 72]], ['tail', [90, 48, 116, 72]], ['legs', [30, 70, 96, 102]]] },
+  mimic: { auto: 0, p: [['tail', 0, /M42 62 Q56 80|fill="#E8C35A"/], ['jaw', [20, 0, 100, 66]]], piv: { jaw: [30, 60], tail: [42, 64] } },
+  wraith: { fl: 'fl-h', auto: 0, p: [['head', [44, 24, 78, 72]]] },
+  gear: { cls: 'gear', auto: 0, p: [['head', [46, 8, 78, 44]], ['armF', [6, 36, 56, 90]], ['armB', [80, 38, 106, 70]], ['legs', [44, 82, 78, 102]]], piv: { armF: [30, 62], armB: [82, 52] } },
+  cultist: { auto: 0, p: [['head', [44, 22, 78, 64]], ['armF', [14, 38, 40, 84]], ['armB', [80, 38, 106, 84]]] },
+  jailer: { auto: 0, p: [['head', [48, 8, 72, 44]], ['armF', [16, 52, 50, 98]], ['armB', [70, 48, 112, 78]]] },
+  furnace: { auto: 0, p: [['head', [48, 8, 72, 44]], ['wep', [90, 26, 112, 102]], ['armF', [14, 44, 46, 72]], ['armB', [74, 44, 106, 72]]], piv: { wep: [100, 74] } },
+  matriarch: { auto: 0, p: [['head', [46, 2, 74, 50]], ['armF', [14, 36, 46, 90]], ['armB', [74, 36, 106, 90]]] },
+  ledger: { auto: 0, p: [['head', [49, 48, 71, 64]], ['wing', [24, 24, 61, 82]], ['wingB', [59, 24, 96, 82]], ['armF', [2, 74, 30, 100]], ['armB', [90, 74, 118, 100]]] },
+  cog: { cls: 'gear', auto: 0, p: [['head', [40, 4, 80, 56]], ['armF', [-4, 48, 42, 96]], ['armB', [78, 48, 124, 96]]], piv: { armF: [20, 72], armB: [100, 72] } },
+  voidsentry: { fl: 'fl-h', auto: 0, p: [['head', [50, 28, 70, 44]], ['wing', [16, 44, 104, 64]]], piv: { wing: [60, 54] } },
+  mirror: { fl: 'fl-h', cls: 'spinw', auto: 0, p: [['wing', 0, /<circle cx="60" cy="32" r="24"/], ['head', [46, 12, 76, 56]]], piv: { wing: [60, 32] } },
+  ossuary: { fl: 'fl-h', auto: 0, p: [['head', [47, 33, 75, 61]], ['armF', [20, 30, 58, 90]], ['armB', [64, 30, 104, 90]]], piv: { armF: [60, 62], armB: [60, 62] } },
+  seer: { fl: 'fl-h', auto: 0, g: /cx="14" cy="14"|cx="104" cy="10"|cx="96" cy="30"/, p: [['head', [46, 28, 74, 80]], ['wep', [94, 40, 114, 102]]], piv: { wep: [102, 96] } },
+  colossus: { auto: 0, p: [['head', [48, 2, 72, 34]], ['armF', [16, 34, 38, 80]], ['armB', [82, 34, 104, 80]], ['legs', [40, 76, 80, 102]]], piv: { armF: [32, 38], armB: [88, 38] } },
+  nullmask: { fl: 'fl-h', cls: 'big', auto: 0, p: [['head', [46, 4, 74, 56]], ['armF', [36, 56, 58, 102]], ['armB', [62, 56, 84, 102]]] },
+  unwritten: { fl: 'fl-h', auto: 0, p: [['head', [46, 4, 74, 60]], ['armF', [14, 40, 50, 64]], ['wep', [78, 10, 112, 64]]], piv: { wep: [80, 58] } },
+  choir: { fl: 'fl-s', auto: 0, p: [['jaw', [48, 62, 72, 74]], ['head', [38, 16, 84, 82]], ['armF', [16, 18, 40, 36]], ['armB', [80, 18, 104, 36]], ['legs', [46, 78, 76, 100]]] },
+  eclipse: { auto: 0, g: /cx="98" cy="20"/, p: [['head', [48, 8, 74, 46]], ['wep', 0, /M22 96 L104 30/]], piv: { wep: [38, 84] } },
+  spire: { fl: 'fl-s', auto: 0, p: [['head', [50, 26, 70, 66]], ['armF', [4, 16, 28, 60]], ['armB', [92, 46, 120, 76]], ['wing', [18, 68, 50, 98]], ['tail', [2, 48, 118, 72]]], piv: { tail: [60, 60] } }
+};
+function rigMapSpec(sp, tx, ty, k) {
+  const o = Object.assign({}, sp);
+  o.p = sp.p.map(b => b[2] ? b : [b[0], [tx + b[1][0] * k, ty + b[1][1] * k, tx + b[1][2] * k, ty + b[1][3] * k]]);
+  if (sp.piv) { o.piv = {}; for (const key in sp.piv) o.piv[key] = [tx + sp.piv[key][0] * k, ty + sp.piv[key][1] * k]; }
+  return o;
+}
+function rigFlat(inner) {
+  const host = document.createElementNS(RNS, 'svg');
+  host.innerHTML = inner;
+  const out = [];
+  const walk = (node, inh, tf) => {
+    for (const c of Array.from(node.children)) {
+      if (c.tagName === 'g') {
+        const ni = Object.assign({}, inh);
+        RIG_INH.forEach(a => { if (c.hasAttribute(a)) ni[a] = c.getAttribute(a); });
+        const t = c.getAttribute('transform');
+        walk(c, ni, t ? (tf + ' ' + t) : tf);
+      } else {
+        const subs = c.tagName === 'path' ? (c.getAttribute('d') || '').split(/(?=M)/).map(x => x.trim()).filter(Boolean) : [null];
+        subs.forEach(dd => {
+          const l = c.cloneNode(true);
+          if (dd !== null && subs.length > 1) l.setAttribute('d', dd);
+          for (const a in inh) if (!l.hasAttribute(a)) l.setAttribute(a, inh[a]);
+          const t = l.getAttribute('transform'), f = (tf + ' ' + (t || '')).trim();
+          if (f) l.setAttribute('transform', f);
+          out.push(l);
+        });
+      }
+    }
+  };
+  walk(host, {}, '');
+  return out;
+}
+function rigMeasure(leaves, vw, vh) {
+  if (!RIG_MS) {
+    RIG_MS = document.createElementNS(RNS, 'svg');
+    document.body.appendChild(RIG_MS);
+  }
+  RIG_MS.setAttribute('viewBox', '0 0 ' + vw + ' ' + vh);
+  RIG_MS.setAttribute('style', 'position:fixed;left:-9999px;top:0;width:' + vw * 4 + 'px;height:' + vh * 4 + 'px;visibility:hidden;pointer-events:none');
+  leaves.forEach(l => RIG_MS.appendChild(l));
+  const base = RIG_MS.getBoundingClientRect();
+  const rects = leaves.map(l => {
+    const r = l.getBoundingClientRect();
+    return [(r.left - base.left) / 4, (r.top - base.top) / 4, (r.right - base.left) / 4, (r.bottom - base.top) / 4];
+  });
+  leaves.forEach(l => l.remove());
+  return rects;
+}
+function rigBuild(inner, vw, vh, spec) {
+  spec = spec || {};
+  const leaves = rigFlat(inner);
+  const rects = rigMeasure(leaves, vw, vh);
+  const n = leaves.length;
+  const role = new Array(n);
+  const real = [];
+  leaves.forEach((l, i) => {
+    const f = l.getAttribute('filter') || '', r = rects[i];
+    if (spec.g && spec.g.test(l.outerHTML)) role[i] = 'ground';
+    else if (i < (spec.lead || 0)) role[i] = i === (spec.lead - 1) && /soft/.test(f) ? 'aura' : 'bg';
+    else if (/soft/.test(f)) role[i] = 'aura';
+    else if (l.tagName === 'ellipse' && +l.getAttribute('cy') >= 92 && +l.getAttribute('rx') >= 40) role[i] = 'ground';
+    else real.push(i);
+  });
+  let ex0 = 1e9, ey0 = 1e9, ex1 = -1e9, ey1 = -1e9;
+  real.forEach(i => { const r = rects[i]; ex0 = Math.min(ex0, r[0]); ey0 = Math.min(ey0, r[1]); ex1 = Math.max(ex1, r[2]); ey1 = Math.max(ey1, r[3]); });
+  ex0 = Math.max(ex0, 0); ex1 = Math.min(ex1, vw); ey0 = Math.max(ey0, 0); ey1 = Math.min(ey1, vh);
+  const ew = ex1 - ex0, eh = ey1 - ey0, ecx = (ex0 + ex1) / 2, ecy = (ey0 + ey1) / 2;
+  const boxes = spec.p || [];
+  const front = spec.hero ? 1 : -1; // which side the front arm is on
+  real.forEach(i => {
+    const r = rects[i], cx = (r[0] + r[2]) / 2, cy = (r[1] + r[3]) / 2;
+    for (const b of boxes) { if (b[2]) { if (b[2].test(leaves[i].outerHTML)) { role[i] = b[0]; return; } continue; } const q = b[1], T = 1.5; if (r[0] >= q[0] - T && r[2] <= q[2] + T && r[1] >= q[1] - T && r[3] <= q[3] + T) { role[i] = b[0]; return; } }
+    if (spec.auto === 0) { role[i] = 'body'; return; }
+    const dx = cx - ecx;
+    if (cy < ey0 + eh * 0.34 && Math.abs(dx) < ew * 0.3) role[i] = 'head';
+    else if (Math.abs(dx) > ew * 0.3 && cy > ey0 + eh * 0.2 && cy < ey0 + eh * 0.9) role[i] = (dx * front > 0) ? 'armF' : 'armB';
+    else if (cy > ey0 + eh * 0.9) role[i] = 'legs';
+    else role[i] = 'body';
+  });
+  // part bounds and pivots
+  const pb = {};
+  leaves.forEach((l, i) => {
+    const k = role[i], r = rects[i];
+    const b = pb[k] || (pb[k] = [1e9, 1e9, -1e9, -1e9]);
+    b[0] = Math.min(b[0], r[0]); b[1] = Math.min(b[1], r[1]); b[2] = Math.max(b[2], r[2]); b[3] = Math.max(b[3], r[3]);
+  });
+  const piv = {};
+  for (const k in pb) {
+    const b = pb[k], w = b[2] - b[0], h = b[3] - b[1], cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+    let p;
+    if (k === 'head') p = [cx, b[3] - h * 0.12];
+    else if (k === 'body' || k === 'legs') p = [ecx, ey1];
+    else if (k === 'armF' || k === 'armB' || k === 'wing' || k === 'wingB' || k === 'tail' || k === 'wep') p = [cx < ecx ? b[2] - w * 0.1 : b[0] + w * 0.1, b[1] + h * 0.2];
+    else if (k === 'jaw') p = [cx, b[1]];
+    else p = [cx, cy];
+    if (spec.piv && spec.piv[k]) p = spec.piv[k];
+    piv[k] = p;
+  }
+  // emit in original paint order, merging consecutive leaves of the same part
+  let bg = '', fg = '', runK = null, run = '';
+  const flush = () => {
+    if (runK === null) return;
+    if (runK === 'bg') bg += run;
+    else if (runK === 'ground') fg += '<g class="pt pt-ground">' + run + '</g>';
+    else fg += '<g class="pt pt-' + (runK === 'wingB' ? 'wing pt-wingB' : runK) + '" style="--o:' + piv[runK][0].toFixed(1) + 'px ' + piv[runK][1].toFixed(1) + 'px">' + run + '</g>';
+    run = '';
+  };
+  leaves.forEach((l, i) => { if (role[i] !== runK) { flush(); runK = role[i]; } run += l.outerHTML; });
+  flush();
+  const cls = (spec.fl ? ' ' + spec.fl : '');
+  const rcls = spec.cls || '';
+  const fxr = Math.max(ew, eh) * 0.55;
+  const fxh = '<g class="rgfx" style="--c:' + ecx.toFixed(1) + 'px ' + ecy.toFixed(1) + 'px">' +
+    '<ellipse class="fx fx-def" cx="' + ecx.toFixed(1) + '" cy="' + ecy.toFixed(1) + '" rx="' + (fxr * 0.9).toFixed(1) + '" ry="' + (fxr * 0.9).toFixed(1) + '" fill="#6FB4FF" fill-opacity=".18" stroke="#9CCBFF" stroke-width="2.5"/>' +
+    '<g class="fx fx-buf">' + [0, 1, 2, 3, 4].map(k => '<circle cx="' + (ecx - ew * 0.3 + k * ew * 0.15).toFixed(1) + '" cy="' + (ey1 - eh * 0.15).toFixed(1) + '" r="' + (2.2 + (k % 2)) + '" fill="#FFE08A" filter="url(#glow)" style="--k:' + k + '"/>').join('') + '</g>' +
+    '<ellipse class="fx fx-deb" cx="' + ecx.toFixed(1) + '" cy="' + ecy.toFixed(1) + '" rx="' + (fxr * 0.8).toFixed(1) + '" ry="' + (fxr * 0.38).toFixed(1) + '" fill="none" stroke="#B46AFF" stroke-width="3" stroke-dasharray="7 5"/>' +
+    '<g class="fx fx-burst">' + [0, 1, 2, 3, 4, 5, 6, 7].map(k => '<g transform="translate(' + ecx.toFixed(1) + ' ' + ecy.toFixed(1) + ')"><path d="M0 -2.5 L10 0 L0 2.5Z" fill="#FFD27A" stroke="#120C10" stroke-width="1" style="--a:' + (k * 45 + 12) + 'deg;transform-origin:0 0"/></g>').join('') + '</g>' +
+    '<ellipse class="fx fx-flash" cx="' + ecx.toFixed(1) + '" cy="' + ecy.toFixed(1) + '" rx="' + (fxr * 1.1).toFixed(1) + '" ry="' + (fxr * 1.1).toFixed(1) + '" fill="#FFFFFF" filter="url(#soft)"/>' +
+    '</g>';
+  return { rcls: rcls, bg: bg, fg: '<g class="rgw' + cls + '" style="--o:' + ecx.toFixed(1) + 'px ' + ey1.toFixed(1) + 'px">' + fg + '</g>', fx: fxh, ex: [ex0, ey0, ex1, ey1] };
+}
+function rigGet(inner, vw, vh, spec) {
+  let r = RIG_CACHE.get(inner);
+  if (!r) { r = rigBuild(inner, vw, vh, spec); RIG_CACHE.set(inner, r); }
+  return r;
+}
+/* ---- Animation state that survives re-renders ----
+   The page redraws often, so one-shot animations are remembered with a start time and resumed
+   mid-way (negative delay) on every redraw until they finish. */
+const RGDUR = { atk: 750, lunge: 700, slam: 900, smash: 950, foot: 900, hit: 450, hurt: 450, def: 800, guard: 800, buf: 900, buff: 900, deb: 900, phase: 1500, stance: 900, toll: 1200 };
+function rgState(key, k, keep) {
+  const now = Date.now();
+  let a = CL.an[key];
+  if (k) a = CL.an[key] = { k: k, t: now };
+  if (a && now - a.t < (RGDUR[a.k] || 800)) return { k: a.k, as: -(now - a.t) };
+  return keep ? { k: keep, as: -9999 } : null;
+}
+/* one rigged scene: st = {k, as} animation state, extra = classes (stances, boss states) */
+function rigSVG(inner, vw, vh, spec, o) {
+  const r = rigGet(inner, vw, vh, spec);
+  const st = o.st;
+  const cls = 'rg' + (r.rcls ? ' ' + r.rcls : '') + (spec && spec.hero ? ' hr' : '') + (st ? ' s-' + st.k : '') + (o.cls ? ' ' + o.cls : '') + (o.lite ? ' lite' : '');
+  const sty = '--id:' + o.id + 'ms' + (st ? ';--as:' + st.as + 'ms' : '');
+  return '<svg class="' + cls + '" style="' + sty + '" viewBox="0 0 ' + vw + ' ' + vh + '" preserveAspectRatio="' + (o.pre || 'xMidYMid meet') + '" role="img" aria-label="' + esc(o.label) + '">' +
+    (o.back || '') + r.bg + r.fg + (o.lite ? '' : r.fx + (o.over || '')) + '</svg>';
+}
+
+function enemyArt(e, st, cls) {
   const d = EN[e.key];
   const kind = d.idle || '';
-  const period = kind === 'sway' ? 4000 : kind === 'flutter' ? 1600 : 3200;
-  return '<svg viewBox="0 0 120 100" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + esc(e.n) + '"><rect width="120" height="100" fill="' + d.bg + '"/><path d="M0 18 Q60 0 120 22 L120 0 L0 0Z" fill="#FFFFFF" opacity=".06"/>' +
-    '<g class="idle ' + kind + '" style="animation-delay:' + idleDelay(e.idx + 1, period) + '">' + ART[e.key](e) + '</g></svg>';
+  let sp = RIGSPEC[e.key] || {};
+  if (e.key === 'hound' && e.max <= 22) sp = rigMapSpec(sp, 18, 22, .7);
+  if (e.key === 'ossuary' && e.split) sp = rigMapSpec(sp, 15, 18, .75);
+  let ghost = '';
+  if (e.key === 'spire' && e.p2 && st && st.k === 'phase') {
+    ghost = '<g class="ghost" style="--gx:-52px;--gy:-30px;--gr:-40deg"><path d="M14 54 Q20 44 20 34 Q20 26 14 22 Q8 26 8 34 Q8 44 14 54Z" fill="#EDE3CF" stroke="#120C10" stroke-width="2"/></g>' +
+      '<g class="ghost" style="--gx:56px;--gy:-24px;--gr:50deg"><path d="M96 68 Q96 52 106 50 Q116 52 116 68 Q111 72 106 72 Q101 72 96 68Z" fill="#6A707A" stroke="#120C10" stroke-width="2"/><rect x="101" y="58" width="10" height="7" fill="#FFE08A"/></g>' +
+      '<g class="ghost" style="--gx:-44px;--gy:34px;--gr:-70deg"><path d="M26 92 Q26 80 34 78 Q42 80 42 92 Q38 96 34 96 Q30 96 26 92Z" fill="#26222A" stroke="#120C10" stroke-width="2"/></g>';
+  }
+  const over = ghost + (e.key === 'cog' ? '<path class="crack" d="M46 50 L54 60 L48 70 L58 82 L52 98 M74 52 L68 64 L78 74 L70 90 M56 24 L60 36 L55 44" stroke="#FFD27A" stroke-width="1.6" fill="none" filter="url(#glow)"/>' : '');
+  const back = '<rect width="120" height="100" fill="' + d.bg + '"/><path d="M0 18 Q60 0 120 22 L120 0 L0 0Z" fill="#FFFFFF" opacity=".06"/>';
+  return rigSVG(ART[e.key](e), 120, 100, sp, { st: st, cls: cls || '', id: idleN(e.idx + 1), label: e.n, back: back, over: over });
 }
 const HERO_ART = {
   duelist: '<rect width="120" height="144" fill="#1C6670"/><path d="M0 24 Q40 0 70 30 Q100 56 120 34 L120 0 L0 0Z" fill="#2A8590" opacity=".6"/>' +
@@ -629,13 +1030,27 @@ const HERO_ART = {
     '<ellipse cx="51" cy="62" rx="6" ry="3.5" fill="#FF5A1F" filter="url(#glow)"/><ellipse cx="69" cy="62" rx="6" ry="3.5" fill="#FF5A1F" filter="url(#glow)"/>' +
     '<ellipse cx="51" cy="62" rx="3" ry="1.6" fill="#FFD27A"/><ellipse cx="69" cy="62" rx="3" ry="1.6" fill="#FFD27A"/></g>'
 };
-function heroSVG(key, animated) {
-  const g = animated ? '<g class="idle" style="animation-delay:' + idleDelay(key.length, 3200) + '">' : '<g>';
-  return '<svg viewBox="0 0 120 144" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(HEROES[key].n) + '">' + HERO_ART[key].replace('@@', g) + '</svg>';
+function heroFx(key) {
+  let h = '<g class="sfx sfx-slam"><ellipse cx="96" cy="132" rx="26" ry="8" fill="none" stroke="#FFE08A" stroke-width="3"/></g>';
+  if (key === 'duelist') {
+    h += '<g class="sfx sfx-foot" stroke="#D8FFFE" stroke-width="2" stroke-linecap="round" fill="none"><path d="M4 70 L44 70 M0 90 L52 90 M8 110 L48 110 M14 128 L42 128"/></g>';
+  }
+  if (key === 'brute') {
+    const fl = [[24, 112, 1], [34, 96, 1.2], [48, 86, 1.1], [60, 80, 1.3], [74, 86, 1.1], [88, 96, 1.2], [98, 112, 1], [16, 128, .9], [106, 128, .9]];
+    h += '<g class="sfx sfx-fury">' + fl.map(f => '<g transform="translate(' + f[0] + ' ' + f[1] + ') scale(' + f[2] + ')"><path d="M0 0 Q-8 -12 -2 -26 Q2 -16 8 -22 Q10 -8 0 0Z" fill="#FF7A1F" filter="url(#glow)"/><path d="M0 0 Q-4 -8 0 -16 Q4 -8 0 0Z" fill="#FFD27A"/></g>').join('') + '</g>';
+    h += '<g class="sfx sfx-iron" stroke="#140A0C" stroke-width="2.2" stroke-linejoin="round"><path d="M18 108 Q22 82 46 82 L48 106 Q32 114 18 108Z" fill="#9AA2AE"/><path d="M102 108 Q98 82 74 82 L72 106 Q88 114 102 108Z" fill="#8C929C"/><path d="M44 92 L76 92 L72 124 Q60 130 48 124Z" fill="#7E848E"/><path d="M52 98 L68 98 M52 108 L68 108" stroke="#C4CAD2" stroke-width="1.6" fill="none"/><path class="shine" d="M34 80 L46 146" stroke="#FFFFFF" stroke-width="5" opacity=".5" fill="none"/></g>';
+    h += '<g class="sfx sfx-calm"><ellipse class="halo" cx="60" cy="84" rx="48" ry="56" fill="#9CF4FF" filter="url(#soft)" opacity=".45"/>' + [[30, 120], [90, 112], [46, 134], [76, 130]].map((o, i) => '<circle class="orb2" cx="' + o[0] + '" cy="' + o[1] + '" r="2.6" fill="#E8FFFF" filter="url(#glow)" style="animation-delay:-' + (i * 0.8) + 's"/>').join('') + '</g>';
+    h += '<ellipse class="sfx-ring" cx="60" cy="96" rx="46" ry="46" fill="none" stroke="#FFFFFF" stroke-width="3"/>';
+  }
+  return h;
 }
-function portraitHTML(key, cls, animated) {
-  const h = HEROES[key];
-  return '<div class="portrait' + (cls ? ' ' + cls : '') + '" style="background:' + h.color + ';border-color:' + h.edge + '">' + heroSVG(key, animated) + '</div>';
+function heroSVG(key, animated, st, cls, lite) {
+  if (!animated) return '<svg viewBox="0 0 120 144" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(HEROES[key].n) + '">' + HERO_ART[key].replace('@@', '<g>') + '</svg>';
+  return rigSVG(HERO_ART[key].replace('@@', '<g>'), 120, 144, RIGSPEC[key], { st: st, cls: cls || '', id: idleN(key.length), label: HEROES[key].n, pre: 'xMidYMid slice', over: heroFx(key), lite: lite });
+}
+function portraitHTML(key, cls, animated, st, rcls) {
+  const h = HEROES[key], lite = arguments.length < 4;
+  return '<div class="portrait' + (cls ? ' ' + cls : '') + '" style="background:' + h.color + ';border-color:' + h.edge + '">' + heroSVG(key, animated, st, rcls, lite) + '</div>';
 }
 
 /* ---------- Icons ---------- */
@@ -664,7 +1079,7 @@ const NODE_LABEL = { fight: 'Fight', elite: 'Elite', rest: 'Rest site', shop: 'M
 
 
 /* ---------- Client UI state ---------- */
-const CL = { role: 'none', V: null, sel: null, overlay: null, lastFx: 0, seen: false, pb: {}, R: null, room: null, code: '', tok: null, actN: 0, acts: [], err: '', status: '', joinCode: '' };
+const CL = { role: 'none', V: null, sel: null, overlay: null, lastFx: 0, seen: false, pb: {}, an: {}, sn: {}, p2: {}, R: null, room: null, code: '', tok: null, actN: 0, acts: [], err: '', status: '', joinCode: '' };
 (function () {
   let base = null, tab = null;
   try { base = localStorage.getItem(TOKKEY); } catch (e) {}
@@ -774,10 +1189,24 @@ function enemyHTML(V, e, prev) {
   const targeting = CL.sel != null && !e.dead;
   const toMe = e.tg === V.me;
   const tgtLabel = V.n > 1 && !e.dead && it.tot > 0 ? '<span class="tgt' + (toMe ? ' me' : '') + '">→ ' + (toMe ? 'You' : esc(vName(V, e.tg))) + '</span>' : '';
-  const cls = 'enemy' + (BOSS_SIZE[e.key] ? ' boss' : '') + (targeting ? ' target' : '') + (it.tot && !e.dead && toMe ? ' threat' : '') + (e.hs > prev ? ' hit' : '') + (e.ac ? ' acting' : '') + (e.dead ? ' dying' : '');
-  return '<button type="button" class="' + cls + '" data-act="enemy" data-arg="' + e.idx + '" data-float="e' + e.idx + '" aria-label="' + esc(e.n + ', ' + e.hp + ' of ' + e.max + ' HP. Next: ' + it.x) + '">' +
+  let ek = '';
+  if (e.ac > prev) ek = { 'k-atk': 'atk', 'k-def': 'def', 'k-buf': 'buf', 'k-deb': 'deb' }[it.c] || 'buf';
+  else if (e.hs > prev) ek = 'hit';
+  if (e.p2 && CL.p2[key] === 0) ek = 'phase';
+  CL.p2[key] = e.p2 ? 1 : 0;
+  let est, dyAs = '';
+  if (e.dead) {
+    if (!CL.an[key] || CL.an[key].k !== 'die') CL.an[key] = { k: 'die', t: Date.now() };
+    const dms = Math.min(Date.now() - CL.an[key].t, 5000);
+    est = { k: 'die', as: -dms }; dyAs = ' style="--as:-' + dms + 'ms"';
+  } else est = rgState(key, ek);
+  let ecls = '';
+  if (e.key === 'bell' && cb.toll) ecls += ' toll';
+  if (e.p2) ecls += ' p2 p2-' + e.key;
+  const cls = 'enemy' + (BOSS_SIZE[e.key] ? ' boss' : '') + (targeting ? ' target' : '') + (it.tot && !e.dead && toMe ? ' threat' : '') + (e.dead ? ' dying' : '');
+  return '<button type="button" class="' + cls + '"' + dyAs + ' data-act="enemy" data-arg="' + e.idx + '" data-float="e' + e.idx + '" aria-label="' + esc(e.n + ', ' + e.hp + ' of ' + e.max + ' HP. Next: ' + it.x) + '">' +
     '<span class="intentbar ' + it.c + '">' + icon + (it.v !== '' ? '<span class="ival">' + it.v + '</span>' : '') + '<span class="itext">' + esc(it.x) + '</span></span>' +
-    '<span class="pwrap">' + tgtLabel + '<span class="art">' + enemyArt(e) + '</span>' + bigShield(e.block, popE) + '</span>' +
+    '<span class="pwrap">' + tgtLabel + '<span class="art">' + enemyArt(e, est, ecls) + '</span>' + bigShield(e.block, popE) + '</span>' +
     '<span class="einfo"><span class="ename">' + esc(e.n) + '</span>' +
     '<span class="hpline">' + (e.block ? '<span class="shield">' + ICON.shield + e.block + '</span>' : '') + '<span class="hpbar' + (e.block ? ' blocked' : '') + '"><i style="width:' + Math.max(0, e.hp / e.max * 100) + '%"></i></span>' + e.hp + '/' + e.max + '</span>' +
     (badges.length ? '<span class="badges">' + badges.join('') + '</span>' : '') +
@@ -800,7 +1229,13 @@ function heroBoxHTML(V, s, prev, mini) {
   const pi = s.pi, hero = V.P[pi].h;
   const key = 'p' + pi;
   const popH = s.block > (CL.pb[key] || 0); CL.pb[key] = s.block;
-  const animCls = s.an[0] > prev ? s.an[1] : '';
+  let hk = s.an[0] > prev ? s.an[1] : '';
+  if (hero === 'duelist' && s.fw && s.fw[0] > prev && s.fw[1] > 0) hk = 'foot';
+  const snk = s.sn || '';
+  if (hero === 'brute') { if (!hk && CL.sn[key] !== undefined && CL.sn[key] !== snk && snk) hk = 'stance'; CL.sn[key] = snk; }
+  const hst = rgState(key, hk);
+  const rcls = (snk ? 'sn-' + snk : '') + (s.dn ? ' dn' : '');
+  const animCls = hk === 'hurt' ? 'hurt' : '';
   const st = s.st;
   const pb = [];
   if (st[0]) pb.push('<span class="badge bad">Weak ' + st[0] + '</span>');
@@ -826,7 +1261,7 @@ function heroBoxHTML(V, s, prev, mini) {
     else if (V.cb.duel) tag = V.cb.duel.a === pi ? '<span class="ptag turn">' + (you ? 'Your turn' : 'Their turn') + '</span>' : '';
     else if (s.rdy) tag = '<span class="ptag ready">Ready</span>';
   }
-  return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, animCls, !mini) + bigShield(s.block, popH, 'shield-p' + pi) + '</div>' +
+  return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, animCls, true, hst, rcls) + bigShield(s.block, popH, 'shield-p' + pi) + '</div>' +
     '<div class="hstats"><span class="hname">' + esc(vName(V, pi)) + (V.n > 1 ? (you ? ' <span class="muted">(you)</span>' : '') : '') + ' ' + tag + '</span>' +
     '<div class="hpline">' + (s.block ? '<span class="shield">' + ICON.shield + s.block + '</span>' : '') + '<span class="hpbar' + (s.block ? ' blocked' : '') + '"><i style="width:' + Math.max(0, s.hp / s.mx * 100) + '%"></i></span>' + s.hp + '/' + s.mx + '</div>' +
     '<div class="row">' + resourceHTML(hero, s) + (!you ? '<span class="muted">' + s.hn + ' cards · ' + s.energy + ' energy</span>' : '') + '</div>' +
@@ -843,7 +1278,7 @@ function combatHTML(V, prev) {
     right = '<div class="duelfoe">' + heroBoxHTML(V, cb.S[1 - me], prev, false) + '</div>';
   } else {
     left = '<div class="heroes">' + heroBoxHTML(V, s, prev, false) + (V.n > 1 ? heroBoxHTML(V, cb.S[1 - me], prev, true) : '') + '</div>';
-    right = cb.en.filter(e => !e.dead || e.ds > prev).map(e => enemyHTML(V, e, prev)).join('');
+    right = cb.en.filter(e => !e.dead || e.ds > prev || (CL.an['e' + e.idx] && CL.an['e' + e.idx].k === 'die' && Date.now() - CL.an['e' + e.idx].t < 1100)).map(e => enemyHTML(V, e, prev)).join('');
   }
   let inc;
   if (cb.busy) inc = '<div class="big">' + (duel ? 'Resolving…' : 'Enemy turn…') + '</div>';
@@ -1055,7 +1490,11 @@ function flushFx(V, prev) {
 }
 function paint(V) {
   const app = document.getElementById('app');
-  const maxFx = V && V.fx && V.fx.length ? V.fx[V.fx.length - 1].s : 0;
+  let maxFx = V && V.fx && V.fx.length ? V.fx[V.fx.length - 1].s : 0;
+  if (V && V.cb) {
+    V.cb.en.forEach(e => { maxFx = Math.max(maxFx, e.ac || 0, e.hs || 0, e.ds || 0); });
+    V.cb.S.forEach(s => { maxFx = Math.max(maxFx, s.an ? s.an[0] : 0, s.fw ? s.fw[0] : 0); });
+  }
   if (!CL.seen) { CL.lastFx = maxFx; CL.seen = true; }
   const prev = CL.lastFx;
   let body = '';

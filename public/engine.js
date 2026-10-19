@@ -351,10 +351,11 @@ function advanceIfDone() {
 }
 
 /* ---------- Combat ---------- */
+const DIFF = 1.5; // extra difficulty on top of the base 1.15: enemy HP and damage
 function log(s) { const c = G.combat; if (!c) return; c.log.unshift(s); if (c.log.length > 18) c.log.length = 18; }
 function makeEnemy(key, idx, dup, hpOverride, raw) {
   const d = EN[key];
-  const mult = raw ? 1 : 1.15 * (G.P.length > 1 ? 1.6 : 1);
+  const mult = raw ? 1 : 1.15 * DIFF * (G.P.length > 1 ? 1.6 : 1);
   const hp = Math.round((hpOverride || rnd(d.hp[0], d.hp[1])) * mult);
   return { idx, key, n: d.names ? d.names[dup % d.names.length] : d.n, variant: dup, hp, max: hp, block: 0, str: 0, weak: 0, vuln: 0, thorns: 0, artifact: d.artifact || 0,
     rooted: false, intangible: false, reflect: false, parry: false, ritual: 0, pi: dup % d.pat.length, dead: false, stolen: {}, acting: false, p2: false, split: false, fragile: 1, tg: 0, hitS: 0, deadS: 0 };
@@ -464,7 +465,7 @@ function intentOf(e, ahead) {
   return p[i];
 }
 function enemyDmg(e, base, T) {
-  let d = Math.round(base * 1.15) + e.str;
+  let d = Math.round(base * 1.15 * DIFF) + e.str;
   if (e.weak > 0) d = Math.floor(d * 0.75);
   if (T && T.vuln > 0) d = Math.floor(d * 1.5);
   if (T && T.stance === 'fury') d = Math.floor(d * 1.25);
@@ -579,10 +580,12 @@ function playCard(pi, uid, tgt) {
   }
   s.energy -= d.c; s.hand.splice(i, 1); s.atkTotal = 0; s.played++;
   log(heroName(pi) + ' plays ' + d.n + (t ? ' on ' + nameOf(t) : '') + '.');
-  if (d.t === 'attack') anim(s, 'lunge');
+  const b0 = s.block, hk = P(pi).hero;
+  if (d.t === 'attack') anim(s, hk === 'bulwark' ? 'slam' : hk === 'brute' ? 'smash' : 'lunge');
   const o = c.duel ? opp(s) : null;
   if (o) o.hurtNow = false;
   if (d.p) d.p(t);
+  if (d.t !== 'attack') anim(s, s.block > b0 ? 'guard' : 'buff');
   if (c.over) return render();
   if (d.t === 'attack') { if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
   if (d.t === 'skill' && !c.duel) aliveEnemies().filter(x => x.key === 'ogre').forEach(og => { og.str += 2; float(tagOf(og), '+2 Strength', 'buff'); log('The Ogre enrages: +2 Strength.'); });
@@ -645,7 +648,7 @@ async function enemyPhase() {
       if (e.dead) break;
       let T = c.S[e.tg];
       if (!T || T.down) { const al = aliveSides(); if (!al.length) break; T = pick(al); e.tg = T.pi; }
-      e.acting = true; render();
+      e.acting = true; e.actS = fx(tagOf(e), '', 'miss'); render();
       await wait(220);
       if (G.combat !== c) return;
       c.S.forEach(s => { s.hurtNow = false; });
@@ -938,7 +941,7 @@ function buildView(me) {
       const nx = intentOf(e, e.key === 'cog' && e.p2 ? 2 : 1);
       return { idx: e.idx, key: e.key, n: e.n, variant: e.variant, hp: e.hp, max: e.max, block: e.block, split: e.split ? 1 : 0, p2: e.p2 ? 1 : 0, dead: e.dead ? 1 : 0,
         st: [e.str, e.ritual, e.weak, e.vuln, e.thorns, e.artifact, e.rooted ? 1 : 0, e.intangible ? 1 : 0, e.reflect ? 1 : 0, e.parry ? 1 : 0, Object.values(e.stolen).reduce((a, b) => a + b, 0)],
-        it, tg: e.tg, nx: nx.hidden ? '???' : nx.l, hs: e.hitS, ds: e.deadS, ac: e.acting ? 1 : 0 };
+        it, tg: e.tg, nx: nx.hidden ? '???' : nx.l, hs: e.hitS, ds: e.deadS, ac: e.actS || 0 };
     });
     let inc = 0;
     if (!c.duel) aliveEnemies().forEach(e => { if (e.tg === me) inc += enemyTotal(e); });
