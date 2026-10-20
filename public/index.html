@@ -153,6 +153,14 @@ html.rm .enemy.lunge { outline: 3px solid #E8743B; outline-offset: 2px; }
 .tbanner.en { border-color: #E8743B; }
 @keyframes tbanner-in { 0% { opacity: 0; transform: translate(-90%, -50%); } 20% { opacity: 1; transform: translate(-50%, -50%); } 75% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-10%, -50%); } }
 html.rm .tbanner { animation: none; }
+.bbanner { position: fixed; left: 50%; top: 30%; transform: translate(-50%, -50%); z-index: 81; pointer-events: none; text-align: center; max-width: 86vw; padding: 14px 44px; border-radius: 12px; background: rgba(21,18,26,.92); border: 2px solid #E8743B; color: #fff; animation: bbanner-in 2.4s ease-out forwards; }
+.bbanner.boss { border-color: #C0392B; box-shadow: 0 0 28px rgba(192,57,43,.55); }
+.bbanner small { display: block; font-family: var(--display); font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: #E8743B; }
+.bbanner b { display: block; font-family: var(--display); font-size: 36px; letter-spacing: 2px; text-transform: uppercase; }
+.bbanner i { display: block; font-size: 14px; opacity: .85; margin-top: 4px; }
+@keyframes bbanner-in { 0% { opacity: 0; transform: translate(-130%, -50%); } 14% { opacity: 1; transform: translate(-50%, -50%); } 80% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -50%); } }
+html.rm .bbanner { animation: none; transform: translate(-50%, -50%); }
+@media (max-width: 600px), (max-height: 480px) { .bbanner { padding: 8px 22px; } .bbanner b { font-size: 24px; } }
 .enemy.tele { --tc: #E8743B; animation: tele-flash .42s ease-out var(--ts, 0s) backwards; }
 .enemy.tele-def { --tc: #56B4E9; } .enemy.tele-buf { --tc: #F0E442; } .enemy.tele-deb { --tc: #CC79A7; }
 .enemy.tele .intentbar { animation: tele-bar .42s ease-out var(--ts, 0s) backwards; }
@@ -905,11 +913,11 @@ body.dragging, body.dragging * { user-select: none; -webkit-user-select: none; }
 .sndpanel input[type=range] { width: 130px; accent-color: var(--gold); }
 .sndpanel .sechead { font-family: var(--display); font-weight: 700; color: var(--gold); margin-top: 2px; }
 /* ---------- Display settings: larger text, high contrast / colorblind-safe ---------- */
-:root { --ts: 1; }
-html.ts1 #app, html.ts2 #app { zoom: var(--ts); }
+:root { --text-scale: 1; }
+html.ts1 #app, html.ts2 #app { zoom: var(--text-scale); }
 @supports not (zoom: 1) {
-  html.ts1 #app, html.ts2 #app { transform: scale(var(--ts)); transform-origin: top center; width: calc(100% / var(--ts)); }
-  html.ts1 #app:has(.battle), html.ts2 #app:has(.battle) { height: calc((100dvh - 12px) / var(--ts)); }
+  html.ts1 #app, html.ts2 #app { transform: scale(var(--text-scale)); transform-origin: top center; width: calc(100% / var(--text-scale)); }
+  html.ts1 #app:has(.battle), html.ts2 #app:has(.battle) { height: calc((100dvh - 12px) / var(--text-scale)); }
 }
 html.ts1 .sndpanel { font-size: 20px; }
 html.ts2 .sndpanel { font-size: 23px; }
@@ -2152,7 +2160,7 @@ const A11Y = (function () {
   try { saved = JSON.parse(localStorage.getItem(K) || 'null'); } catch (e) {}
   if (saved && typeof saved === 'object') { prefs.size = (saved.size === 0 || saved.size === 1 || saved.size === 2) ? saved.size : (saved.big === true ? 1 : 0); prefs.hc = saved.hc === true; prefs.cb = saved.cb === true; }
   else { try { prefs.hc = !!(window.matchMedia && matchMedia('(prefers-contrast: more)').matches); } catch (e) {} }
-  function apply() { document.documentElement.style.setProperty('--ts', String([1, 1.25, 1.5][prefs.size] || 1)); const c = document.documentElement.classList; c.toggle('ts1', prefs.size === 1); c.toggle('ts2', prefs.size === 2); c.toggle('hc', prefs.hc); c.toggle('cb', prefs.cb); if (prefs.cb) decorate(); }
+  function apply() { document.documentElement.style.setProperty('--text-scale', String([1, 1.25, 1.5][prefs.size] || 1)); const c = document.documentElement.classList; c.toggle('ts1', prefs.size === 1); c.toggle('ts2', prefs.size === 2); c.toggle('hc', prefs.hc); c.toggle('cb', prefs.cb); if (prefs.cb) decorate(); }
   function set(k, v) { if (k === 'size') v = Math.max(0, Math.min(2, Number(v) | 0)); else if (k === 'hc' || k === 'cb') v = !!v; else return; prefs[k] = v; try { localStorage.setItem(K, JSON.stringify(prefs)); } catch (e) {} apply(); }
   apply();
   /* colorblind mode: per-status glyphs on badges (shown via CSS attr()), float prefixes for damage/block/etc. */
@@ -2389,7 +2397,9 @@ const SND = (function () {
     win: { len: 2.8, ev: [[0, [62], 0.25, 'b'], [0.2, [66], 0.25, 'b'], [0.4, [69], 0.25, 'b'], [0.6, [74, 78, 81], 1.6, 'b'], [0.6, [86], 1.8, 'bell'], [0.9, [93], 1.8, 'bell']] },
     clear: { len: 6, ev: [[0, [55, 62], 0.4, 'b'], [0.4, [59, 66], 0.4, 'b'], [0.8, [62, 69], 0.4, 'b'], [1.2, [67, 74, 79], 1.8, 'b'], [1.9, [71, 78, 83], 0.5, 'b'], [2.4, [74, 81, 86], 2.6, 'b'], [1.2, [91], 2.4, 'bell'], [2.4, [98], 3, 'bell'], [0, [38], 5, 'drone']] },
     final: { len: 9, ev: [[0, [50, 57], 0.5, 'b'], [0.5, [54, 61], 0.5, 'b'], [1, [57, 64], 0.5, 'b'], [1.5, [62, 69], 1.2, 'b'], [2.8, [59, 66, 71], 0.5, 'b'], [3.3, [62, 69, 74], 0.5, 'b'], [3.8, [66, 73, 78], 0.5, 'b'], [4.3, [69, 76, 81], 3.8, 'b'], [4.3, [93], 4, 'bell'], [5.5, [98], 4, 'bell'], [6.5, [105], 3, 'bell'], [0, [38], 8, 'drone']] },
-    defeat: { len: 6, ev: [[0, [57, 60, 64], 1.2, 'pad'], [1.2, [55, 58, 62], 1.2, 'pad'], [2.4, [53, 56, 60], 1.4, 'pad'], [3.8, [50, 53, 57], 2.2, 'pad'], [0, [33], 0.1, 'bell'], [2.4, [28], 0.1, 'bell'], [3.8, [26], 0.1, 'bell']] }
+    defeat: { len: 6, ev: [[0, [57, 60, 64], 1.2, 'pad'], [1.2, [55, 58, 62], 1.2, 'pad'], [2.4, [53, 56, 60], 1.4, 'pad'], [3.8, [50, 53, 57], 2.2, 'pad'], [0, [33], 0.1, 'bell'], [2.4, [28], 0.1, 'bell'], [3.8, [26], 0.1, 'bell']] },
+    intro: { len: 2.2, ev: [[0, [43, 50], 0.35, 'b'], [0.35, [46, 53], 1.4, 'b'], [0, [31], 2, 'drone'], [0.35, [79], 1.6, 'bell']] },
+    elite: { len: 1.2, ev: [[0, [50, 57], 0.25, 'b'], [0.25, [53, 60], 0.8, 'b'], [0.25, [84], 0.9, 'bell']] }
   };
   function playSting(V, t, name) {
     const s = STING[name]; if (!s) return;
@@ -2400,6 +2410,7 @@ const SND = (function () {
       else if (k === 'drone') V.tone({ t: tt, f: mf(notes[0]), d, a: 0.6, r: 1.2, v: 0.12, type: 'sawtooth', lp: 220 });
       else if (k === 'pad') pad(V, tt, notes, d, 0.05, 700, 'triangle');
     });
+    if (name === 'intro') { thump(V, t, 0.3, 60); thump(V, t + 0.35, 0.25, 55); }
     if (name === 'clear' || name === 'final') { thump(V, t, 0.3, 70); thump(V, t + 1.2, 0.25, 70); thump(V, t + 2.4, 0.3, 65); }
   }
 
@@ -3113,7 +3124,8 @@ function chestStage(V, tier, relic, key, title) {
 function chestSfx(relic, cards) {
   SND.ui('lid', 0.1); SND.ui('thud', 0.65); SND.ui('burst', 0.55); SND.ui('coin', 0.75); if (relic) SND.ui('relic', 1.15);
   /* reward cards flip in at 1.55s + 0.22s per card (see .reveal .card.rv); no flip under Reduce motion */
-  if (!REDUCE && cards) cards.forEach((id, i) => SND.fire('reveal', RAR[id] || 'c', 1.55 + i * 0.22 + 0.1));
+  /* sound is not motion: under Reduce motion cards appear at once, so play the reveals right away */
+  if (cards) cards.forEach((id, i) => SND.fire('reveal', RAR[id] || 'c', REDUCE ? 0.9 + i * 0.12 : 1.55 + i * 0.22 + 0.1));
 }
 
 /* ----- audio: map game state onto music scenes and event sounds ----- */
@@ -3136,6 +3148,7 @@ function sndSync(V, prev) {
     else if (scr === 'actclear' || scr === 'duelend') SND.stinger('clear');
     else if (scr === 'victory') SND.stinger('final');
     else if (scr === 'defeat') SND.stinger('defeat');
+    else if (scr === 'combat') bossIntro(V);
     else if (scr === 'treasure') SND.ui('thud');
     else if (scr === 'rest') SND.ui('crackle');
     else if (scr === 'shop') SND.ui('coin');
@@ -3180,6 +3193,24 @@ function sndSync(V, prev) {
     if (f.x[0] === '−') { SND.hit(CL.sndHero || me, 0.08 + 0.09 * n); SND.enemy(((c.en.find(e => 'e' + e.idx === f.t) || {}).key) || 'moth', 'hit', 0.1 + 0.09 * n); n++; }
     else if (f.x === 'Blocked') { SND.block(CL.sndHero || me, 0.06 + 0.09 * n); n++; }
   });
+}
+
+function bossIntro(V) {
+  const cb = V && V.cb;
+  if (!cb || cb.duel || (cb.k !== 'boss' && cb.k !== 'elite')) return;
+  const e = (cb.en || []).find(x => !x.dead) || (cb.en || [])[0];
+  if (!e) return;
+  const boss = cb.k === 'boss';
+  const note = (typeof EN !== 'undefined' && EN[e.key] && EN[e.key].note) || '';
+  let b = document.getElementById('bbanner');
+  if (b) b.remove();
+  b = document.createElement('div');
+  b.id = 'bbanner'; b.className = 'bbanner' + (boss ? ' boss' : '');
+  b.setAttribute('role', 'status');
+  b.innerHTML = '<small>' + (boss ? 'Boss' : 'Elite') + '</small><b>' + esc(e.n || e.key) + '</b>' + (note ? '<i>' + esc(note) + '</i>' : '');
+  document.body.appendChild(b);
+  try { SND.stinger(boss ? 'intro' : 'elite'); } catch (err) {}
+  setTimeout(() => { if (b.parentNode) b.remove(); }, REDUCE ? 2200 : 2400);
 }
 
 function turnBanner(txt, enemy) {
@@ -3694,6 +3725,7 @@ function titleHTML() {
     '<form class="row joinrow" data-form="join"><label for="joincode">Join with code</label><input id="joincode" class="codein" maxlength="5" autocomplete="off" spellcheck="false" placeholder="ABCDE" value="' + esc(CL.joinCode) + '"' + (rooms === false ? ' disabled' : '') + '><button type="submit" class="btn"' + (rooms === false ? ' disabled' : '') + '>Join</button></form>' +
     
     (CL.err ? '<p class="waitnote">' + esc(CL.err) + '</p>' : '') +
+    '<div class="row"><button type="button" class="btn" data-act="ach">Achievements (' + ACH.count() + '/' + ACH.total + ')</button></div>' +
     (sg ? '<div class="row"><button type="button" class="btn" data-act="continue">Continue solo run · ' + esc(HEROES[sg.P[0].hero].n) + ', Act ' + ROMAN[sg.act - 1] + '</button></div>' : '') +
     '</div></section>';
 }
@@ -3711,7 +3743,7 @@ function heroPickCards(act, chosen, other) {
   }).join('') + '</div>';
 }
 function pickHTML() {
-  return '<section class="panel"><h2>Choose your hero</h2>' + diffPickHTML(prefDiff(), 'setdiff', true) + heroPickCards('solohero', null) + '<div class="row"><button type="button" class="btn" data-act="leave">Back</button></div></section>';
+  return '<section class="panel"><h2>Choose your hero</h2>' + diffPickHTML(prefDiff(), 'setdiff', true) + modPickHTML(prefMods(), 'setmod', true) + heroPickCards('solohero', null) + '<div class="row"><button type="button" class="btn" data-act="leave">Back</button></div></section>';
 }
 function netLine() {
   const n = CL.net;
@@ -3829,7 +3861,7 @@ function lobbyHTML(V) {
     '<div class="row"><button type="button" class="btn" data-act="copycode">Copy code</button><button type="button" class="btn" data-act="copylink">Copy invite link</button>' + (navigator.share ? '<button type="button" class="btn" data-act="sharelink">Share…</button>' : '') + '</div>' +
     '<p class="netline" role="status" aria-live="polite">' + esc(CL.copied || '') + '</p>' +
     '<ul class="lobbyl">' + slot(0) + slot(1) + '</ul>' +
-    diffPickHTML(V.df == null ? 1 : V.df, 'hostdiff', host) +
+    diffPickHTML(V.df == null ? 1 : V.df, 'hostdiff', host) + modPickHTML(V.md || 0, 'hostmod', host) +
     heroPickCards('hero', V.P[me].h, V.n > 1 && V.P[1 - me] ? V.P[1 - me].h : null) +
     '<div class="row">' + (host ? '<button type="button" class="btn primary" data-act="start"' + (ready ? '' : ' disabled') + '>' + (p2 ? (ready ? 'Start the climb' : 'Waiting for both heroes…') : 'Waiting for partner…') + '</button>' : '<span class="muted">' + (ready ? 'Waiting for the host to start…' : 'Waiting for both heroes…') + '</span>') +
     '<button type="button" class="btn" data-act="leave">Leave</button></div>' + netLine() + '</section>';
@@ -4136,7 +4168,136 @@ function partnerFx(V) {
   an.onfinish = () => g.remove();
   setTimeout(() => g.remove(), 900);
 }
+/* ---------- Achievements (client only, saved in localStorage) ---------- */
+const ACH = (function () {
+  const KEY = 'masked-spire-achievements';
+  const LIST = [
+    { id: 'first_win', n: 'First Victory', d: 'Win a run.' },
+    { id: 'flawless', n: 'Flawless Run', d: 'Win a run from Act 1 without losing any HP (the final duel does not count).' },
+    { id: 'boss1', n: 'Boss Slayer', d: 'Defeat a boss.' },
+    { id: 'boss3', n: 'Spire Breaker', d: 'Defeat 3 bosses in one run.' },
+    { id: 'boss10', n: 'Boss Hunter', d: 'Defeat 10 bosses in total.' },
+    { id: 'untouched', n: 'Untouched', d: 'Win a fight without losing any HP.' },
+    { id: 'streak3', n: 'Triple Threat', d: 'Defeat 3 enemies in one turn.' },
+    { id: 'streak5', n: 'Rampage', d: 'Defeat 5 enemies in one turn.' },
+    { id: 'kills100', n: 'Centurion', d: 'Defeat 100 enemies in total.' }
+  ];
+  let store = { u: {}, t: { kills: 0, bosses: 0, wins: 0 } };
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s && typeof s === 'object') {
+      if (s.u && typeof s.u === 'object') store.u = s.u;
+      if (s.t && typeof s.t === 'object') { store.t.kills = +s.t.kills || 0; store.t.bosses = +s.t.bosses || 0; store.t.wins = +s.t.wins || 0; }
+    }
+  } catch (e) {}
+  let dirty = false, run = null, queue = [], showing = false;
+  function save() { if (!dirty) return; dirty = false; try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+  function css() {
+    if (document.getElementById('ach-css')) return;
+    const st = document.createElement('style');
+    st.id = 'ach-css';
+    st.textContent = '#achtoast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:1100;background:#2a2236;color:#fff;border:1px solid #d8b45a;border-radius:10px;padding:10px 16px;box-shadow:0 4px 18px rgba(0,0,0,.5);max-width:90vw;text-align:center;opacity:0;pointer-events:none}' +
+      '#achtoast.on{opacity:1}#achtoast.anim{transition:opacity .25s}#achtoast small{display:block;opacity:.8}' +
+      '#achov{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:12px}' +
+      '#achov .achbox{background:#1b1722;color:#eee;border:1px solid #d8b45a;border-radius:12px;max-width:520px;width:100%;max-height:88vh;display:flex;flex-direction:column;padding:14px 16px}' +
+      '#achov h2{margin:0 0 8px}#achov ul{list-style:none;margin:0 0 10px;padding:0;overflow:auto;flex:1}' +
+      '#achov li{padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.1)}#achov li.lock{opacity:.5}#achov li small{display:block;opacity:.8}';
+    document.head.appendChild(st);
+  }
+  function pump() {
+    if (showing || !queue.length) return;
+    css();
+    showing = true;
+    const a = queue.shift();
+    let t = document.getElementById('achtoast');
+    if (!t) { t = document.createElement('div'); t.id = 'achtoast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+    t.className = (typeof REDUCE !== 'undefined' && REDUCE) ? '' : 'anim';
+    t.innerHTML = '\ud83c\udfc6 Achievement unlocked<br><b>' + esc(a.n) + '</b><small>' + esc(a.d) + '</small>';
+    void t.offsetWidth;
+    t.classList.add('on');
+    setTimeout(() => { t.classList.remove('on'); setTimeout(() => { showing = false; pump(); }, 350); }, 3200);
+  }
+  function unlock(id) {
+    if (store.u[id]) return;
+    const a = LIST.filter(x => x.id === id)[0];
+    if (!a) return;
+    store.u[id] = Date.now(); dirty = true;
+    queue.push(a); pump();
+  }
+  function fresh(V, me) {
+    return { hp: me.hp, k: me.k || 0, took: false, bosses: 0, scr: V.scr, kind: null, act: V.act, tk: null, tbase: me.k || 0, fightHurt: false, ended: false, full: V.act === 1 && !V.floor };
+  }
+  function observe(V) {
+    if (!V || !V.P || !V.P[V.me] || V.scr === 'lobby') { run = null; return; }
+    const me = V.P[V.me];
+    if (!run || (run.ended && V.scr !== 'victory' && V.scr !== 'defeat') || V.act < run.act) run = fresh(V, me);
+    const duel = !!(V.cb && (V.cb.duel || V.cb.k === 'duel')) || V.scr === 'duelintro' || V.scr === 'duelend';
+    /* HP loss (duel excluded) */
+    if (!duel && me.hp < run.hp) { run.took = true; run.fightHurt = true; }
+    run.hp = me.hp;
+    /* kills */
+    const k = me.k || 0;
+    if (V.cb && !duel) {
+      const key = V.act + ':' + V.floor + ':' + V.cb.t;
+      if (run.tk !== key) { run.tk = key; run.tbase = run.k; }
+    }
+    const d = k - run.k;
+    if (d > 0 && d < 50) { store.t.kills += d; dirty = true; if (store.t.kills >= 100) unlock('kills100'); }
+    run.k = k;
+    if (V.cb && !duel) {
+      const turn = k - run.tbase;
+      if (turn >= 3) unlock('streak3');
+      if (turn >= 5) unlock('streak5');
+    }
+    /* combat tracking */
+    if (V.scr === 'combat' && V.cb) {
+      if (run.scr !== 'combat') run.fightHurt = false;
+      run.kind = V.cb.k;
+    } else if (run.scr === 'combat' && V.scr !== 'defeat' && run.kind) {
+      if (run.kind === 'boss') {
+        run.bosses++; store.t.bosses++; dirty = true;
+        unlock('boss1');
+        if (run.bosses >= 3) unlock('boss3');
+        if (store.t.bosses >= 10) unlock('boss10');
+      }
+      if (run.kind !== 'duel' && !run.fightHurt) unlock('untouched');
+      run.kind = null;
+    }
+    /* run end */
+    if (V.scr === 'victory' && !run.ended) {
+      run.ended = true; store.t.wins++; dirty = true;
+      unlock('first_win');
+      if (run.full && !run.took) unlock('flawless');
+    } else if (V.scr === 'defeat') run.ended = true;
+    run.scr = V.scr;
+    save();
+  }
+  function count() { return LIST.filter(a => store.u[a.id]).length; }
+  function close() {
+    const o = document.getElementById('achov');
+    if (o) o.remove();
+    document.removeEventListener('keydown', onKey, true);
+  }
+  function onKey(ev) { if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); close(); } }
+  function open() {
+    css(); close();
+    const o = document.createElement('div');
+    o.id = 'achov';
+    o.setAttribute('role', 'dialog'); o.setAttribute('aria-modal', 'true'); o.setAttribute('aria-label', 'Achievements');
+    o.innerHTML = '<div class="achbox"><h2>Achievements (' + count() + '/' + LIST.length + ')</h2><ul>' +
+      LIST.map(a => store.u[a.id]
+        ? '<li><b>\ud83c\udfc6 ' + esc(a.n) + '</b><small>' + esc(a.d) + ' Unlocked ' + esc(new Date(store.u[a.id]).toLocaleDateString()) + '</small></li>'
+        : '<li class="lock"><b>\ud83d\udd12 ' + esc(a.n) + '</b><small>' + esc(a.d) + '</small></li>').join('') +
+      '</ul><div class="row"><button type="button" class="btn primary" id="achclose">Close</button></div></div>';
+    o.addEventListener('click', ev => { if (ev.target === o || ev.target.id === 'achclose') close(); });
+    document.body.appendChild(o);
+    document.addEventListener('keydown', onKey, true);
+    const b = document.getElementById('achclose'); if (b) b.focus();
+  }
+  return { observe, open, count, total: LIST.length };
+})();
 function paint(V) {
+  try { ACH.observe(V); } catch (e) {}
   const app = document.getElementById('app');
   let maxFx = V && V.fx && V.fx.length ? V.fx[V.fx.length - 1].s : 0;
   if (V && V.cb) {
@@ -4145,7 +4306,25 @@ function paint(V) {
   }
   if (!CL.seen) { CL.lastFx = maxFx; CL.seen = true; }
   const prev = CL.lastFx;
-  if (V && V.fx) V.fx.forEach(f => { if (f.k === 'coin' && f.s > prev && f.x) toast('🪙 ' + f.x); });
+  if (!window.coinFlipFx) window.coinFlipFx = function (text) {
+    if (!document.getElementById('coinfx-css')) {
+      const st = document.createElement('style'); st.id = 'coinfx-css';
+      st.textContent = '#coinfx{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;pointer-events:none;z-index:9999;background:rgba(0,0,0,.35)}' +
+        '#coinfx .cf-coin{width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#F6DB84,#E8BE52 55%,#8E6A20);border:4px solid #8E6A20;box-shadow:0 0 28px rgba(232,190,82,.6)}' +
+        '#coinfx.go .cf-coin{animation:cf-flip 1.3s cubic-bezier(.2,.7,.3,1) both}' +
+        '#coinfx .cf-txt{color:#fff;font-weight:700;font-size:1.25rem;text-align:center;padding:8px 16px;background:rgba(0,0,0,.6);border-radius:10px;max-width:86vw}' +
+        '@keyframes cf-flip{0%{transform:translateY(120px) rotateX(0) scale(.6)}50%{transform:translateY(-90px) rotateX(900deg) scale(1.15)}100%{transform:translateY(0) rotateX(1800deg) scale(1)}}';
+      document.head.appendChild(st);
+    }
+    const old = document.getElementById('coinfx'); if (old) old.remove();
+    const el = document.createElement('div'); el.id = 'coinfx'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite');
+    const coin = document.createElement('div'); coin.className = 'cf-coin'; coin.setAttribute('aria-hidden', 'true');
+    const txt = document.createElement('div'); txt.className = 'cf-txt'; txt.textContent = '🪙 ' + text;
+    el.appendChild(coin); el.appendChild(txt); document.body.appendChild(el);
+    if (!REDUCE) { void el.offsetWidth; el.classList.add('go'); try { SND.ui('coin', 0.75); } catch (e) {} }
+    setTimeout(() => { if (el.parentNode) el.remove(); }, REDUCE ? 1800 : 2400);
+  };
+  if (V && V.fx) V.fx.forEach(f => { if (f.k === 'coin' && f.s > prev && f.x) { try { window.coinFlipFx(f.x); } catch (e) { toast('🪙 ' + f.x); } } });
   const sk = V ? V.scr : (CL.role || 'title');
   if (CL.scrKey !== undefined && CL.scrKey !== sk) {
     if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); if (['combat', 'map', 'reward', 'duelintro', 'duelend'].indexOf(sk) >= 0) { let w = document.getElementById('trwipe'); if (!w) { w = document.createElement('div'); w.id = 'trwipe'; w.setAttribute('aria-hidden', 'true'); w.addEventListener('animationend', () => w.classList.remove('go', 'duel', 'quick')); document.body.appendChild(w); } w.classList.remove('go', 'duel', 'quick'); void w.offsetWidth; w.classList.add('go'); if (sk === 'map' || sk === 'reward') w.classList.add('quick'); else if (sk !== 'combat') w.classList.add('duel'); setTimeout(() => w.classList.remove('go', 'duel', 'quick'), 1000); } clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
@@ -4268,6 +4447,12 @@ function prefDiff() { let d = NaN; try { d = parseInt(localStorage.getItem(DIFFK
 function setPrefDiff(d) { try { localStorage.setItem(DIFFKEY, String(d)); } catch (e) {} }
 function diffPickHTML(cur, act, on) {
   return '<div class="row" role="group" aria-label="Difficulty"><span class="muted">Difficulty</span>' + E.DIFFS.map((d, i) => '<button type="button" class="btn' + (i === cur ? ' primary' : '') + '" data-act="' + act + '" data-arg="' + i + '" aria-pressed="' + (i === cur ? 'true' : 'false') + '"' + (on ? '' : ' disabled') + '>' + esc(d.n) + '</button>').join('') + '</div>';
+}
+const MODKEY = 'masked-spire-mods';
+function prefMods() { let m = 0; try { m = parseInt(localStorage.getItem(MODKEY), 10); } catch (e) {} return m >= 0 && m < (1 << E.MODS.length) ? m : 0; }
+function setPrefMods(m) { try { localStorage.setItem(MODKEY, String(m)); } catch (e) {} }
+function modPickHTML(cur, act, on) {
+  return '<div role="group" aria-label="Modifiers"><div class="row"><span class="muted">Modifiers</span>' + E.MODS.map((m, i) => { const sel = ((cur >> i) & 1) === 1; return '<button type="button" class="btn' + (sel ? ' primary' : '') + '" data-act="' + act + '" data-arg="' + i + '" aria-pressed="' + (sel ? 'true' : 'false') + '" title="' + esc(m.d) + '"' + (on ? '' : ' disabled') + '>' + esc(m.n) + '</button>'; }).join('') + '</div><p class="muted" style="margin:0">' + E.MODS.map(m => esc(m.n) + ': ' + esc(m.d)).join(' · ') + '</p></div>';
 }
 function soloView() { return E.G ? E.buildView(0) : null; }
 function render() {
@@ -4652,10 +4837,11 @@ document.getElementById('app').addEventListener('click', ev => {
   const act = b.dataset.act, arg = b.dataset.arg;
   const V = curView();
   switch (act) {
+    case 'ach': ACH.open(); break;
     case 'solo': CL.role = 'pick'; E.G = null; render(); break;
-    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(h, CL.tok)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; ENDFX = null; render(); saveSolo(); break; }
-    case 'solohero': { const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(arg, CL.tok)]; E.G = G; CL.role = 'solo'; CL.seen = false; render(); saveSolo(); break; }
-    case 'host': CL.err = ''; goOnline({ t: 'create', tok: CL.tok, diff: prefDiff() }); break;
+    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const G = E.baseG('solo', prefDiff(), prefMods()); G.P = [E.newPlayer(h, CL.tok, G.mods)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; ENDFX = null; render(); saveSolo(); break; }
+    case 'solohero': { const G = E.baseG('solo', prefDiff(), prefMods()); G.P = [E.newPlayer(arg, CL.tok, G.mods)]; E.G = G; CL.role = 'solo'; CL.seen = false; render(); saveSolo(); break; }
+    case 'host': CL.err = ''; goOnline({ t: 'create', tok: CL.tok, diff: prefDiff(), mods: prefMods() }); break;
     case 'continue': {
       const s = loadSave();
       if (!s) { render(); break; }
@@ -4673,6 +4859,8 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'snd': SND.togglePanel(); break;
     case 'keys': kbHelp(); break;
     case 'setdiff': setPrefDiff(Number(arg)); render(); break;
+    case 'setmod': setPrefMods(prefMods() ^ (1 << Number(arg))); render(); break;
+    case 'hostmod': { const nm = ((V && V.md) || 0) ^ (1 << Number(arg)); setPrefMods(nm); send('mods', nm); break; }
     case 'hostdiff': setPrefDiff(Number(arg)); send('diff', Number(arg)); break;
     case 'leave': leaveAll(); break;
     case 'hero': SND.ui('node'); send('hero', arg); break;

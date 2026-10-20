@@ -206,7 +206,7 @@ const HEROES = {
   elementalist: {
     n: 'The Elementalist', tag: 'Masked · four elements', hp: 80, relic: 'quadmask', color: '#2C1F55', edge: '#5B448F',
     passive: 'Quadrant Mask: each Attack you play gives 1 Block (not reduced by Frail).',
-    starter: ['estrike', 'emberlash', 'rimespiral', 'sparkjolt', 'eguard', 'eguard', 'eguard', 'eguard', 'eguard', 'eguard'],
+    starter: ['emberlash', 'rimespiral', 'sparkjolt', 'estrike', 'eguard', 'eguard', 'eguard', 'eguard', 'eguard', 'eguard'],
     pool: ['cinderbolt', 'scorch', 'frostward', 'gust', 'icelance', 'stormcrash', 'rimeshroud', 'tempest', 'stonemask'],
     style: 'Fire, frost, storm and stone. Chain cheap Attacks so the mask turns every swing into Block. Fire burns, frost chills (weaker enemy attacks), storm shocks (bonus damage), stone guards.'
   }
@@ -217,7 +217,7 @@ const RELICS = {
   mask:        { n: 'Cracked Mask', d: 'Start each combat with 1 Flow on your first turn.', start: 1 },
   lanternhelm: { n: 'Lantern Helm', d: 'Start each combat with 8 Block.', start: 1 },
   hornedmask:  { n: 'Horned Mask', d: 'Start each combat in Calm stance.', start: 1 },
-  quadmask:    { n: 'Quadrant Mask', d: 'Start each combat with 5 Block and one Fire, Frost, Storm and Stone attack in your opening hand.', start: 1 },
+  quadmask:    { n: 'Quadrant Mask', d: 'Start each combat with 5 Block. Your opening hand always holds one Fire, one Frost, one Storm and one Stone attack (a basic one is conjured if your deck lacks it).', start: 1 },
   whetstone:   { n: 'Whetstone', d: 'Your Attacks deal 1 extra damage per hit.' },
   locket:      { n: 'Iron Locket', d: 'Start each combat with 6 Block.' },
   hourglass:   { n: 'Sand Hourglass', d: 'Draw 2 extra cards on your first turn.' },
@@ -229,6 +229,11 @@ const RELICS = {
   cinder:      { n: 'Cinder Charm', d: 'Start each combat with 1 Strength.' },
   satchel:     { n: 'Gilded Satchel', d: 'Gain 30 gold when picked up.' },
   tonic:       { n: 'Bitter Tonic', d: 'Heal 15 HP when picked up.' },
+  bountypouch: { n: 'Bounty Pouch', d: 'Gain 3 gold each time you kill an enemy.' },
+  carrion:     { n: 'Carrion Charm', d: 'Heal 2 HP each time you kill an enemy.' },
+  thimble:     { n: 'Hex Thimble', d: 'Enemies start each combat with 1 Weak.' },
+  pocket:      { n: 'Stitched Pocket', d: 'Gain 4 Block after drawing your hand at the start of each turn.' },
+  spurboots:   { n: 'Spurred Boots', d: 'Gain 1 extra Energy on your first turn against an Elite or Boss.' },
   ribbon:      { n: 'Silk Ribbon', d: 'Boss relic. Draw 1 extra card every turn.', boss: 1 },
   wardenseal:  { n: 'Warden\'s Seal', d: 'Boss relic. Start each combat with 12 Block.', boss: 1 }
 };
@@ -323,17 +328,23 @@ function available() {
 }
 
 /* ---------- Run setup ---------- */
-function baseG(mode, diff) {
-  return { v: 3, mode, code: null, screen: mode === 'coop' ? 'lobby' : 'map', act: 1, floor: 0, map: genMap(), pos: null, P: [], combat: null, fx: [], fxSeq: 0, duelWinner: null, started: mode !== 'coop', diff: normDiff(diff) };
+const MODS = [{ k: 'horde', n: 'Faster Horde', d: 'Enemies hit 25% harder.' }, { k: 'fragile', n: 'Fragile Heroes', d: 'Heroes start with 75% max HP.' }, { k: 'gold', n: 'Double Gold', d: 'All gold rewards are doubled.' }, { k: 'curse', n: 'Curse Start', d: 'Each hero starts with a Fate curse in their deck.' }];
+function normMods(m) { m = Number(m); return Number.isInteger(m) && m >= 0 ? m & ((1 << MODS.length) - 1) : 0; }
+function modOn(k, m) { const i = MODS.findIndex(x => x.k === k); if (m === undefined) m = G && G.mods; return i >= 0 && ((normMods(m) >> i) & 1) === 1; }
+function goldMul() { return modOn('gold') ? 2 : 1; }
+function baseG(mode, diff, mods) {
+  return { v: 3, mode, code: null, screen: mode === 'coop' ? 'lobby' : 'map', act: 1, floor: 0, map: genMap(), pos: null, P: [], combat: null, fx: [], fxSeq: 0, duelWinner: null, started: mode !== 'coop', diff: normDiff(diff), mods: normMods(mods) };
 }
-function newPlayer(hero, tok) {
+function newPlayer(hero, tok, mods) {
   const p = { hero: null, tok: tok || null, hp: 0, maxHp: 0, gold: 99, deck: [], relics: [], kills: 0, done: false, vote: null, ack: 0, conn: true, reward: null, shop: null, treasure: null, actclear: null };
-  if (hero) equipHero(p, hero);
+  if (hero) equipHero(p, hero, mods);
   return p;
 }
-function equipHero(p, hero) {
+function equipHero(p, hero, mods) {
   const h = HEROES[hero];
-  p.hero = hero; p.hp = h.hp; p.maxHp = h.hp; p.deck = h.starter.map(mk); p.relics = [h.relic];
+  const hp = modOn('fragile', mods) ? Math.round(h.hp * 0.75) : h.hp;
+  p.hero = hero; p.hp = hp; p.maxHp = hp; p.deck = h.starter.map(mk); p.relics = [h.relic];
+  if (modOn('curse', mods)) p.deck.push(mk('fate'));
 }
 function freeRelic(pi, boss) {
   const free = Object.keys(RELICS).filter(k => !RELICS[k].start && !hasR(pi, k));
@@ -368,7 +379,7 @@ function enterNode(r, l) {
   else if (node.type === 'rest') { G.screen = 'rest'; G.P.forEach(p => { p.rested = false; }); render(); }
   else if (node.type === 'shop') { G.P.forEach((p, pi) => { p.shop = { cards: cardChoices(pi, 4, 'shop').map(id => ({ id, price: rnd(PRICE[RAR[id]][0], PRICE[RAR[id]][1]) + (G.act - 1) * 8, sold: false })), removed: false }; }); G.screen = 'shop'; render(); }
   else if (node.type === 'treasure') {
-    G.P.forEach((p, pi) => { const gold = rnd(40, 60) + (G.act - 1) * 10; p.gold += gold; const relic = freeRelic(pi); gainRelic(pi, relic); p.treasure = { gold, relic }; });
+    G.P.forEach((p, pi) => { const gold = (rnd(40, 60) + (G.act - 1) * 10) * goldMul(); p.gold += gold; const relic = freeRelic(pi); gainRelic(pi, relic); p.treasure = { gold, relic }; });
     G.screen = 'treasure'; render();
   }
 }
@@ -424,6 +435,7 @@ function startCombat(keys, kind) {
     S: G.P.map((p, i) => newSide(i)), turn: 0, over: false, busy: false, log: [], duel: null, finalToll: false
   };
   if (G.P.some((p, i) => hasR(i, 'bellshard'))) C().enemies.forEach(e => { e.vuln = 1; });
+  if (G.P.some((p, i) => hasR(i, 'thimble'))) C().enemies.forEach(e => { e.weak = Math.max(e.weak, 1); });
   log(kind === 'boss' ? EN[keys[0]].n + ' looms over you.' : 'Enemies appear: ' + C().enemies.map(e => e.n).join(', ') + '.');
   G.screen = 'combat';
   startRound();
@@ -447,7 +459,7 @@ function startTurnSide(s) {
   let keep = 0;
   if (!first && P(pi).hero === 'bulwark') keep = s.keepAll ? s.block : Math.floor(s.block / 2);
   s.block = keep + (first && hasR(pi, 'locket') ? 6 : 0) + (first && hasR(pi, 'lanternhelm') ? 8 : 0) + (first && hasR(pi, 'quadmask') ? 5 : 0) + (first && hasR(pi, 'wardenseal') ? 12 : 0);
-  s.energy = Math.max(0, 3 + (first && hasR(pi, 'quill') ? 1 : 0) - s.drain);
+  s.energy = Math.max(0, 3 + (first && hasR(pi, 'quill') ? 1 : 0) + (first && hasR(pi, 'spurboots') && C() && (C().kind === 'elite' || C().kind === 'boss') ? 1 : 0) - s.drain);
   if (s.drain) log(heroName(pi) + ' is Shackled: ' + s.energy + ' Energy.');
   s.drain = 0;
   s.hushNow = s.hush; s.hush = 0;
@@ -460,9 +472,11 @@ function startTurnSide(s) {
   if (first && hasR(pi, 'quadmask')) {
     const EL = { emberlash: 'fire', cinderbolt: 'fire', scorch: 'fire', rimespiral: 'frost', icelance: 'frost', stormcrash: 'storm', tempest: 'storm', sparkjolt: 'storm' };
     const elOf = id => (CARDS[id] && CARDS[id].t === 'attack') ? (EL[id] || 'stone') : null;
-    ['fire', 'frost', 'storm', 'stone'].forEach(el => { const j = s.draw.findIndex(c => elOf(c.id) === el); if (j >= 0) s.draw.push(s.draw.splice(j, 1)[0]); });
+    const BASIC = { fire: 'emberlash', frost: 'rimespiral', storm: 'sparkjolt', stone: 'estrike' };
+    ['fire', 'frost', 'storm', 'stone'].forEach(el => { const j = s.draw.findIndex(c => elOf(c.id) === el); if (j >= 0) s.draw.push(s.draw.splice(j, 1)[0]); else s.draw.push(mk(BASIC[el])); });
   }
   draw(5 + (first && hasR(pi, 'hourglass') ? 2 : 0) + (hasR(pi, 'ribbon') ? 1 : 0));
+  if (hasR(pi, 'pocket')) gain(4, true);
 }
 function draw(n) {
   const s = A;
@@ -521,7 +535,7 @@ function intentOf(e, ahead) {
   return p[i];
 }
 function enemyDmg(e, base, T) {
-  let d = Math.round(base * 1.15 * DIFF * diffMult()) + e.str;
+  let d = Math.round(base * 1.15 * DIFF * diffMult() * (modOn('horde') ? 1.25 : 1)) + e.str;
   if (e.weak > 0) d -= e.weak;
   if (e.chill > 0) d = Math.floor(d * 0.75);
   if (T && T.vuln > 0) d = Math.floor(d * 1.5);
@@ -575,7 +589,12 @@ function hit(t, base, times) {
 function kill(e, by) {
   const c = C();
   e.dead = true; e.hp = 0; e.deadS = fx(tagOf(e), '', 'miss');
-  if (by != null && G.P[by]) G.P[by].kills++;
+  if (by != null && G.P[by]) {
+    G.P[by].kills++;
+    if (hasR(by, 'bountypouch')) { G.P[by].gold += 3; log(heroName(by) + ' pockets 3 gold.'); }
+    const ks = c.S[by];
+    if (ks && !ks.down && hasR(by, 'carrion')) { ks.hp = Math.min(ks.max, ks.hp + 2); float(tagOf(ks), '+2 HP', 'buff'); }
+  }
   log(e.n + ' is defeated.');
   if (e.key === 'moth') { const s = c.S[by != null ? by : e.tg]; if (s) { s.discard.push(mk('dazed')); log('Glowdust: a Dazed joins ' + heroName(s.pi) + '’s discard pile.'); } }
   Object.keys(e.stolen).forEach(k => {
@@ -819,7 +838,7 @@ function win() {
     G.P.forEach((p, pi) => {
       const relic = freeRelic(pi, true); gainRelic(pi, relic);
       const healed = Math.ceil((p.maxHp - p.hp) * 0.4); p.hp += healed;
-      const gold = rnd(60, 80); p.gold += gold;
+      const gold = rnd(60, 80) * goldMul(); p.gold += gold;
       p.actclear = { act: Act, relic, healed, gold, cards: cardChoices(pi, 3, 'boss'), taken: false };
     });
     G.screen = 'actclear';
@@ -827,7 +846,7 @@ function win() {
   }
   const elite = c.kind === 'elite';
   G.P.forEach((p, pi) => {
-    const gold = (elite ? rnd(28, 36) : rnd(12, 20)) + (Act - 1) * 6;
+    const gold = ((elite ? rnd(28, 36) : rnd(12, 20)) + (Act - 1) * 6) * goldMul();
     p.gold += gold;
     const relic = elite ? freeRelic(pi) : null;
     gainRelic(pi, relic);
@@ -885,12 +904,15 @@ function doAction(pi, a, x, y) {
     case 'hero':
       if (scr === 'lobby' && HEROES[x]) { p.hero = x; render(); }
       break;
+    case 'mods':
+      if (scr === 'lobby' && pi === 0 && x != null) { G.mods = normMods(x); render(); }
+      break;
     case 'diff':
       if (scr === 'lobby' && pi === 0 && x != null) { G.diff = normDiff(x); render(); }
       break;
     case 'start':
       if (scr === 'lobby' && pi === 0 && G.P.length === 2 && G.P.every(q => q.hero) && G.P[1].conn) {
-        G.P.forEach(q => equipHero(q, q.hero)); G.started = true; G.screen = 'map'; resetDone(); render();
+        G.P.forEach(q => equipHero(q, q.hero, G.mods)); G.started = true; G.screen = 'map'; resetDone(); render();
       }
       break;
     case 'node': if (scr === 'map') { const [r, l] = String(x).split('-').map(Number); vote(pi, r, l); } break;
@@ -921,8 +943,9 @@ function doAction(pi, a, x, y) {
         if (G.P.every(q => q.done || !q.conn)) {
           G.P.forEach(q => {
             const keep = { conn: q.conn, ack: q.ack };
-            ['cp', 'dmg', 'tn'].forEach(k => { delete q[k]; });
-            Object.assign(q, newPlayer(q.hero, q.tok), keep);
+            const hero = q.hero, tok = q.tok;
+            Object.keys(q).forEach(k => { delete q[k]; });
+            Object.assign(q, newPlayer(hero, tok, G.mods), keep);
           });
           G.map = genMap(); G.act = 1; G.floor = 0; G.pos = null; G.combat = null; G.fx = [];
           G.duelWinner = null; G.started = false; G.screen = 'lobby';
@@ -1042,7 +1065,7 @@ function buildView(me) {
   const V = {
     me, n: G.P.length, mode: G.mode, code: G.code, scr: G.screen, act: G.act, floor: G.floor, tok: p ? p.tok : null, ack: p ? p.ack : 0,
     P: G.P.map(q => ({ h: q.hero, hp: q.hp, mx: q.maxHp, g: q.gold, rl: q.relics, dn: q.done ? 1 : 0, vt: q.vote, on: q.conn ? 1 : 0, k: q.kills })),
-    deck: p ? p.deck.map(x => [x.u, x.id]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff), rs: p ? { cp: p.cp || 0, dm: p.dmg || 0, tn: p.tn || 0 } : null
+    deck: p ? p.deck.map(x => [x.u, x.id]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff), md: normMods(G.mods), rs: p ? { cp: p.cp || 0, dm: p.dmg || 0, tn: p.tn || 0 } : null
   };
   const c = G.combat;
   if (G.screen === 'map') {
@@ -1095,7 +1118,7 @@ return {
   get G() { return G; }, set G(v) { G = v; },
   get uidN() { return uidN; }, set uidN(v) { uidN = v; },
   doAction, buildView, previewCard, newPlayer, baseG, equipHero, startCombat, startDuel, win,
-  DIFFS, CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES, PRICE
+  DIFFS, MODS, CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES, PRICE
 };
 }
 if (typeof module !== 'undefined' && module.exports) module.exports = { createEngine };

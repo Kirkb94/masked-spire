@@ -35,6 +35,11 @@ test('newPlayer builds an elementalist with the starter deck and relic', () => {
   assert.strictEqual(p.maxHp, h.hp);
 });
 
+test('elementalist starter deck has exactly one attack of each element', () => {
+  const h = HEROES.elementalist;
+  ['emberlash', 'rimespiral', 'sparkjolt', 'estrike'].forEach(id => assert.strictEqual(h.starter.filter(x => x === id).length, 1, id));
+});
+
 test('elementalist relic exists and is a starting relic', () => {
   const key = HEROES.elementalist.relic;
   const r = RELICS[key];

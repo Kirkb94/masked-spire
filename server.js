@@ -24,7 +24,9 @@ const BUILD_PLACEHOLDER = "let BUILD_ID = 'dev';";
 let INDEX_HTML = null; // index.html with the real build injected, read once at startup
 try {
   const src = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
-  if (src.indexOf(BUILD_PLACEHOLDER) === -1) console.warn('BUILD placeholder not found in index.html; clients will fetch /version');
+  const phCount = src.split(BUILD_PLACEHOLDER).length - 1;
+  if (phCount > 1) console.warn('BUILD placeholder found ' + phCount + ' times in index.html (expected exactly 1); check public/index.html');
+  if (phCount === 0) console.warn('BUILD placeholder not found in index.html; clients will fetch /version');
   else INDEX_HTML = Buffer.from(src.split(BUILD_PLACEHOLDER).join("let BUILD_ID = '" + BUILD + "';"), 'utf8');
 } catch (e) { console.warn('Could not preload index.html', e && e.message); }
 console.log('Build ' + BUILD);
@@ -206,11 +208,11 @@ function makeCode() {
   const al = 'abcdefghjkmnpqrstuvwxyz23456789';
   for (;;) { let s = ''; for (let i = 0; i < 5; i++) s += al[Math.floor(Math.random() * al.length)]; if (!rooms.has(s)) return s; }
 }
-function createRoom(tok, diff) {
+function createRoom(tok, diff, mods) {
   const code = makeCode();
   const room = { code, sockets: new Set(), last: Date.now(), pending: false, away: [false, false], dropAt: [0, 0], timers: [null, null] };
   room.E = createEngine({ onChange: () => scheduleBroadcast(room) });
-  const G = room.E.baseG('coop', diff);
+  const G = room.E.baseG('coop', diff, mods);
   G.code = code;
   G.P = [room.E.newPlayer(null, tok)];
   room.E.G = G;
@@ -354,7 +356,7 @@ wss.on('connection', (ws, req) => {
       if (buildMismatch(m)) return err(RELOAD_MSG, true);
       if (rooms.size >= MAX_ROOMS) return err('The server is full right now. Try again later.', true);
       detach(ws);
-      const room = createRoom(tok, m.diff);
+      const room = createRoom(tok, m.diff, m.mods);
       ws.room = room; ws.pi = 0; room.sockets.add(ws);
       setConn(room);
       ws.send(JSON.stringify({ t: 'joined', code: room.code, pi: 0 }));
