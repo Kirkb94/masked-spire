@@ -359,6 +359,10 @@ html.rm .piles span.shuf { animation: none; }
 @keyframes rv-flip { 0% { opacity: 0; transform: perspective(800px) rotateY(90deg) translateY(14px) scale(.9); filter: brightness(1.8); } 55% { opacity: 1; transform: perspective(800px) rotateY(-12deg) scale(1.06); box-shadow: 0 0 28px 6px var(--gl, transparent); filter: brightness(1.3); } 100% { opacity: 1; transform: none; box-shadow: 0 0 0 0 transparent; filter: none; } }
 @keyframes rv-spark { 0% { opacity: 0; transform: scale(.6); } 30% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(1.25); } }
 html.rm .reveal .card.rv, html.rm .reveal .card.rv::after { animation: none; }
+.reveal .card.rv.rar-u { box-shadow: 0 0 10px 1px color-mix(in srgb, var(--gl) 55%, transparent); }
+.reveal .card.rv.rar-r { box-shadow: 0 0 14px 2px color-mix(in srgb, var(--gl) 70%, transparent); }
+.reveal .card.rv.rar-u { box-shadow: 0 0 10px 1px color-mix(in srgb, var(--gl) 55%, transparent); }
+.reveal .card.rv.rar-r { box-shadow: 0 0 14px 2px color-mix(in srgb, var(--gl) 70%, transparent); }
 @keyframes scr-in { from { opacity: 0; } to { opacity: 1; } }
 #trwipe { position: fixed; inset: 0; z-index: 9000; pointer-events: none; display: none; background: linear-gradient(100deg, #0B0709 0%, #0B0709 88%, #E8BE52 94%, rgba(232, 190, 82, 0) 100%); }
 #trwipe.go { display: block; animation: tr-wipe .55s cubic-bezier(.6, 0, .3, 1) forwards; }
@@ -411,6 +415,30 @@ html.rm .hcard:hover { transform: none; }
 .hcard .hrelic { padding: 6px 10px; font-size: 14px; gap: 1px; }
 .hcard .hrelic b { font-size: 16px; }
 @media (max-width: 860px) { .hcard .portrait { width: 84px; } }
+@media (max-height: 720px) {
+  .heropick { gap: 8px; align-items: stretch; }
+  .hcard { gap: 4px; padding: 8px 10px; min-height: 0; }
+  .hcard .portrait { width: clamp(64px, 12vh, 96px); }
+  .hcard h3 { font-size: 18px; }
+  .hcard p, .hcard ul { font-size: 13px; line-height: 1.25; }
+  .hcard ul { gap: 1px; }
+  .hcard .hrelic { height: 78px; box-sizing: border-box; padding: 5px 8px; font-size: 12px; line-height: 1.2; overflow: hidden; flex: none; justify-content: flex-start; }
+  .hcard .hrelic b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hcard .hrelic span:last-child { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .hcard .btn { margin-top: auto; flex: none; padding-top: 8px; padding-bottom: 8px; }
+}
+@media (max-height: 720px) {
+  .heropick { gap: 8px; align-items: stretch; }
+  .hcard { gap: 4px; padding: 8px 10px; min-height: 0; }
+  .hcard .portrait { width: clamp(64px, 12vh, 96px); }
+  .hcard h3 { font-size: 18px; }
+  .hcard p, .hcard ul { font-size: 13px; line-height: 1.25; }
+  .hcard ul { gap: 1px; }
+  .hcard .hrelic { height: 78px; box-sizing: border-box; padding: 5px 8px; font-size: 12px; line-height: 1.2; overflow: hidden; flex: none; justify-content: flex-start; }
+  .hcard .hrelic b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hcard .hrelic span:last-child { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .hcard .btn { margin-top: auto; flex: none; padding-top: 8px; padding-bottom: 8px; }
+}
 
 
 /* Brute stances */
@@ -690,7 +718,7 @@ html.rm .chip.partner.re .pdot { animation: none; }
 .rg.s-cast .rgw { animation: rg-cast .8s ease-out var(--as, 0s) both; transform-box: fill-box; transform-origin: 50% 80%; }
 @keyframes rg-cast { 0% { transform: none; } 30% { transform: translateY(-6px) scale(1.06); filter: brightness(1.25); } 55% { transform: translateY(-3px) scale(1.1); filter: brightness(1.5); } 100% { transform: none; filter: none; } }
 .pwrap { position: relative; }
-.elorb { position: absolute; left: 4%; bottom: 16%; width: 22px; height: 22px; border-radius: 50%; pointer-events: none; z-index: 3; background: radial-gradient(circle at 35% 30%, #fff 0, var(--oc) 40%, var(--od) 100%); box-shadow: 0 0 10px 3px var(--oc); }
+.elorb { position: absolute; left: 4%; bottom: 16%; width: 22px; height: 22px; border-radius: 50%; pointer-events: auto; z-index: 3; background: radial-gradient(circle at 35% 30%, #fff 0, var(--oc) 40%, var(--od) 100%); box-shadow: 0 0 10px 3px var(--oc); }
 .elorb.el-fire { --oc: #FF9A3C; --od: #B52A0A; }
 .elorb.el-frost { --oc: #7FE3FF; --od: #1C6FA8; }
 .elorb.el-storm { --oc: #FFE45C; --od: #A87C00; }
@@ -831,13 +859,11 @@ body.dragging, body.dragging * { user-select: none; -webkit-user-select: none; }
 .sndpanel input[type=range] { width: 130px; accent-color: var(--gold); }
 .sndpanel .sechead { font-family: var(--display); font-weight: 700; color: var(--gold); margin-top: 2px; }
 /* ---------- Display settings: larger text, high contrast / colorblind-safe ---------- */
-html.ts1 #app { zoom: 1.25; }
-html.ts2 #app { zoom: 1.5; }
+:root { --ts: 1; }
+html.ts1 #app, html.ts2 #app { zoom: var(--ts); }
 @supports not (zoom: 1) {
-  html.ts1 #app { transform: scale(1.25); transform-origin: top center; width: 80%; }
-  html.ts2 #app { transform: scale(1.5); transform-origin: top center; width: 66.667%; }
-  html.ts1 #app:has(.battle) { height: calc((100dvh - 12px) / 1.25); }
-  html.ts2 #app:has(.battle) { height: calc((100dvh - 12px) / 1.5); }
+  html.ts1 #app, html.ts2 #app { transform: scale(var(--ts)); transform-origin: top center; width: calc(100% / var(--ts)); }
+  html.ts1 #app:has(.battle), html.ts2 #app:has(.battle) { height: calc((100dvh - 12px) / var(--ts)); }
 }
 html.ts1 .sndpanel { font-size: 20px; }
 html.ts2 .sndpanel { font-size: 23px; }
@@ -906,6 +932,15 @@ html.hc .card .rgem { outline: 2px solid #FFFFFF; }
 .mapart { top: 0; height: 100%; }
 .mapfx { top: 0; height: 100%; overflow: hidden; z-index: 1; }
 .mapfog { top: 0; z-index: 2; }
+.startmark { position: absolute; transform: translate(-50%, -50%); z-index: 3; pointer-events: none; padding: 3px 10px; border-radius: 999px; background: var(--gold); color: #1A1424; font-weight: 800; font-size: 12px; white-space: nowrap; box-shadow: 0 2px 8px #000A; animation: startbob 1.6s ease-in-out infinite; }
+.startmark::before { content: '\25B2 '; }
+@keyframes startbob { 0%, 100% { margin-top: 0; } 50% { margin-top: -5px; } }
+html.rm .startmark { animation: none; }
+@media (prefers-reduced-motion: reduce) { html:not(.rm-off) .startmark { animation: none; } }
+#mapcue { position: fixed; left: 50%; transform: translateX(-50%); z-index: 50; display: none; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--gold); background: #1A1424EE; color: var(--ink); font-weight: 700; font-size: 13px; box-shadow: 0 4px 14px #000A; cursor: pointer; }
+#mapcue.show { display: block; }
+#mapcue.up { top: 64px; }
+#mapcue.down { bottom: 14px; }
 .act1 .mapfog { background: linear-gradient(to bottom, rgba(8, 23, 27, .8), rgba(8, 23, 27, .62) 75%, rgba(8, 23, 27, 0)); }
 .act2 .mapfog { background: linear-gradient(to bottom, rgba(23, 11, 8, .8), rgba(23, 11, 8, .62) 75%, rgba(23, 11, 8, 0)); }
 .act3 .mapfog { background: linear-gradient(to bottom, rgba(10, 6, 20, .8), rgba(10, 6, 20, .62) 75%, rgba(10, 6, 20, 0)); }
@@ -934,7 +969,16 @@ html.rm .me-hot { animation: none; }
 .node.avail { transition: filter .18s ease, transform .18s ease; }
 .node.avail:hover, .node.avail:focus-visible { transform: translate(-50%, -50%) scale(1.12); filter: drop-shadow(0 0 8px #E8BE52) drop-shadow(0 0 16px #E8BE5299); outline: none; }
 .mapcard .node:not(.avail):not(.done):not(.cur):not(.voted) { opacity: .72; }
-.mapcard .node.cur { box-shadow: 0 0 0 4px var(--teal), 0 3px 8px #000A; }
+.mapcard .node.cur { box-shadow: 0 0 0 4px var(--teal), 0 3px 8px #000A; animation: curpulse 2s ease-in-out infinite; }
+@keyframes curpulse { 50% { box-shadow: 0 0 0 8px #5FE6E255, 0 0 16px #5FE6E2AA, 0 3px 8px #000A; } }
+.mapcard .node.avail { animation: availpulse 1.5s ease-in-out infinite; }
+@keyframes availpulse { 0%, 100% { box-shadow: 0 0 0 2px #E8BE5266, 0 3px 8px #000A; } 50% { box-shadow: 0 0 0 8px #E8BE5233, 0 0 16px #E8BE52AA, 0 3px 8px #000A; } }
+html.rm .mapcard .node.cur, html.rm .mapcard .node.avail { animation: none; }
+html.rm .mapcard .node.avail { box-shadow: 0 0 0 4px #E8BE5299, 0 3px 8px #000A; }
+@media (prefers-reduced-motion: reduce) { html:not(.rm-off) .mapcard .node.cur, html:not(.rm-off) .mapcard .node.avail { animation: none; } html:not(.rm-off) .mapcard .node.avail { box-shadow: 0 0 0 4px #E8BE5299, 0 3px 8px #000A; } }
+.legend .lg-ring { display: inline-block; width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 0 0 3px var(--teal); background: #1F1830; margin: 0 3px; }
+.legend .lg-line { width: 28px; height: 8px; }
+.legend .lg-sep { flex-basis: 100%; height: 0; }
 .maptok { position: absolute; width: 42px; z-index: 4; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 3px 4px #000C); }
 .maptok .portrait { width: 42px; height: 42px; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--gold); animation: tokbob 1.8s ease-in-out infinite; }
 .maptok.other .portrait { border-color: var(--teal); width: 34px; height: 34px; }
@@ -1230,7 +1274,7 @@ window.msSay = function (m) {
 'use strict';
 var KEY = 'ms_tutorial_seen';
 var css = '.mstip{position:fixed;z-index:60;max-width:min(260px,86vw);background:var(--panel,#1c1626);color:#fff;border:1px solid var(--gold,#e0b84a);border-radius:8px;padding:8px 10px;font-size:15px;line-height:1.35;box-shadow:0 8px 24px #000A;pointer-events:none}.mstip[hidden]{display:none}.mstip b{display:block;color:var(--gold,#e0b84a);margin-bottom:2px}'
- + '.mstut{position:fixed;inset:0;z-index:70;background:#000C;display:flex;align-items:center;justify-content:center;padding:14px}.mstut .card{background:var(--panel,#1c1626);border:1px solid var(--gold,#e0b84a);border-radius:12px;max-width:440px;width:100%;max-height:92vh;overflow:auto;padding:18px 20px;box-shadow:0 12px 40px #000;color:#fff}.mstut h2{margin:0 0 8px;color:var(--gold,#e0b84a);font-size:22px}.mstut p{margin:0 0 14px;font-size:17px;line-height:1.45}.mstut .row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.mstut .step{opacity:.7;font-size:14px}.mstut .btns{display:flex;gap:8px;flex-wrap:wrap}.mstut button{min-height:44px;min-width:44px}.mstut button:focus-visible{outline:3px solid var(--gold,#e0b84a);outline-offset:2px}';
+ + '.mstut{position:fixed;inset:0;z-index:70;background:#000C;display:flex;align-items:center;justify-content:center;padding:14px}.mstut.sp{background:transparent}.mstut .spot{position:fixed;z-index:0;border:2px solid var(--gold,#e0b84a);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.8),0 0 14px 2px var(--gold,#e0b84a);pointer-events:none}.mstut .card{position:relative;z-index:1;box-sizing:border-box;overflow-wrap:anywhere}.mstut.anch .card{position:absolute;margin:0;width:min(380px,calc(100vw - 20px));max-height:calc(100vh - 20px)}.mstut .card{background:var(--panel,#1c1626);border:1px solid var(--gold,#e0b84a);border-radius:12px;max-width:440px;width:100%;max-height:92vh;overflow:auto;padding:18px 20px;box-shadow:0 12px 40px #000;color:#fff}.mstut h2{margin:0 0 8px;color:var(--gold,#e0b84a);font-size:22px}.mstut p{margin:0 0 14px;font-size:17px;line-height:1.45}.mstut .row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.mstut .step{opacity:.7;font-size:14px}.mstut .btns{display:flex;gap:8px;flex-wrap:wrap}.mstut button{min-height:44px;min-width:44px}.mstut button:focus-visible{outline:3px solid var(--gold,#e0b84a);outline-offset:2px}';
 var sty = document.createElement('style'); sty.textContent = css; document.head.appendChild(sty);
 
 /* ----- tooltips ----- */
@@ -1261,6 +1305,8 @@ var KW = [
 var tip = document.createElement('div'); tip.className = 'mstip'; tip.id = 'mstip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true; document.body.appendChild(tip);
 var anchor = null, hideT = 0, watch = 0;
 function tipFor(el) {
+  var dt = el.getAttribute && el.getAttribute('data-tip');
+  if (dt) { var di = dt.indexOf('|'); return di < 0 ? ['', dt] : [dt.slice(0, di), dt.slice(di + 1)]; }
   if (el.classList.contains('energy')) return T.energy;
   if (el.classList.contains('shield')) return T.block;
   if (el.classList.contains('intentbar')) {
@@ -1285,7 +1331,7 @@ function tipFor(el) {
 function find(n) {
   if (!n || !n.closest) return null;
   if (n.closest('button.enemy') === n) { var ib = n.querySelector('.intentbar'); if (ib) return ib; }
-  var el = n.closest('.badge, .intentbar, .energy, .shield, .piles span');
+  var el = n.closest('.badge, .intentbar, .energy, .shield, .piles span, [data-tip]');
   return el && tipFor(el) ? el : null;
 }
 function hide() { tip.hidden = true; anchor = null; clearTimeout(hideT); clearInterval(watch); }
@@ -1318,12 +1364,37 @@ window.addEventListener('resize', hide);
 var STEPS = [
   ['Welcome to Masked Spire', 'Climb the Spire with a roster of four heroes, building your deck as you go. Play solo, or team up online with a partner; a co-op run ends in a duel after the final boss.'],
   ['Playing cards', 'Tap a card in your hand to play it. Cards that need a target ask you to tap an enemy. Tap the card again to cancel. When you are done, press End turn.'],
-  ['Energy', 'The glowing counter by the End turn button is your Energy. Each card costs some, and it refills at the start of every turn. Unspent Energy is not saved.'],
-  ['Block and HP', 'Block soaks up damage before your HP does, and it usually fades at the start of your next turn. If your HP hits zero, you fall.'],
-  ['Enemy intents', 'The bar above each enemy shows what it will do next turn: attack, defend, buff or debuff. Plan your Block and damage around it.'],
+  ['Energy', 'The glowing counter by the End turn button is your Energy. Each card costs some, and it refills at the start of every turn. Unspent Energy is not saved.', '.energy'],
+  ['Block and HP', 'Block soaks up damage before your HP does, and it usually fades at the start of your next turn. If your HP hits zero, you fall.', '.shield'],
+  ['Enemy intents', 'The bar above each enemy shows what it will do next turn: attack, defend, buff or debuff. Plan your Block and damage around it.', '.intentbar'],
   ['Keywords and help', 'Hover, focus or tap Energy, Block, intents, piles and status badges (like Weak or Vulnerable) for a quick explanation. Reopen this guide any time from the Sound menu, under How to play.']
 ];
-var ov = null, idx = 0, lastFocus = null;
+var ov = null, idx = 0, lastFocus = null, lt = 0;
+function target(sel) {
+  if (!sel) return null;
+  var l = document.querySelectorAll(sel);
+  for (var i = 0; i < l.length; i++) { var r = l[i].getBoundingClientRect(); if (r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight) return l[i]; }
+  return null;
+}
+function layout() {
+  if (!ov) return;
+  var card = ov.querySelector('.card'), sp = ov.querySelector('.spot'); if (!card) return;
+  var t = target(STEPS[idx][2]);
+  if (!t) { ov.classList.remove('sp'); ov.classList.remove('anch'); card.style.left = ''; card.style.top = ''; if (sp) sp.style.display = 'none'; return; }
+  ov.classList.add('sp'); ov.classList.add('anch');
+  var r = t.getBoundingClientRect(), pad = 6, g = 14, m = 10, vw = window.innerWidth, vh = window.innerHeight;
+  if (sp) { sp.style.display = 'block'; sp.style.left = (r.left - pad) + 'px'; sp.style.top = (r.top - pad) + 'px'; sp.style.width = (r.width + pad * 2) + 'px'; sp.style.height = (r.height + pad * 2) + 'px'; }
+  var w = card.offsetWidth, h = card.offsetHeight;
+  function cl(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  var cx = cl(r.left + r.width / 2 - w / 2, m, vw - w - m), cy = cl(r.top + r.height / 2 - h / 2, m, vh - h - m);
+  var x, y;
+  if (r.right + pad + g + w <= vw - m) { x = r.right + pad + g; y = cy; }
+  else if (r.left - pad - g - w >= m) { x = r.left - pad - g - w; y = cy; }
+  else if (r.bottom + pad + g + h <= vh - m) { x = cx; y = r.bottom + pad + g; }
+  else if (r.top - pad - g - h >= m) { x = cx; y = r.top - pad - g - h; }
+  else { x = cx; y = (vh - r.bottom) > r.top ? Math.min(vh - h - m, r.bottom + pad + g) : Math.max(m, r.top - pad - g - h); }
+  card.style.left = Math.round(Math.max(m, x)) + 'px'; card.style.top = Math.round(Math.max(m, y)) + 'px';
+}
 function seen() { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
 function isSeen() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return true; } }
 function render() {
@@ -1340,7 +1411,9 @@ function render() {
   if (idx > 0) mk('Back', '', function () { idx--; render(); });
   var nb = mk(last ? 'Got it' : 'Next', 'primary', function () { if (last) close(); else { idx++; render(); } });
   row.appendChild(st); row.appendChild(btns);
-  card.appendChild(h); card.appendChild(p); card.appendChild(row); ov.appendChild(card);
+  card.appendChild(h); card.appendChild(p); card.appendChild(row);
+  var spot = document.createElement('div'); spot.className = 'spot'; spot.setAttribute('aria-hidden', 'true'); spot.style.display = 'none'; ov.appendChild(spot);
+  ov.appendChild(card); layout();
   nb.focus();
 }
 function onKey(e) {
@@ -1358,6 +1431,7 @@ function open() {
   if (ov) return;
   hide();
   lastFocus = document.activeElement; idx = 0;
+  window.addEventListener('resize', layout); clearInterval(lt); lt = setInterval(layout, 600);
   ov = document.createElement('div'); ov.className = 'mstut'; ov.id = 'mstut';
   ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'mstut-h'); ov.setAttribute('aria-describedby', 'mstut-p');
   document.body.appendChild(ov);
@@ -1367,6 +1441,7 @@ function open() {
 function close() {
   if (!ov) return;
   document.removeEventListener('keydown', onKey, true);
+  window.removeEventListener('resize', layout); clearInterval(lt);
   ov.remove(); ov = null; seen();
   try { if (lastFocus && lastFocus.isConnected && lastFocus.focus) lastFocus.focus(); } catch (e) {}
 }
@@ -1413,7 +1488,11 @@ function endTurnConfirm(n, energy, onYes) {
   const back = document.createElement('div');
   back.id = 'endconf'; back.className = 'endconf-back';
   back.innerHTML = '<div class="endconf" role="alertdialog" aria-modal="true" aria-label="End turn?"><h3>End your turn?</h3><p>You still have ' + n + ' playable card' + (n === 1 ? '' : 's') + ' and ' + energy + ' energy left.</p><label><input type="checkbox" data-ec="never"> Don’t ask again</label><div class="row"><button type="button" class="btn" data-ec="no">Keep playing</button><button type="button" class="btn primary" data-ec="yes">End turn</button></div></div>';
-  const close = () => { document.removeEventListener('keydown', onKey, true); back.remove(); };
+  const opener = document.activeElement;
+  const close = () => {
+    document.removeEventListener('keydown', onKey, true); back.remove();
+    try { const o = opener && opener.isConnected ? opener : document.querySelector('[data-act="end"]'); if (o && o.focus) o.focus(); } catch (e) {}
+  };
   const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); close(); } };
   back.addEventListener('click', ev => {
     const t = ev.target.closest ? ev.target.closest('[data-ec]') : null;
@@ -2008,7 +2087,7 @@ const A11Y = (function () {
   try { saved = JSON.parse(localStorage.getItem(K) || 'null'); } catch (e) {}
   if (saved && typeof saved === 'object') { prefs.size = (saved.size === 0 || saved.size === 1 || saved.size === 2) ? saved.size : (saved.big === true ? 1 : 0); prefs.hc = saved.hc === true; prefs.cb = saved.cb === true; }
   else { try { prefs.hc = !!(window.matchMedia && matchMedia('(prefers-contrast: more)').matches); } catch (e) {} }
-  function apply() { const c = document.documentElement.classList; c.toggle('ts1', prefs.size === 1); c.toggle('ts2', prefs.size === 2); c.toggle('hc', prefs.hc); c.toggle('cb', prefs.cb); if (prefs.cb) decorate(); }
+  function apply() { document.documentElement.style.setProperty('--ts', String([1, 1.25, 1.5][prefs.size] || 1)); const c = document.documentElement.classList; c.toggle('ts1', prefs.size === 1); c.toggle('ts2', prefs.size === 2); c.toggle('hc', prefs.hc); c.toggle('cb', prefs.cb); if (prefs.cb) decorate(); }
   function set(k, v) { if (k === 'size') v = Math.max(0, Math.min(2, Number(v) | 0)); else if (k === 'hc' || k === 'cb') v = !!v; else return; prefs[k] = v; try { localStorage.setItem(K, JSON.stringify(prefs)); } catch (e) {} apply(); }
   apply();
   /* colorblind mode: per-status glyphs on badges (shown via CSS attr()), float prefixes for damage/block/etc. */
@@ -2035,7 +2114,8 @@ const A11Y = (function () {
     let pend = false;
     new MutationObserver(() => { if (!prefs.cb || pend) return; pend = true; requestAnimationFrame(() => { pend = false; decorate(); }); }).observe(document.documentElement, { childList: true, subtree: true });
   }
-  return { prefs, set, cbFloat };
+  function reset() { prefs.size = 0; prefs.hc = false; prefs.cb = false; try { localStorage.setItem(K, JSON.stringify(prefs)); } catch (e) {} apply(); }
+  return { prefs, set, reset, cbFloat };
 })();
 /* ---------- Audio: synthesized soundtrack and effects (Web Audio, no files) ---------- */
 const SND = (function () {
@@ -2434,7 +2514,7 @@ const SND = (function () {
     const same = !!playing && playing.key === key;
     const keepStep = same ? Math.ceil(stepI / 32) * 32 : 0;
     stopMusic(same ? XFADE.sameOutTau : XFADE.outTau);
-    if (!ac || !prefs.music || ac.state !== 'running') return;
+    if (!ac || !prefs.music || prefs.mute || prefs.musicVol <= 0.001 || ac.state !== 'running') return;
     const bus = ac.createGain(); bus.gain.setValueAtTime(0, ac.currentTime); bus.gain.setTargetAtTime(TRIM[key] || 1, ac.currentTime + (same ? XFADE.sameInDelay : XFADE.inDelay), same ? XFADE.sameInTau : XFADE.inTau); bus.connect(musicBus);
     curBus = bus; playing = { key, mode }; const V = voices(ac, bus), mi = MODE[mode] || 0, tr = TRACKS[key], sd = 60 / BPM[key][mi] / 4;
     stepI = keepStep; nextT = ac.currentTime + 0.12;
@@ -2447,7 +2527,7 @@ const SND = (function () {
   function sync() {
     syncAmb();
     if (!ac || ac.state !== 'running') return;
-    if (!prefs.music || want.key === 'none' || !TRACKS[want.key]) { if (playing) stopMusic(); return; }
+    if (!prefs.music || prefs.mute || prefs.musicVol <= 0.001 || want.key === 'none' || !TRACKS[want.key]) { if (playing) stopMusic(); return; }
     if (!playing || playing.key !== want.key || playing.mode !== want.mode) startMusic(want.key, want.mode);
   }
   function scene(key, mode) { want = { key, mode: mode || 'calm' }; sync(); }
@@ -2497,6 +2577,10 @@ const SND = (function () {
     heal(V, t) { V.tone({ t, f: 523, d: 0.04, r: 0.35, v: 0.06, parts: BELL }); V.tone({ t: t + 0.09, f: 784, d: 0.04, r: 0.5, v: 0.06, parts: BELL }); },
     endturn(V, t) { V.tone({ t, f: 392, d: 0.05, r: 0.35, v: 0.08, parts: BELL }); V.tone({ t: t + 0.07, f: 262, d: 0.05, r: 0.5, v: 0.08, parts: BELL }); thump(V, t, 0.15, 100); },
     transition(V, t) { V.noise({ t, d: 0.22, a: 0.08, type: 'bp', f: 300, f2: 1800, q: 0.8, v: 0.05, r: 0.12 }); },
+    cardatk(V, t) { V.noise({ t, d: 0.07, type: 'bp', f: 3000, f2: 900, q: 1.5, v: 0.07, r: 0.05 }); V.tone({ t, f: 180, f2: 110, d: 0.05, a: 0.003, r: 0.08, v: 0.05, type: 'sawtooth', lp: 900 }); },
+    cardskl(V, t) { V.tone({ t, f: 440, f2: 520, d: 0.04, a: 0.004, r: 0.14, v: 0.045, type: 'triangle' }); V.noise({ t, d: 0.04, type: 'bp', f: 2400, q: 2, v: 0.03, r: 0.05 }); },
+    cardpow(V, t) { [523, 784, 1047].forEach((f, k) => V.tone({ t: t + k * 0.05, f, d: 0.04, r: 0.5, v: 0.045, parts: BELL })); V.noise({ t, d: 0.3, a: 0.05, type: 'hp', f: 2000, f2: 6000, v: 0.04, r: 0.2 }); },
+    deathpop(V, t) { thump(V, t, 0.2, 120); V.noise({ t, d: 0.18, a: 0.004, type: 'bp', f: 1800, f2: 400, q: 0.8, v: 0.1, r: 0.15 }); V.tone({ t: t + 0.03, f: 660, f2: 220, d: 0.12, a: 0.004, r: 0.15, v: 0.04, type: 'triangle' }); },
     blockup(V, t) { V.tone({ t, f: 220, f2: 330, d: 0.06, a: 0.004, r: 0.12, v: 0.06, type: 'triangle' }); V.noise({ t, d: 0.05, type: 'bp', f: 2600, q: 2, v: 0.05, r: 0.08 }); V.tone({ t: t + 0.04, f: 880, d: 0.02, r: 0.25, v: 0.035, parts: BELL }); },
     status(V, t) { V.tone({ t, f: 740, f2: 560, d: 0.05, a: 0.004, r: 0.2, v: 0.05, type: 'sine' }); V.tone({ t: t + 0.06, f: 1109, d: 0.03, r: 0.3, v: 0.04, parts: BELL }); }
   };
@@ -2540,9 +2624,10 @@ const SND = (function () {
     if (master) master.gain.setTargetAtTime(masterGain(), t, 0.05);
     if (musicBus) { musicBus.gain.cancelScheduledValues(t); musicBus.gain.setTargetAtTime(musicBase(), t, 0.05); }
     if (sfxBus) sfxBus.gain.setTargetAtTime(sfxBase(), t, 0.05);
+    try { sync(); } catch (e) {}
   }
   /* hit / block sound hooks: placeholders reuse existing hero sounds; overwrite HOOKS.hit / HOOKS.block to use real files later */
-  const HOOKS = { hit: (h, delay) => hero(h, 'hit', delay), block: (h, delay) => hero(h, 'guard', delay), hover: () => ui('hover'), click: () => ui('click'), card: () => ui('card'), draw: delay => ui('draw', delay), endturn: () => ui('endturn'), transition: () => ui('transition'), reveal: (rar, delay) => { delay = delay || 0; ui('flip', delay); if (rar === 'r') ui('gleamr', delay + 0.25); else if (rar === 'u') ui('gleamu', delay + 0.25); } };
+  const HOOKS = { hit: (h, delay) => hero(h, 'hit', delay), block: (h, delay) => hero(h, 'guard', delay), hover: () => ui('hover'), click: () => ui('click'), card: () => ui('card'), cardplay: (ty, delay) => ui(ty === 'attack' ? 'cardatk' : ty === 'power' ? 'cardpow' : 'cardskl', delay), deathpop: () => ui('deathpop'), draw: delay => ui('draw', delay), endturn: () => ui('endturn'), transition: () => ui('transition'), reveal: (rar, delay) => { delay = delay || 0; ui('flip', delay); if (rar === 'r') ui('gleamr', delay + 0.25); else if (rar === 'u') ui('gleamu', delay + 0.25); } };
   function fire(name, a, b) { try { if (HOOKS[name]) HOOKS[name](a, b); } catch (e) {} }
   function hit(h, delay) { try { HOOKS.hit(h, delay); } catch (e) {} }
   function block(h, delay) { try { HOOKS.block(h, delay); } catch (e) {} }
@@ -2565,11 +2650,11 @@ const SND = (function () {
   }
   function togglePanel() {
     if (!panel) {
-      panel = document.createElement('div'); panel.id = 'sndpanel'; panel.className = 'sndpanel'; panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Sound and display settings');
-      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label>Text size <select data-k="ts" aria-label="Text size"><option value="0">Normal</option><option value="1">Large</option><option value="2">Extra large</option></select></label><label><input type="checkbox" data-k="hc"> High contrast</label><label><input type=\"checkbox\" data-k=\"cb\"> Colorblind mode (icons and patterns)</label><label><input type="checkbox" data-k="rm"> Reduce motion (overrides system setting)</label><label><input type="checkbox" data-k="vib"> Vibration (mobile; off when Reduce motion is on)</label><div class="sechead">Gameplay</div><label><input type="checkbox" data-k="endc"> Confirm before ending turn</label>';
+      panel = document.createElement('div'); panel.id = 'sndpanel'; panel.className = 'sndpanel'; panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Sound and display settings'); panel.setAttribute('aria-modal', 'true');
+      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label>Text size <select data-k="ts" aria-label="Text size"><option value="0">Normal</option><option value="1">Large</option><option value="2">Extra large</option></select></label><label><input type="checkbox" data-k="hc"> High contrast</label><label><input type=\"checkbox\" data-k=\"cb\"> Colorblind mode (icons and patterns)</label><button type="button" class="btn" data-reset="1">Reset display</button><label><input type="checkbox" data-k="rm"> Reduce motion (overrides system setting)</label><label><input type="checkbox" data-k="vib"> Vibration (mobile; off when Reduce motion is on)</label><div class="sechead">Gameplay</div><label><input type="checkbox" data-k="endc"> Confirm before ending turn</label>';
       panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx' || k === 'mute') setPref(k, e.target.checked); else if (k === 'hc' || k === 'cb') A11Y.set(k, e.target.checked); else if (k === 'ts') A11Y.set('size', e.target.value); else if (k === 'rm') setReduceMotion(e.target.checked); else if (k === 'vib') setVibrate(e.target.checked); else if (k === 'endc') setEndConfirm(e.target.checked); });
       panel.addEventListener('input', e => { const k = e.target.getAttribute('data-k'); if (k === 'musicVol' || k === 'sfxVol') { setPref(k, Math.max(0, Math.min(1, Number(e.target.value) / 100))); if (k === 'sfxVol') ui('click'); } });
-      panel.insertAdjacentHTML('beforeend', '<div class="sechead">Help</div><button type="button" class="btn" data-help="1">How to play</button>'); panel.addEventListener('click', e => { if (e.target.closest('[data-help]')) { panel.hidden = true; if (window.MSTutorial) window.MSTutorial.open(); } }); document.body.appendChild(panel);
+      panel.insertAdjacentHTML('beforeend', '<div class="sechead">Help</div><button type="button" class="btn" data-help="1">How to play</button>'); panel.addEventListener('click', e => { if (e.target.closest('[data-reset]')) { A11Y.reset(); panel.querySelector('[data-k="ts"]').value = '0'; panel.querySelector('[data-k="hc"]').checked = false; panel.querySelector('[data-k="cb"]').checked = false; return; } if (e.target.closest('[data-help]')) { panel.hidden = true; if (window.MSTutorial) window.MSTutorial.open(); } }); document.body.appendChild(panel);
     }
     const opener = document.activeElement;
     panel.hidden = !panel.hidden; syncPanel(); unlock();
@@ -2753,6 +2838,8 @@ function mapEdge(x1, y1, x2, y2, seed) {
   return 'M' + x1 + ' ' + y1 + ' C ' + f1(x1 + o) + ' ' + f1(y1 + (y2 - y1) * .35) + ', ' + f1(x2 - o) + ' ' + f1(y1 + (y2 - y1) * .65) + ', ' + x2 + ' ' + y2;
 }
 /* progress HUD: floor, run progress, next node types */
+/* Floor numbering: node row r is floor r+1 (boss = ROWS+1). V.floor = last entered floor (0 at act start). */
+function floorNo(f) { return Math.max(1, Math.min(ROWS + 1, f | 0)); }
 function mapHud(V) {
   const T = ROWS + 1, cl = Math.max(0, Math.min(T, V.floor || 0)), rows = V.map;
   const run = Math.round(((V.act - 1) * T + cl) / (3 * T) * 100);
@@ -2772,10 +2859,10 @@ function mapHud(V) {
   });
   let bar = '';
   for (let i = 0; i < T; i++) bar += '<i class="' + (i < cl ? 'on' : i === cl ? 'nx' : '') + '"></i>';
-  return '<div class="maphud" aria-label="Run progress"><div class="mh-top"><b>Floor ' + Math.min(T, cl + 1) + '/' + T + '</b><span class="muted">Act ' + ROMAN[V.act - 1] + ' · ' + run + '% of run</span></div>' +
+  return '<div class="maphud" aria-label="Run progress"><div class="mh-top"><b>Floor ' + floorNo(cl + 1) + '/' + T + '</b><span class="muted">Act ' + ROMAN[V.act - 1] + ' · ' + run + '% of run</span></div>' +
     '<div class="mh-bar" role="progressbar" aria-label="Floors cleared this act" aria-valuemin="0" aria-valuemax="' + T + '" aria-valuenow="' + cl + '">' + bar + '</div>' +
-    '<div class="mh-row"><span class="mh-lbl">Next</span>' + chips(av) + '</div>' +
-    (then.length ? '<div class="mh-row then"><span class="mh-lbl">Then</span>' + chips(then) + '</div>' : '') + '</div>';
+    '<div class="mh-row"><span class="mh-lbl">Next · Floor ' + floorNo(cl + 1) + '</span>' + chips(av) + '</div>' +
+    (then.length ? '<div class="mh-row then"><span class="mh-lbl">Then · Floor ' + floorNo(cl + 2) + '</span>' + chips(then) + '</div>' : '') + '</div>';
 }
 function mapHTML(V) {
   const H = (ROWS + 1) * 74 + 106;
@@ -2827,15 +2914,59 @@ function mapHTML(V) {
   const toks = V.P.map((q, i) => '<div class="maptok' + (i === V.me ? '' : ' other') + '" data-to="' + f1(here.l) + ',' + f1(here.t) + '" style="left:' + f1(from.l) + '%;top:' + f1(from.t) + '%;' + (V.n > 1 ? 'margin-left:' + (i ? 12 : -12) + 'px;' : '') + '">' + portraitHTML(q.h, 'tk') + '</div>').join('');
   const fogRow = cur ? Math.min(ROWS, cur.r + 3) : 3;
   const fogH = Math.max(0, Math.min(100, (y(fogRow) + 20) / H * 100));
-  const coopNote = V.n > 1 ? '<p class="muted" style="margin:0">Both players pick the same node to move on. ' + (myVote && oVote !== myVote ? 'Waiting for your partner…' : oVote && oVote !== myVote ? 'Your partner chose a node: tap it to agree.' : '') + '</p>' : '';
+  const coopNote = V.n > 1 ? '<p class="muted" style="margin:0">Both players pick a node. If you pick different ones, a coin flip decides. ' + (myVote && oVote !== myVote ? 'Waiting for your partner…' : oVote && oVote !== myVote ? 'Your partner chose a node: tap it to agree.' : '') + '</p>' : '';
   const ph = '-' + f1((Date.now() / 1000) % 24) + 's';
   return '<section class="mapcard act' + V.act + '" aria-label="Act ' + ROMAN[V.act - 1] + ' map"><div class="row"><div style="display:flex;flex-direction:column;gap:2px"><span class="actbanner">Act ' + ROMAN[V.act - 1] + ' of III</span><h2>' + esc(Act.n) + '</h2></div><span class="muted">Climb from the bottom. Glowing nodes are your next choices. Boss: ' + esc(EN[Act.boss].n) + '.</span></div>' + coopNote + mapHud(V) +
     '<div class="mapwrap" style="aspect-ratio:400 / ' + H + ';--ph:' + ph + '">' +
     '<svg class="mapart" viewBox="0 0 400 ' + H + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + actScene(V.act, H) + '</svg>' +
     '<div class="mapfx" aria-hidden="true">' + mapParticles(V.act) + '</div>' +
     '<svg class="edges" viewBox="0 0 400 ' + H + '" aria-hidden="true">' + edges + '<g class="mgate" transform="translate(' + ex + ' ' + ey + ')"><circle r="7" fill="#1A1424" stroke="#E8BE52" stroke-width="1.5"/></g></svg>' +
-    '<div class="mapfog" style="height:' + f1(fogH) + '%" aria-hidden="true"></div>' + nodes + toks + '</div>' +
-    '<div class="legend">' + ['fight', 'elite', 'rest', 'shop', 'treasure'].map(k => '<span>' + MAPICON[k] + NODE_LABEL[k] + '</span>').join('') + '<span>' + MAPICON['boss' + V.act] + 'Boss</span></div></section>';
+    '<div class="mapfog" style="height:' + f1(fogH) + '%" aria-hidden="true"></div>' + nodes + (!cur ? '<span class="startmark" style="left:50%;top:' + f1((y(0) + 38) / H * 100) + '%">Start here</span>' : '') + toks + '</div>' +
+    '<div class="legend">' + ['fight', 'elite', 'rest', 'shop', 'treasure'].map(k => '<span>' + MAPICON[k] + NODE_LABEL[k] + '</span>').join('') + '<span>' + MAPICON['boss' + V.act] + 'Boss</span><i class="lg-sep"></i>' +
+    '<span><i class="lg-ring"></i>You are here</span>' +
+    '<span><svg class="lg-line" viewBox="0 0 28 8" aria-hidden="true"><path d="M1 4H27" class="me-hot"/></svg>Next path</span>' +
+    '<span><svg class="lg-line" viewBox="0 0 28 8" aria-hidden="true"><path d="M1 4H27" class="me-lit"/></svg>Travelled</span>' +
+    '<span><svg class="lg-line" viewBox="0 0 28 8" aria-hidden="true"><path d="M1 4H27" class="me-dash"/></svg>Unexplored</span></div></section>';
+}
+/* map scroll helpers: bring the current / first reachable row into view, and show a cue when rows are off-screen */
+function mapTarget() { return document.querySelector('.mapwrap .node.avail') || document.querySelector('.mapwrap .node.cur'); }
+function mapCue(hide) {
+  let c = document.getElementById('mapcue');
+  if (!c) {
+    c = document.createElement('button'); c.type = 'button'; c.id = 'mapcue';
+    c.addEventListener('click', () => {
+      const t = mapTarget(), tr = t && t.getBoundingClientRect(), off = tr && (tr.bottom > innerHeight - 4 || tr.top < 60);
+      const top = off ? tr.top + scrollY - innerHeight * .55 : scrollY + (c.classList.contains('up') ? -1 : 1) * innerHeight * .7;
+      window.scrollTo({ top: Math.max(0, top), behavior: REDUCE ? 'auto' : 'smooth' });
+    });
+    document.body.appendChild(c);
+    window.addEventListener('scroll', () => mapCue(), { passive: true });
+    window.addEventListener('resize', () => mapCue());
+  }
+  const w = document.querySelector('.mapwrap');
+  if (hide || !w) { c.classList.remove('show'); return; }
+  const r = w.getBoundingClientRect(), t = mapTarget(), tr = t && t.getBoundingClientRect();
+  let dir = '';
+  if (tr && tr.bottom > innerHeight - 4) dir = 'down';
+  else if (tr && tr.top < 60) dir = 'up';
+  else if (r.top < -24) dir = 'up';
+  else if (r.bottom > innerHeight + 24) dir = 'down';
+  c.classList.toggle('show', !!dir);
+  c.classList.remove('up', 'down');
+  if (dir) {
+    c.classList.add(dir);
+    c.textContent = dir === 'up' ? '\u25B2 Map continues above' : '\u25BC Map continues below';
+    c.setAttribute('aria-label', dir === 'up' ? 'Scroll up to see more of the map' : 'Scroll down to see more of the map');
+  }
+}
+function mapScrollTo(V) {
+  const key = V.act + ':' + (V.pos ? V.pos.r + '-' + V.pos.l : 'start');
+  if (CL.mapKey === key) return;
+  CL.mapKey = key;
+  const t = mapTarget(); if (!t) return;
+  const tr = t.getBoundingClientRect();
+  if (tr.top >= 70 && tr.bottom <= innerHeight - 40) return;
+  window.scrollTo({ top: Math.max(0, tr.top + scrollY - innerHeight * .55), behavior: REDUCE ? 'auto' : 'smooth' });
 }
 /* after the map is in the DOM: slide the hero token along to the new node */
 function mapAfterPaint() {
@@ -3015,7 +3146,7 @@ function topbar(V) {
   return '<header class="topbar"><span class="name">' + esc(HEROES[me.h].n) + '</span>' +
     '<span class="stat" title="Health">' + ICON.heart + me.hp + ' / ' + me.mx + '</span>' +
     '<span class="stat" title="Gold">' + ICON.coin + me.g + '</span>' +
-    '<span class="stat" title="Act and floor">' + ICON.floor + 'Act ' + ROMAN[V.act - 1] + ' · Floor ' + V.floor + '/' + (ROWS + 1) + '</span>' + partner +
+    '<span class="stat" title="Act and floor">' + ICON.floor + 'Act ' + ROMAN[V.act - 1] + ' · Floor ' + floorNo(V.floor) + '/' + (ROWS + 1) + '</span>' + partner +
     '<span class="relics">' + me.rl.map(r => '<span class="chip" title="' + esc(RELICS[r].d) + '">' + esc(RELICS[r].n) + '</span>').join('') + '</span>' +
     '<span class="spacer"></span>' + (V.code ? '<span class="chip code" title="Room code">Room ' + esc(V.code.toUpperCase()) + '</span>' : '') +
     '<button type="button" class="btn snd" data-act="snd" aria-label="Sound settings">' + SND.SPK + ' Sound</button><button type="button" class="btn" data-act="deck">Deck (' + V.deck.length + ')</button></header>';
@@ -3165,8 +3296,8 @@ function resourceHTML(hero, s) {
     return '<span class="stance st-' + (s.sn || 'none') + '" title="' + esc(st ? st.d : 'No stance. Play stance cards to enter Fury, Iron or Calm.') + '"><i></i>' + (st ? st.n : 'No stance') + '</span>' +
       (st ? '<span class="stancetip">' + esc(st.d) + '</span>' : '') + (s.sw ? '<span class="muted">' + s.sw + ' switch' + (s.sw > 1 ? 'es' : '') + ' this turn</span>' : '');
   }
-  if (hero === 'elementalist') return '<span class="shellhint" title="Quadrant Mask: each Attack you play gives 1 Block.">Quadrant Mask: Attacks give 1 Block</span>';
-  return '<span class="shellhint" title="Iron Shell: keep half your Block at the start of your turn.">Iron Shell keeps ' + s.kb + ' Block</span>';
+  if (hero === 'elementalist') return '<span class="shellhint" tabindex="0" data-tip="Quadrant Mask|Each Attack you play gives 1 Block. This ignores Frail.">Quadrant Mask: Attacks give 1 Block</span>';
+  return '<span class="shellhint" tabindex="0" data-tip="Iron Shell|Keep half your Block at the start of your turn.">Iron Shell keeps ' + s.kb + ' Block</span>';
 }
 function heroBoxHTML(V, s, prev, mini) {
   const pi = s.pi, hero = V.P[pi].h;
@@ -3204,7 +3335,7 @@ function heroBoxHTML(V, s, prev, mini) {
     else if (V.cb.duel) tag = V.cb.duel.a === pi ? '<span class="ptag turn">' + (you ? 'Your turn' : 'Their turn') + '</span>' : '';
     else if (s.rdy) tag = '<span class="ptag ready">Ready</span>';
   }
-  return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, (animCls || '') + (hero === 'elementalist' && s.el ? ' hold-' + s.el : ''), true, hst, rcls) + (hero === 'elementalist' && s.el ? '<span class="elorb el-' + s.el + (hst && hst.k === 'cast' ? ' cast' : '') + '" style="' + (hst && hst.k === 'cast' ? '--as:' + hst.as + 'ms' : '') + '" title="Last element: ' + s.el + '"></span>' : '') + bigShield(s.block, popH, 'shield-p' + pi) + '</div>' +
+  return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, (animCls || '') + (hero === 'elementalist' && s.el ? ' hold-' + s.el : ''), true, hst, rcls) + (hero === 'elementalist' && s.el ? '<span class="elorb el-' + s.el + (hst && hst.k === 'cast' ? ' cast' : '') + '" style="' + (hst && hst.k === 'cast' ? '--as:' + hst.as + 'ms' : '') + '" tabindex="0" data-tip="Last element: ' + s.el + '|The element of the last Attack you played."></span>' : '') + bigShield(s.block, popH, 'shield-p' + pi) + '</div>' +
     '<div class="hstats"><span class="hname">' + esc(vName(V, pi)) + (V.n > 1 ? (you ? ' <span class="muted">(you)</span>' : '') : '') + ' ' + tag + '</span>' +
     '<div class="hpline">' + (s.block ? '<span class="shield">' + ICON.shield + s.block + '</span>' : '') + hpBar('p' + pi, s.hp, s.mx, s.block) + s.hp + '/' + s.mx + '</div>' +
     '<div class="row">' + resourceHTML(hero, s) + (!you ? '<span class="muted">' + s.hn + ' cards · ' + s.energy + ' energy</span>' : '') + '</div>' +
@@ -3442,7 +3573,7 @@ function endHTMLBase(V, won) {
   const counts = {};
   V.deck.forEach(d => { const n = CARDS[d[1]].n; counts[n] = (counts[n] || 0) + 1; });
   const deck = '<div class="dchips">' + Object.keys(counts).sort().map((n, i) => '<span class="dchip" style="--i:' + i + '">' + esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '') + '</span>').join('') + '</div>';
-  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules">' + stat('Floors cleared', floors, 0) + stat('Turns', rs.tn, 1) + stat('Cards played', rs.cp, 2) + stat('Damage dealt', rs.dm, 3) + stat('Gold', V.P[V.me].g, 4) + '</ul><p class="muted">Final deck (' + V.deck.length + ')</p>' + deck + '</div>';
+  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules">' + stat('Floors cleared', floors, 0) + stat('Turns', rs.tn, 1) + stat('Cards played', rs.cp, 2) + stat('Damage dealt', rs.dm, 3) + stat('Cards taken', V.deck.filter(d => CARDS[d[1]] && CARDS[d[1]].t !== 'status' && !((HEROES[V.P[V.me].h] || { starter: [] }).starter.indexOf(d[1]) >= 0)).length, 4) + stat('Gold', V.P[V.me].g, 5) + '</ul><p class="muted">Final deck (' + V.deck.length + ')</p>' + deck + '</div>';
   const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : '';
   const marker = '<div class="row"><button type="button" class="btn primary" data-act="leave">';
   if (!REDUCE && !endTickOn) { endTickOn = true; requestAnimationFrame(endTick); }
@@ -3675,6 +3806,64 @@ function burstFx(host, text, delay) {
   host.appendChild(b);
   setTimeout(() => b.remove(), 800 + delay);
 }
+/* ----- particle layer: cheap WAAPI dots, skipped entirely under Reduce motion ----- */
+const FXCOL = { attack: '#ff7a59', skill: '#6ec3ff', power: '#c58bff', draw: '#ffe08a', death: '#ffc27a' };
+function fxLayer() {
+  let l = document.getElementById('fxlayer');
+  if (!l) {
+    l = document.createElement('div');
+    l.id = 'fxlayer';
+    l.setAttribute('aria-hidden', 'true');
+    l.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;z-index:70;pointer-events:none;overflow:visible;';
+    document.body.appendChild(l);
+  }
+  return l;
+}
+function particleBurst(x, y, o) {
+  if (REDUCE || !document.body || !document.body.animate) return;
+  o = o || {};
+  const L = fxLayer();
+  if (L.childElementCount > 70) return;
+  const n = Math.min(o.n || 8, 14), col = o.color || '#fff';
+  for (let i = 0; i < n; i++) {
+    const a = o.up ? -Math.PI / 2 + (Math.random() - 0.5) * 1.8 : Math.random() * Math.PI * 2;
+    const dist = (o.d || 40) * (0.5 + Math.random() * 0.7);
+    const sz = 2 + Math.random() * (o.s || 4);
+    const p = document.createElement('i');
+    p.style.cssText = 'position:absolute;display:block;border-radius:50%;left:' + (x - sz / 2) + 'px;top:' + (y - sz / 2) + 'px;width:' + sz + 'px;height:' + sz + 'px;background:' + col + ';box-shadow:0 0 6px ' + col + ';';
+    L.appendChild(p);
+    const dx = Math.cos(a) * dist, dy = Math.sin(a) * dist + (o.g || 14);
+    const dur = (o.t || 450) + Math.random() * 200;
+    const done = () => { if (p.parentNode) p.remove(); };
+    try {
+      p.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.2)', opacity: 0 }], { duration: dur, easing: 'cubic-bezier(.2,.7,.4,1)', fill: 'forwards' }).onfinish = done;
+    } catch (e) { done(); }
+    setTimeout(done, dur + 400);
+  }
+}
+function particlesAt(el, o) {
+  if (!el || !el.getBoundingClientRect) return;
+  const r = el.getBoundingClientRect();
+  if (!r.width && !r.height) return;
+  particleBurst(r.left + r.width / 2, r.top + r.height / 2, o);
+}
+/* Card-play accent: sound always plays (effects volume applies); particles are skipped by REDUCE inside particleBurst. */
+function cardSfx(V, pv, hs) {
+  if (!hs || !pv || !V || V.scr !== 'combat' || !V.cb || pv.scr !== 'combat' || !pv.cb) return;
+  const pn = x => Array.isArray(x) ? x.length : Number(x) || 0;
+  if (pn(V.cb.played) <= pn(pv.cb.played)) return;
+  const cur = {};
+  V.cb.hand.forEach(h => { cur[h[0]] = 1; });
+  const gone = pv.cb.hand.filter(h => !cur[h[0]] && hs.m[h[0]]);
+  gone.slice(0, 4).forEach((h, i) => {
+    const c = CARDS[h[1]], g = hs.m[h[0]];
+    if (!c || !g) return;
+    const ty = c.t === 'power' ? 'power' : c.t === 'attack' ? 'attack' : 'skill';
+    try { SND.fire('cardplay', ty, i * 0.06); } catch (e) {}
+    const r = g.r;
+    setTimeout(() => particleBurst(r.left + r.width / 2, r.top + r.height / 2, { color: FXCOL[ty], n: ty === 'power' ? 13 : 9, d: ty === 'attack' ? 52 : 40, up: ty === 'skill' }), i * 60);
+  });
+}
 function flushFx(V, prev) {
   if (!V.fx) return;
   const counts = {};
@@ -3719,7 +3908,11 @@ function flushFx(V, prev) {
     setTimeout(() => s.remove(), 1800);
   });
   if (V.cb) V.cb.S.forEach(s => { if (s.fw[0] > prev && s.fw[1] > 0) footworkAnim(s.pi, s.fw[1]); });
-  if (V.cb && V.scr === 'combat' && prev > 0 && V.cb.en.some(e => e.ds > prev)) { shakeScreen(1); buzz([40, 40, 80]); }
+  if (V.cb && V.scr === 'combat' && prev > 0 && V.cb.en.some(e => e.ds > prev)) {
+    shakeScreen(1); buzz([40, 40, 80]);
+    try { SND.fire('deathpop'); } catch (e) {}
+    V.cb.en.forEach(e => { if (e.ds > prev) particlesAt(document.querySelector('[data-float="e' + e.idx + '"]'), { color: FXCOL.death, n: 14, d: 70, s: 6, t: 600, g: 30 }); });
+  }
 }
 function handFx(V, pv) {
   if (REDUCE || !pv || !V || V.scr !== 'combat' || !V.cb || !pv.cb || pv.scr !== 'combat') return;
@@ -3746,6 +3939,7 @@ function handFx(V, pv) {
       { opacity: 1, offset: .25 },
       { transform: 'none', opacity: 1 }
     ], { duration: 380, delay: base + n * 70, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
+    setTimeout(() => particlesAt(el, { color: FXCOL.draw, n: 5, d: 26, s: 3, t: 350, up: true, g: 6 }), base + n * 70 + 330);
     n++;
   });
 }
@@ -3761,6 +3955,7 @@ function pulsePile(name, delay) {
 }
 function pileFx(V, pv) {
   const hs = CL.hs; CL.hs = null;
+  cardSfx(V, pv, hs);
   if (REDUCE || !V || V.scr !== 'combat' || !V.cb) return;
   if (hs && pv && pv.scr === 'combat' && pv.cb) {
     const cur = {};
@@ -3928,7 +4123,10 @@ function paint(V) {
   try { pileFx(V, CL.pvV); } catch (e) { CL.hs = null; }
   try { partnerFx(V); } catch (e) {}
   try { sndSync(V, prev); } catch (e) {}
-  if (V && V.scr === 'map') { try { mapAfterPaint(); } catch (e) {} }
+  if (V && V.scr === 'map') {
+    try { mapAfterPaint(); } catch (e) {}
+    try { mapScrollTo(V); mapCue(); } catch (e) {}
+  } else { CL.mapKey = null; try { mapCue(true); } catch (e) {} }
   CL.lastFx = Math.max(prev, maxFx);
   CL.pvV = V;
   try { showPreview(V); } catch (e) {}
@@ -4451,7 +4649,7 @@ function pileView(which, opener) {
   const V = curView();
   const idx = { draw: 0, discard: 1, exhaust: 2, deck: 3 }[which];
   if (idx == null || !V || !V.cb || !V.cb.pc) return;
-  const rawIds = idx === 3 ? [].concat(V.cb.pc[0] || [], V.cb.pc[1] || [], V.cb.pc[2] || [], (V.cb.hand || []).map(x => x[1])) : (V.cb.pc[idx] || []);
+  const rawIds = idx === 3 ? [].concat(V.cb.pc[0] || [], V.cb.pc[1] || [], V.cb.pc[2] || [], (V.cb.hand || []).map(x => x[1]), V.cb.pwr || []) : (V.cb.pc[idx] || []);
   const ids = rawIds.filter(id => CARDS[id]);
   const groups = new Map();
   ids.forEach(id => groups.set(id, (groups.get(id) || 0) + 1));
@@ -4467,7 +4665,7 @@ function pileView(which, opener) {
   back.id = 'pilev'; back.className = 'overlay';
   back.setAttribute('role', 'dialog'); back.setAttribute('aria-modal', 'true'); back.setAttribute('aria-labelledby', 'pilev-h');
   back.innerHTML = `<section class='panel'><div class='row'><h2 id='pilev-h'>${PILE_NAMES[which]} (${ids.length})</h2><span class='spacer'></span><button type='button' class='btn primary' data-pv='close'>Close</button></div>` +
-    `<p class='muted'>${which === 'draw' ? 'Draw order is hidden. ' : ''}${which === 'deck' ? 'Cards in your piles and hand; played Powers are not listed. ' : ''}Sort: <span id='pilev-s'>${sortBtns()}</span></p>` +
+    `<p class='muted'>${which === 'draw' ? 'Draw order is hidden. ' : ''}${which === 'deck' ? 'Every card in your deck this fight, including Powers already in play. ' : ''}Sort: <span id='pilev-s'>${sortBtns()}</span></p>` +
     `<div class='cards' id='pilev-c'>` + cardsHTML() + `</div></section>`;
   let watch = null;
   const close = () => {
@@ -4609,6 +4807,67 @@ function kbMark() {
   if (el) el.classList.add('kbt');
 }
 new MutationObserver(kbMark).observe(document.getElementById('app'), { childList: true, subtree: true });
+/* Shared modal focus manager: Tab trap for #endconf, the deck/remove overlay and the settings panel; focus restore for the re-rendered overlay */
+(function modalFocus() {
+  const FOC = 'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
+  let opener = null, wasOpen = false;
+  function topModal() {
+    const e = document.getElementById('endconf');
+    if (e) return e.firstElementChild || e;
+    if (document.getElementById('kbhelp') || document.getElementById('mstut')) return null;
+    const p = document.getElementById('sndpanel');
+    if (p && !p.hidden) return p;
+    return document.querySelector('#app .overlay[aria-modal="true"]');
+  }
+  function focusables(m) {
+    return Array.prototype.filter.call(m.querySelectorAll(FOC), el => !el.disabled && el.getAttribute('aria-hidden') !== 'true' && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
+  }
+  function noteOpener(ev) {
+    if (document.querySelector('#app .overlay[aria-modal="true"]')) return;
+    const t = ev.target && ev.target.closest ? ev.target.closest('[data-act]') : null;
+    opener = t ? { act: t.getAttribute('data-act'), arg: t.getAttribute('data-arg') } : null;
+  }
+  document.addEventListener('click', noteOpener, true);
+  document.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') noteOpener(ev); }, true);
+  document.addEventListener('keydown', ev => {
+    if (ev.defaultPrevented) return;
+    const m = topModal();
+    if (!m) return;
+    if (ev.key === 'Escape' && m.classList.contains('overlay')) {
+      const c = m.querySelector('[data-act="close"]');
+      if (c) { ev.preventDefault(); c.click(); }
+      return;
+    }
+    if (ev.key !== 'Tab') return;
+    const f = focusables(m);
+    if (!f.length) { ev.preventDefault(); return; }
+    const first = f[0], last = f[f.length - 1], a = document.activeElement;
+    if (!m.contains(a)) { ev.preventDefault(); first.focus(); }
+    else if (ev.shiftKey && a === first) { ev.preventDefault(); last.focus(); }
+    else if (!ev.shiftKey && a === last) { ev.preventDefault(); first.focus(); }
+  }, true);
+  /* the overlay is rendered inside #app and gets rebuilt on every paint: (re)focus it while open, restore focus to the opener after close */
+  new MutationObserver(() => {
+    const ov = document.querySelector('#app .overlay[aria-modal="true"]');
+    if (ov) {
+      wasOpen = true;
+      if (!ov.contains(document.activeElement)) {
+        const f = focusables(ov);
+        const c = ov.querySelector('[data-act="close"]') || f[0];
+        if (c) { try { c.focus({ preventScroll: true }); } catch (e) {} }
+      }
+    } else if (wasOpen) {
+      wasOpen = false;
+      let el = null;
+      if (opener) {
+        const sel = '[data-act="' + opener.act + '"]' + (opener.arg != null ? '[data-arg="' + opener.arg + '"]' : '');
+        try { el = document.querySelector('#app ' + sel); } catch (e) {}
+      }
+      if (!el) el = document.querySelector('#app [data-act="deck"]') || document.querySelector('#app [data-act]');
+      if (el) { try { el.focus({ preventScroll: true }); } catch (e) {} }
+    }
+  }).observe(document.getElementById('app'), { childList: true, subtree: true });
+})();
 function kbHelp() {
   if (document.getElementById('kbhelp')) return;
   const back = document.createElement('div');

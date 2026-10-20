@@ -374,8 +374,15 @@ function enterNode(r, l) {
 function vote(pi, r, l) {
   if (!available().some(a => a.r === r && a.l === l)) return;
   P(pi).vote = r + '-' + l;
+  if (G.P.some(p => !p.vote)) return render();
   const v = G.P[0].vote;
-  if (G.P.every(p => p.vote === v)) enterNode(r, l); else render();
+  if (G.P.every(p => p.vote === v)) return enterNode(r, l);
+  // Players disagree: coin flip between the two picks
+  const wi = pick(G.P.map((p, i) => i));
+  const [wr, wl] = G.P[wi].vote.split('-').map(Number);
+  enterNode(wr, wl);
+  log('Coin flip: the party follows ' + (G.P[wi].hero || 'Player ' + (wi + 1)) + '\'s path.');
+  render();
 }
 function toMap() { G.screen = 'map'; G.combat = null; G.P.forEach(p => { p.reward = null; p.shop = null; p.treasure = null; }); resetDone(); render(); }
 function nextAct() { G.act++; G.map = genMap(); G.pos = null; G.floor = 0; G.P.forEach(p => { p.actclear = null; }); G.screen = 'map'; G.combat = null; resetDone(); render(); }
@@ -405,7 +412,7 @@ function newSide(pi) {
   const p = P(pi);
   return { isP: true, pi, hp: p.hp, max: p.maxHp, block: 0, energy: 3, flow: 0, flowEnd: 0, rage: 0, str: hasR(pi, 'cinder') ? 1 : 0, weak: 0, vuln: 0, frail: 0, drain: 0, hush: 0, hushNow: 0,
     thorns: hasR(pi, 'thornring') ? 2 : 0, composure: 0, rhythm: 0, keep: 0, rampart: 0, keepAll: 0, bloodpact: 0, ragegain: 0, stance: hasR(pi, 'hornedmask') ? 'calm' : null, switches: 0, mantra: 0, serenity: 0, ironplus: 0,
-    draw: shuffle(p.deck.map(c => mk(c.id))), hand: [], discard: [], exhaust: [], played: 0, lastAttack: 5, atkTotal: 0,
+    draw: shuffle(p.deck.map(c => mk(c.id))), hand: [], discard: [], exhaust: [], pwr: [], played: 0, lastAttack: 5, atkTotal: 0,
     ready: false, down: p.hp <= 0, turnN: 0, animS: 0, animK: '', fwS: 0, fwN: 0, hurtNow: false };
 }
 function startCombat(keys, kind) {
@@ -635,7 +642,7 @@ function playCard(pi, uid, tgt) {
   if (c.over) return render();
   if (d.t === 'attack') { if (P(pi).hero === 'elementalist') { A = s; gain(1, true); } if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
   if (d.t === 'skill' && !c.duel) aliveEnemies().filter(x => x.key === 'ogre').forEach(og => { og.str += 2; float(tagOf(og), '+2 Strength', 'buff'); log('The Ogre enrages: +2 Strength.'); });
-  if (d.t !== 'power') (d.x ? s.exhaust : s.discard).push(card);
+  if (d.t !== 'power') (d.x ? s.exhaust : s.discard).push(card); else (s.pwr || (s.pwr = [])).push(card.id);
   if (!c.duel && !aliveEnemies().length) { c.busy = true; render(); setTimeout(win, isReduce() ? 100 : 650); return; }
   render();
 }
@@ -1037,7 +1044,7 @@ function buildView(me) {
     const guard = s.block + (P(me).hero === 'duelist' ? 2 * s.flow : 0) + 3 * s.rampart + (s.stance === 'iron' ? 4 + s.ironplus : 0);
     V.cb = {
       k: c.kind, t: c.turn, busy: c.busy ? 1 : 0, logs: c.log.slice(0, 5), duel: c.duel ? { a: c.duel.active, r: c.duel.round } : null, toll: c.finalToll ? 1 : 0,
-      en, S: c.S.map(sideView), hand: s.hand.map(x => [x.u, x.id]), piles: [s.draw.length, s.discard.length, s.exhaust.length], pc: [s.draw, s.discard, s.exhaust].map(a => a.map(x => x.id).sort()), played: s.played, pl: c.pl || null,
+      en, S: c.S.map(sideView), hand: s.hand.map(x => [x.u, x.id]), piles: [s.draw.length, s.discard.length, s.exhaust.length], pc: [s.draw, s.discard, s.exhaust].map(a => a.map(x => x.id).sort()), pwr: (s.pwr || []).slice().sort(), played: s.played, pl: c.pl || null,
       inc: { tot: inc, guard, extra: guard > s.block ? 1 : 0 }
     };
   }
