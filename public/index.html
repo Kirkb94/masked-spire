@@ -363,6 +363,7 @@ html.rm .reveal .card.rv, html.rm .reveal .card.rv::after { animation: none; }
 #trwipe { position: fixed; inset: 0; z-index: 9000; pointer-events: none; display: none; background: linear-gradient(100deg, #0B0709 0%, #0B0709 88%, #E8BE52 94%, rgba(232, 190, 82, 0) 100%); }
 #trwipe.go { display: block; animation: tr-wipe .55s cubic-bezier(.6, 0, .3, 1) forwards; }
 #trwipe.go.duel { background: linear-gradient(100deg, #12070A 0%, #12070A 88%, #D6473F 94%, rgba(214, 71, 63, 0) 100%); animation-duration: .8s; }
+#trwipe.go.quick { animation-duration: .35s; }
 @keyframes tr-wipe { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 0 100%); } }
 html.rm #trwipe, html.rm #trwipe.go { display: none; animation: none; }
 @media (prefers-reduced-motion: reduce) { html:not(.rm-off) #app.scr-in, html:not(.rm-off) #trwipe.go { animation: none; } html:not(.rm-off) #trwipe.go { display: none; } }
@@ -783,7 +784,8 @@ body.dragging, body.dragging * { user-select: none; -webkit-user-select: none; }
 .hand { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; scroll-padding-inline: 16px; }
 .hand .card { scroll-snap-align: center; }
 @media (hover: none) { .card:hover, .hand .card:hover { transform: none; } .card.sel, .hand .card.sel { transform: translateY(-12px); } }
-@media (pointer: coarse) { .btn, .topbar .btn, .controls .endwrap .btn { min-height: 44px; } .hand { padding-top: 24px; padding-bottom: 14px; } }
+@media (pointer: coarse) { .btn, .topbar .btn, .controls .endwrap .btn { min-height: 44px; } .hand { padding-top: 24px; padding-bottom: 14px; } .hint .btn { min-height: 44px; min-width: 72px; margin: 2px 4px; } .hint:not(:empty) { display: block; } }
+.hint .btn { padding: 4px 14px; }
 @media (max-width: 640px), (pointer: coarse) { .btn, .topbar .btn, .controls .endwrap .btn { min-height: 44px; } .controls .endwrap .btn.kbhelp { min-width: 44px; } }
 /* ---------- Sound panel ---------- */
 .sndfloat { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); z-index: 40; min-height: 40px; padding: 6px 12px; display: flex; gap: 6px; align-items: center; font-size: 16px; }
@@ -842,6 +844,15 @@ html.cb .intentbar.k-atk { background-image: repeating-linear-gradient(45deg, rg
 html.cb .intentbar.k-def { background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.16) 0 3px, transparent 3px 8px); }
 html.cb .intentbar.k-buf { background-image: radial-gradient(rgba(255,255,255,.28) 1.4px, transparent 1.9px); background-size: 8px 8px; }
 html.cb .intentbar.k-deb { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.14) 0 3px, transparent 3px 7px), repeating-linear-gradient(-45deg, rgba(255,255,255,.14) 0 3px, transparent 3px 7px); }
+
+/* Colorblind mode: rarity shapes (common ● / uncommon ▲ / rare ★), not just color */
+html.cb .card .rgem { transform: none; width: 15px; height: 15px; border: 0; box-shadow: none; filter: drop-shadow(0 0 2px #000); }
+html.cb .card .rgem.r-u { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+html.cb .card .rgem.r-r { clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); width: 18px; height: 18px; }
+html.cb .card.rar-u .rlabel::before { content: '\25B2 '; }
+html.cb .card.rar-r .rlabel::before { content: '\2605 '; }
+html.cb .card.rar-r { border-style: double; border-width: 4px; }
+html.hc .card .rgem { outline: 2px solid #FFFFFF; }
 
 /* ---------- Map art ---------- */
 .mapcard .mapwrap { max-width: 540px; height: auto; border-radius: 14px; overflow: hidden; border: 1px solid #000A; box-shadow: inset 0 0 40px #000B, 0 6px 22px #0008; background: #0C0A12; }
@@ -982,7 +993,8 @@ html.rm #rotate svg { animation: none; }
 @keyframes sc-mote { 0% { opacity: 0; transform: translateY(6px); } 30% { opacity: .8; } 100% { opacity: 0; transform: translateY(-26px); } }
 html.rm .scenehd *, html.rm .scenehd { animation: none !important; }
 html.rm .scenehd .sc-ember, html.rm .scenehd .sc-mote { opacity: .5; }
-@media (prefers-reduced-motion: reduce) { html:not(.rm-off) .scenehd *, html:not(.rm-off) .scenehd { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { html:not(.rm-off) .scenehd *, html:not(.rm-off) .scenehd { animation: none !important; } html:not(.rm-off) .scenehd .sc-ember, html:not(.rm-off) .scenehd .sc-mote { opacity: .5; } }
+.scenehd { contain: paint; }
 @media (prefers-reduced-motion: reduce) { #rotate svg { animation: none; } }
 @media (pointer: coarse) and (orientation: portrait) { html:not(.allow-portrait) #rotate { display: flex; } }
 #rotate .btn { min-height: 48px; padding: 10px 18px; margin-top: 6px; }
@@ -1986,7 +1998,7 @@ const SND = (function () {
   const brass = (V, t, notes, d, v, lp) => notes.forEach(n => { V.tone({ t, f: mf(n), d, a: 0.05, r: 0.25, v, type: 'sawtooth', lp: lp || 1500, lp2: (lp || 1500) * 2.4, q: 1.2 }); V.tone({ t, f: mf(n), d, a: 0.05, r: 0.25, v: v * 0.6, type: 'sawtooth', det: 8, lp: lp || 1500, lp2: (lp || 1500) * 2.4 }); });
 
   /* ----- music tracks: step(c) is called once per 16th note ----- */
-  const BPM = { menu: [70, 70, 70], a1: [54, 78, 92], a2: [76, 100, 116], a3: [48, 66, 80], duel: [84, 104, 124], rest: [58, 58, 58], shop: [92, 92, 92] };
+  const BPM = { menu: [70, 70, 70], map: [62, 62, 62], a1: [54, 78, 92], a2: [76, 100, 116], a3: [48, 66, 80], duel: [84, 104, 124], rest: [58, 58, 58], shop: [92, 92, 92] };
   const RE_CH = [[38, 45, 50, 57], [34, 46, 50, 53], [41, 48, 53, 57], [36, 48, 52, 55]];
   const SH_CH = [[45, 52, 57, 60], [41, 48, 53, 57], [43, 50, 55, 59], [40, 47, 52, 56]];
   const SH_PENT = [69, 72, 74, 76, 79, 81];
@@ -2001,7 +2013,18 @@ const SND = (function () {
   const A3_CH = [[38, 45, 50, 53, 57], [34, 46, 53, 56, 61], [43, 50, 55, 58, 62], [45, 52, 57, 60, 64]];
   const A3_FM = [[600, 1040], [450, 800], [800, 1150], [350, 700]];
 
+  const MAP_CH = [[38, 45, 50, 57], [36, 43, 48, 55], [41, 48, 53, 57], [43, 50, 55, 59]];
+  const MAP_PENT = [62, 65, 67, 69, 72, 74];
+
   const TRACKS = {
+    map(c) {
+      const { V, t, i, sd } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = MAP_CH[ci];
+      if (i % 32 === 0) { pad(V, t, ch, sd * 32, 0.022, 700, 'triangle'); V.tone({ t, f: mf(ch[0] - 12), d: sd * 32, a: 1.5, r: 1.5, v: 0.08, type: 'sine' }); }
+      if (st === 0 || st === 8) thump(V, t, 0.05, 70);
+      if (st % 4 === 2 && hs(i, 40) > 0.35) pluck(V, t, ch[(st / 4 + bar) % 4] + 12, 0.04);
+      if (st % 4 === 0 && hs(i, 41) > 0.7) { const n = MAP_PENT[Math.floor(hs(i, 42) * 6)]; pluck(V, t, n, 0.035); pluck(V, t + sd * 3, n, 0.015); }
+      if (st === 0 && hs(bar, 43) > 0.6) bell(V, t, 86 + Math.floor(hs(bar, 44) * 3) * 2, 0.03, 2.5);
+    },
     menu(c) {
       const { V, t, i, sd } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = MENU_CH[ci];
       if (i % 32 === 0) { pad(V, t, ch, sd * 32, 0.028, 900); pad(V, t, ch.map(n => n + 12), sd * 32, 0.012, 1400, 'triangle'); V.tone({ t, f: mf(MENU_R[ci]), d: sd * 32, a: 1.5, r: 1.5, v: 0.1, type: 'sine' }); }
@@ -2741,7 +2764,7 @@ function sndSync(V, prev) {
   const was = CL.sndScr; CL.sndScr = scr;
   if (!V || scr === 'lobby') { SND.scene('menu'); SND.ambient(null); return; }
   const ak = 'a' + Math.min(3, Math.max(1, V.act || 1));
-  let key = ak, mode = 'calm';
+  let key = scr === 'map' ? 'map' : ak, mode = 'calm';
   if (scr === 'combat' && V.cb) { mode = V.cb.duel || V.cb.k === 'boss' ? 'boss' : 'fight'; if (V.cb.duel) key = 'duel'; }
   else if (scr === 'duelintro' || scr === 'duelend') key = 'duel';
   else if (scr === 'rest') key = 'rest';
@@ -2946,7 +2969,7 @@ function enemyHTML(V, e, prev) {
   if (e.key === 'bell' && cb.toll) badges.push('<span class="badge bad">Final Toll</span>');
   if (e.key === 'cog' && e.p2) badges.push('<span class="badge bad">Shattered: acts twice, takes +25%</span>');
   if (e.key === 'spire' && e.p2) badges.push('<span class="badge bad">Unmasked</span>');
-  const targeting = CL.sel != null && !e.dead;
+  const targeting = !e.dead && selNeedsTarget(V);
   const toMe = e.tg === V.me;
   const tgtLabel = V.n > 1 && !e.dead && it.tot > 0 ? '<span class="tgt' + (toMe ? ' me' : '') + '">→ ' + (toMe ? 'You' : esc(vName(V, e.tg))) + '</span>' : '';
   let ek = '';
@@ -3096,7 +3119,7 @@ function combatHTML(V, prev) {
       : '<div class="big safe">' + ICON.check + 'No attacks at you next turn</div>';
   }
   const ls = liveSide(V);
-  const hand = cb.hand.map(([u, id], i) => cardHTML(id, 'card', u, { u: u, kb: i < 10 ? String((i + 1) % 10) : '', sel: CL.sel === u, dim: CARDS[id].c > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
+  const hand = cb.hand.map(([u, id], i) => cardHTML(id, 'card', u, { u: u, kb: i < 20 ? (i < 10 ? '' : '⇧') + String((i + 1) % 10) : '', sel: CL.sel === u, dim: CARDS[id].c > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
   const endLabel = duel ? (myTurn ? 'End turn' : 'Rival’s turn') : waiting ? 'Waiting for partner…' : 'End turn';
   const canEnd = !cb.busy && !s.dn && myTurn;
   const selCard = CL.sel != null ? cb.hand.find(h => h[0] === CL.sel) : null;
@@ -3109,7 +3132,7 @@ function combatHTML(V, prev) {
     '<div class="dock"><div class="controls"><div class="energy" title="Energy">' + s.energy + '<small>energy</small></div>' +
     '<div class="incoming">' + inc + '<div class="piles"><span data-pile="draw" data-act="pile" data-arg="draw" role="button" tabindex="0" aria-haspopup="dialog">Draw ' + cb.piles[0] + '</span><span data-pile="discard" data-act="pile" data-arg="discard" role="button" tabindex="0" aria-haspopup="dialog">Discard ' + cb.piles[1] + '</span><span data-pile="exhaust" data-act="pile" data-arg="exhaust" role="button" tabindex="0" aria-haspopup="dialog">Exhaust ' + cb.piles[2] + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
     '<div class="endwrap"><button type="button" class="btn kbhelp" data-act="keys" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">?</button><button type="button" class="btn primary" data-act="end"' + (canEnd ? '' : ' disabled') + '>' + endLabel + ' <kbd class="kbn-e" aria-hidden="true">E</kbd></button></div></div>' +
-    '<div class="hint" aria-live="polite">' + (selCard ? 'Choose a target for ' + esc(CARDS[selCard[1]].n) + ' (←/→ to pick, Enter to confirm, Esc or tap the card again to cancel)' : '') + '</div>' +
+    '<div class="hint" aria-live="polite">' + (selCard ? (selNeedsTarget(V) ? 'Choose a target for ' + esc(CARDS[selCard[1]].n) + ' (←/→ to pick, Enter to confirm, Esc or tap the card again to cancel) <button type="button" class="btn" data-act="cancelsel">Cancel</button>' : '<span class="selask">Play ' + esc(CARDS[selCard[1]].n) + '?</span> <button type="button" class="btn primary" data-act="playsel">Play</button> <button type="button" class="btn" data-act="cancelsel">Cancel</button>') : '') + '</div>' +
     '<div class="hand" aria-label="Your hand">' + (hand || '<span class="muted">' + (cb.busy ? 'Resolving…' : waiting ? 'Waiting for your partner to end their turn…' : 'Your hand is empty.') + '</span>') + '</div></div>' +
     logPanelHTML() + '</section>';
 }
@@ -3450,6 +3473,7 @@ function flushFx(V, prev) {
     if (dmg) {
       s.style.fontSize = Math.min(56, 32 + Math.floor(dmg * 0.6)) + 'px';
       if (dmg >= 20) s.classList.add('crit');
+      if (dmg >= 6 && dmg < 12 && f.t === 'p' + V.me) shakeScreen(1);
       if (dmg >= 12) {
         s.classList.add('big');
         if (f.t[0] === 'e' || f.t === 'p' + V.me) shakeScreen(dmg >= 20 ? 2 : 1);
@@ -3499,6 +3523,70 @@ function handFx(V, pv) {
     n++;
   });
 }
+/* Discard / exhaust ghosts + pile counter pulses. CL.hs holds the previous render's hand card rects and clones. */
+function pulsePile(name, delay) {
+  setTimeout(() => {
+    if (REDUCE) return;
+    const el = document.querySelector('.piles [data-pile="' + name + '"]');
+    if (!el || !el.animate) return;
+    el.style.display = 'inline-block';
+    el.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.3)', offset: .4 }, { transform: 'scale(1)' }], { duration: 340, easing: 'ease-out' });
+  }, delay);
+}
+function pileFx(V, pv) {
+  const hs = CL.hs; CL.hs = null;
+  if (REDUCE || !V || V.scr !== 'combat' || !V.cb) return;
+  if (hs && pv && pv.scr === 'combat' && pv.cb) {
+    const cur = {};
+    V.cb.hand.forEach(h => { cur[h[0]] = 1; });
+    const gone = pv.cb.hand.filter(h => !cur[h[0]] && hs.m[h[0]]);
+    const pp = pv.cb.piles || [0, 0, 0], cp = V.cb.piles || [0, 0, 0];
+    let exN = Math.max(0, cp[2] - pp[2]);
+    const dEl = document.querySelector('.piles [data-pile="discard"]'), xEl = document.querySelector('.piles [data-pile="exhaust"]');
+    let maxEnd = 0, toDis = false, toEx = false;
+    gone.slice(0, 12).forEach((h, i) => {
+      const c = CARDS[h[1]], g = hs.m[h[0]];
+      if (!c || !g || !g.n.animate) return;
+      let kind = 'discard';
+      if (c.t === 'power') kind = 'power';
+      else if (exN > 0 && (c.x || c.eth)) { exN--; kind = 'exhaust'; }
+      const tEl = kind === 'exhaust' ? xEl : dEl;
+      const gh = g.n.cloneNode(true);
+      ['data-u', 'data-arg', 'data-act', 'id'].forEach(a => gh.removeAttribute(a));
+      gh.setAttribute('aria-hidden', 'true'); gh.setAttribute('tabindex', '-1');
+      gh.style.cssText = 'position:fixed;margin:0;left:' + g.r.left + 'px;top:' + g.r.top + 'px;width:' + g.r.width + 'px;height:' + g.r.height + 'px;z-index:60;pointer-events:none;transform-origin:center;';
+      document.body.appendChild(gh);
+      let frames;
+      if (kind === 'discard' && tEl) {
+        const tr = tEl.getBoundingClientRect();
+        const dx = (tr.left + tr.width / 2) - (g.r.left + g.r.width / 2), dy = (tr.top + tr.height / 2) - (g.r.top + g.r.height / 2);
+        frames = [{ transform: 'none', opacity: 1 }, { opacity: 1, offset: .6 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.25) rotate(12deg)', opacity: 0 }];
+      } else if (kind === 'exhaust' && tEl) {
+        const tr = tEl.getBoundingClientRect();
+        const dx = (tr.left + tr.width / 2) - (g.r.left + g.r.width / 2), dy = (tr.top + tr.height / 2) - (g.r.top + g.r.height / 2);
+        frames = [{ transform: 'none', opacity: 1, filter: 'none' }, { transform: 'translateY(-14px) scale(1.05)', opacity: 1, filter: 'brightness(1.8) saturate(.4)', offset: .35 }, { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.2) rotate(-14deg)', opacity: 0, filter: 'brightness(2) blur(2px)' }];
+      } else {
+        frames = [{ transform: 'none', opacity: 1 }, { transform: 'translateY(-18px) scale(1.12)', opacity: 0 }];
+      }
+      const dur = kind === 'discard' ? 380 : 520, delay = i * 60;
+      const done = () => { if (gh.parentNode) gh.remove(); };
+      gh.animate(frames, { duration: dur, delay: delay, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'both' }).onfinish = done;
+      setTimeout(done, dur + delay + 400);
+      maxEnd = Math.max(maxEnd, delay + dur);
+      if (kind === 'discard') toDis = true; else if (kind === 'exhaust') toEx = true;
+    });
+    if (cp[0] !== pp[0]) pulsePile('draw', 0);
+    if (cp[1] !== pp[1]) pulsePile('discard', toDis ? maxEnd - 80 : 0);
+    if (cp[2] !== pp[2]) pulsePile('exhaust', toEx ? maxEnd - 80 : 0);
+  }
+  const snap = {};
+  document.querySelectorAll('.hand .card[data-u]').forEach(el => {
+    const u = el.getAttribute('data-u');
+    const busy = hs && hs.m[u] && el.getAnimations && el.getAnimations().length;
+    snap[u] = busy ? hs.m[u] : { r: el.getBoundingClientRect(), n: el.cloneNode(true) };
+  });
+  CL.hs = { m: snap };
+}
 function partnerFx(V) {
   if (!V || V.scr !== 'combat' || !V.cb) { CL.lastPl = undefined; return; }
   const pl = V.cb.pl;
@@ -3543,7 +3631,7 @@ function paint(V) {
   const prev = CL.lastFx;
   const sk = V ? V.scr : (CL.role || 'title');
   if (CL.scrKey !== undefined && CL.scrKey !== sk) {
-    if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); if (['combat', 'duelintro', 'duelend'].indexOf(sk) >= 0) { let w = document.getElementById('trwipe'); if (!w) { w = document.createElement('div'); w.id = 'trwipe'; w.setAttribute('aria-hidden', 'true'); w.addEventListener('animationend', () => w.classList.remove('go', 'duel')); document.body.appendChild(w); } w.classList.remove('go', 'duel'); void w.offsetWidth; w.classList.add('go'); if (sk !== 'combat') w.classList.add('duel'); setTimeout(() => w.classList.remove('go', 'duel'), 1000); } clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
+    if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); if (['combat', 'map', 'reward', 'duelintro', 'duelend'].indexOf(sk) >= 0) { let w = document.getElementById('trwipe'); if (!w) { w = document.createElement('div'); w.id = 'trwipe'; w.setAttribute('aria-hidden', 'true'); w.addEventListener('animationend', () => w.classList.remove('go', 'duel', 'quick')); document.body.appendChild(w); } w.classList.remove('go', 'duel', 'quick'); void w.offsetWidth; w.classList.add('go'); if (sk === 'map' || sk === 'reward') w.classList.add('quick'); else if (sk !== 'combat') w.classList.add('duel'); setTimeout(() => w.classList.remove('go', 'duel', 'quick'), 1000); } clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
     if (!REDUCE && ['reward', 'actclear', 'victory', 'defeat', 'duelend'].indexOf(sk) < 0) SND.fire('transition');
   }
   CL.scrKey = sk;
@@ -3609,6 +3697,7 @@ function paint(V) {
   try { barFx(V); } catch (e) {}
   if (V) flushFx(V, prev);
   try { handFx(V, CL.pvV); } catch (e) {}
+  try { pileFx(V, CL.pvV); } catch (e) { CL.hs = null; }
   try { partnerFx(V); } catch (e) {}
   try { sndSync(V, prev); } catch (e) {}
   if (V && V.scr === 'map') { try { mapAfterPaint(); } catch (e) {} }
@@ -3745,11 +3834,17 @@ function updateNetPill() {
   let el = document.getElementById('netpill');
   if (!el) {
     const st = document.createElement('style');
-    st.textContent = '#netpill{position:fixed;top:calc(6px + env(safe-area-inset-top,0px));right:calc(6px + env(safe-area-inset-right,0px));z-index:9998;display:none;align-items:center;gap:6px;max-width:70vw;padding:3px 9px;border-radius:12px;background:rgba(20,16,30,.82);color:#fff;font:600 12px/1.3 system-ui,sans-serif;pointer-events:none;white-space:nowrap}#netpill .np-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#4caf50}#netpill.mid .np-dot{background:#ffb300}#netpill.bad .np-dot{background:#e53935}#netpill .np-peer{overflow:hidden;text-overflow:ellipsis;color:#ffd54a}#netpill.bad .np-peer{color:#ff8a80}#netpill .np-peer:empty{display:none}';
+    st.textContent = '#netpill{position:fixed;top:calc(6px + env(safe-area-inset-top,0px));right:calc(6px + env(safe-area-inset-right,0px));z-index:9998;display:none;align-items:center;gap:6px;max-width:70vw;padding:3px 9px;border-radius:12px;background:rgba(20,16,30,.82);color:#fff;font:600 12px/1.3 system-ui,sans-serif;pointer-events:auto;cursor:pointer;flex-wrap:wrap;white-space:nowrap}#netpill .np-detail{display:none;flex-basis:100%;white-space:normal;font-weight:500;color:#ddd}#netpill[data-open="1"] .np-detail{display:block}#netpill:focus-visible{outline:3px solid #ffd54a;outline-offset:2px}#netpill .np-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#4caf50}#netpill.mid .np-dot{background:#ffb300}#netpill.bad .np-dot{background:#e53935}#netpill .np-peer{overflow:hidden;text-overflow:ellipsis;color:#ffd54a}#netpill.bad .np-peer{color:#ff8a80}#netpill .np-peer:empty{display:none}';
     document.head.appendChild(st);
     el = document.createElement('div');
     el.id = 'netpill';
     el.innerHTML = '<span class="np-dot" aria-hidden="true"></span><span class="np-ping" aria-hidden="true"></span><span class="np-peer" role="status" aria-live="polite"></span>';
+    const dt = document.createElement('span'); dt.className = 'np-detail';
+    el.appendChild(dt);
+    el.setAttribute('role', 'button'); el.tabIndex = 0; el.setAttribute('aria-expanded', 'false');
+    const togglePill = () => { const o = el.dataset.open === '1' ? '0' : '1'; el.dataset.open = o; el.setAttribute('aria-expanded', o === '1' ? 'true' : 'false'); };
+    el.addEventListener('click', togglePill);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePill(); } });
     document.body.appendChild(el);
   }
   const V = CL.V;
@@ -3777,6 +3872,11 @@ function updateNetPill() {
   const cls = lvl === 'ok' ? '' : lvl;
   if (el.className !== cls) el.className = cls;
   el.title = up ? 'Ping ' + ping : 'Disconnected';
+  const dEl = el.querySelector('.np-detail');
+  if (dEl) {
+    const dtxt = up ? 'Connected \u00B7 ' + ping + (V.n > 1 ? ' \u00B7 ' + (peer || ((V.cb && V.cb.duel ? 'Opponent' : 'Partner') + ' online')) : '') : 'Disconnected \u2014 retrying automatically';
+    if (dEl.textContent !== dtxt) dEl.textContent = dtxt;
+  }
   el.style.display = 'flex';
 }
 setInterval(updateNetBar, 500);
@@ -4000,6 +4100,12 @@ function loadSave() {
 }
 
 /* ---------- Input ---------- */
+const TAPSEL = window.matchMedia('(pointer: coarse)');
+function selNeedsTarget(V) {
+  if (CL.sel == null || !V || !V.cb || V.cb.duel) return false;
+  const h = V.cb.hand.find(x => x[0] === CL.sel);
+  return !!h && !!CARDS[h[1]].tg && V.cb.en.filter(e => !e.dead).length > 1;
+}
 function curView() { return CL.role === 'online' ? CL.V : soloView(); }
 document.getElementById('app').addEventListener('click', ev => {
   const b = ev.target.closest('[data-act]');
@@ -4039,6 +4145,7 @@ document.getElementById('app').addEventListener('click', ev => {
       const h = V.cb.hand.find(x => x[0] === u);
       if (!h) break;
       const d = CARDS[h[1]];
+      if (TAPSEL.matches && ev.detail > 0 && CL.sel !== u) { CL.sel = u; paint(V); break; } /* touch: first tap selects, confirm via Play button or second tap */
       if (d.tg && !V.cb.duel) {
         const live = V.cb.en.filter(e => !e.dead);
         if (live.length > 1) { CL.sel = CL.sel === u ? null : u; paint(V); break; }
@@ -4047,7 +4154,17 @@ document.getElementById('app').addEventListener('click', ev => {
       CL.sel = null;
       break;
     }
-    case 'enemy': if (CL.sel != null) { const u = CL.sel; CL.sel = null; sendCard(V, u, Number(arg)); } break;
+    case 'enemy': if (selNeedsTarget(V)) { const u = CL.sel; CL.sel = null; sendCard(V, u, Number(arg)); } break;
+    case 'cancelsel': CL.sel = null; if (V) paint(V); break;
+    case 'playsel': {
+      if (!V || !V.cb || CL.sel == null) break;
+      const u = CL.sel, h = V.cb.hand.find(x => x[0] === u);
+      CL.sel = null;
+      if (!h) { paint(V); break; }
+      const live = V.cb.en.filter(e => !e.dead);
+      sendCard(V, u, CARDS[h[1]].tg && !V.cb.duel && live.length ? live[0].idx : null);
+      break;
+    }
     case 'end': {
       const left = ENDCONF ? endTurnPlayable(V) : 0;
       if (left) endTurnConfirm(left, V.cb.S[V.me].energy, () => { CL.sel = null; send('end'); });
@@ -4237,6 +4354,7 @@ function kbHelp() {
   back.id = 'kbhelp'; back.className = 'endconf-back';
   back.innerHTML = '<div class="endconf" role="dialog" aria-modal="true" aria-labelledby="kbhelp-h"><h3 id="kbhelp-h">Keyboard shortcuts</h3><ul class="kbkeys">' +
     '<li><kbd>1</kbd>–<kbd>9</kbd>, <kbd>0</kbd> Select / play card 1–10</li>' +
+    '<li><kbd>Shift</kbd>+<kbd>1</kbd>–<kbd>0</kbd> Select / play card 11–20</li>' +
     '<li><kbd>Tab</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> Cycle targets</li>' +
     '<li><kbd>Enter</kbd> Confirm target</li>' +
     '<li><kbd>Esc</kbd> Cancel selection</li>' +
@@ -4294,9 +4412,10 @@ document.addEventListener('keydown', ev => {
     if (b && !b.disabled) { ev.preventDefault(); b.click(); }
     return;
   }
-  if (/^[0-9]$/.test(k)) {
+  const kbDig = /^[0-9]$/.test(k) ? k : (ev.shiftKey && /^Digit[0-9]$/.test(ev.code || '') ? ev.code.slice(5) : null);
+  if (kbDig !== null) {
     const cards = Array.from(document.querySelectorAll('.hand [data-act="card"]'));
-    const el = cards[k === '0' ? 9 : Number(k) - 1];
+    const el = cards[(kbDig === '0' ? 9 : Number(kbDig) - 1) + (ev.shiftKey && !/^[0-9]$/.test(k) ? 10 : 0)];
     if (!el) return;
     ev.preventDefault();
     kbT = null;
