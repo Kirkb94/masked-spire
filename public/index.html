@@ -144,6 +144,15 @@ html.rm .shield.pop { animation: none; }
 .enemy.target { cursor: pointer; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal); }
 .enemy.target:hover { transform: translateY(-4px); }
 .enemy.acting { z-index: 2; }
+.enemy.lunge { z-index: 3; }
+.enemy.lunge .art { animation: e-lunge .42s cubic-bezier(.3,0,.3,1); }
+@keyframes e-lunge { 0% { transform: none; } 35% { transform: translateY(-8px) scale(1.03); } 60% { transform: translateY(26px) scale(1.1); } 100% { transform: none; } }
+html.rm .enemy.lunge .art { animation: none; }
+html.rm .enemy.lunge { outline: 3px solid #E8743B; outline-offset: 2px; }
+.tbanner { position: fixed; left: 50%; top: 38%; transform: translate(-50%, -50%); z-index: 80; pointer-events: none; padding: 10px 34px; border-radius: 12px; background: rgba(21,18,26,.88); border: 2px solid var(--teal); color: #fff; font-family: var(--display); font-size: 30px; letter-spacing: 2px; text-transform: uppercase; animation: tbanner-in 1s ease-out forwards; }
+.tbanner.en { border-color: #E8743B; }
+@keyframes tbanner-in { 0% { opacity: 0; transform: translate(-90%, -50%); } 20% { opacity: 1; transform: translate(-50%, -50%); } 75% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-10%, -50%); } }
+html.rm .tbanner { animation: none; }
 .enemy.tele { --tc: #E8743B; animation: tele-flash .42s ease-out var(--ts, 0s) backwards; }
 .enemy.tele-def { --tc: #56B4E9; } .enemy.tele-buf { --tc: #F0E442; } .enemy.tele-deb { --tc: #CC79A7; }
 .enemy.tele .intentbar { animation: tele-bar .42s ease-out var(--ts, 0s) backwards; }
@@ -405,7 +414,8 @@ html.rm .hcard:hover { transform: none; }
 .trio .portrait { border-radius: 10px; }
 @media (max-width: 520px) { .trio { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .actbanner { font-family: var(--display); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
-@media (max-width: 860px) { .heropick { grid-template-columns: 1fr; } }
+@media (max-width: 860px) { .heropick { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .heropick { grid-template-columns: 1fr; } }
 .heropick { gap: 12px; }
 .hcard { gap: 6px; padding: 10px 12px; }
 .hcard .portrait { width: clamp(84px, 16vh, 140px); align-self: center; }
@@ -415,6 +425,18 @@ html.rm .hcard:hover { transform: none; }
 .hcard .hrelic { padding: 6px 10px; font-size: 14px; gap: 1px; }
 .hcard .hrelic b { font-size: 16px; }
 @media (max-width: 860px) { .hcard .portrait { width: 84px; } }
+@media (min-width: 900px) and (max-height: 900px) and (orientation: landscape) {
+  .heropick { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-items: stretch; }
+  .hcard { gap: 4px; padding: 8px; }
+  .hcard .portrait { width: clamp(64px, 11vh, 96px); }
+  .hcard h3 { font-size: 18px; }
+  .hcard p, .hcard ul { font-size: 12.5px; line-height: 1.25; }
+  .hcard .muted { font-size: 12px; }
+  .hcard .hrelic { height: 82px; box-sizing: border-box; padding: 5px 8px; font-size: 12px; line-height: 1.2; overflow: hidden; flex: none; }
+  .hcard .hrelic b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hcard .hrelic span:last-child { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .hcard .btn { padding-top: 8px; padding-bottom: 8px; }
+}
 @media (max-height: 720px) {
   .heropick { gap: 8px; align-items: stretch; }
   .hcard { gap: 4px; padding: 8px 10px; min-height: 0; }
@@ -950,6 +972,11 @@ html.rm .startmark { animation: none; }
 .me-hot { fill: none; stroke: #E8BE52; stroke-width: 3.5; stroke-dasharray: 8 6; stroke-linecap: round; animation: me-flow 1s linear infinite; }
 .me-lit { fill: none; stroke: #5FE6E2; stroke-width: 3.5; stroke-linecap: round; filter: drop-shadow(0 0 4px #5FE6E2); }
 @keyframes me-flow { to { stroke-dashoffset: -28; } }
+.me-lit.me-draw { stroke-dasharray: 1; animation: me-draw .9s ease-out both; }
+@keyframes me-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.legend .lg-ring { animation: curpulse 2s ease-in-out infinite; }
+html.rm .me-lit.me-draw, html.rm .legend .lg-ring { animation: none; }
+@media (prefers-reduced-motion: reduce) { html:not(.rm-off) .me-lit.me-draw, html:not(.rm-off) .legend .lg-ring { animation: none; } }
 .me-hot { filter: drop-shadow(0 0 4px #E8BE52); }
 html.rm .me-hot { animation: none; }
 @media (prefers-reduced-motion: reduce) { html:not(.rm-off) .me-hot { animation: none; } }
@@ -1300,7 +1327,13 @@ var KW = [
   ['intangible', 'Intangible', 'Every hit taken is reduced to 1 damage.'],
   ['rooted', 'Rooted', 'Takes half damage.'],
   ['hushed', 'Hushed', 'Powers cannot be played.'],
-  ['composure', 'Composure', 'A defensive buff that protects you.']
+  ['composure', 'Composure', 'A defensive buff that protects you.'],
+  ['burn', 'Burn', 'Takes damage equal to its Burn stacks at the end of the round, then loses 1 stack.'],
+  ['chill', 'Chill', 'Its attacks deal 25% less damage. Loses 1 stack each turn.'],
+  ['shock', 'Shock', 'The next hit it takes deals 3 extra damage and uses up 1 stack.'],
+  ['reflecting', 'Reflecting', 'Reflects half of the damage it takes back at the attacker.'],
+  ['en garde', 'En Garde', 'Parries the next hit against it.'],
+  ['holding', 'Holding', 'Is carrying stolen gold. Defeat it to get the gold back.']
 ];
 var tip = document.createElement('div'); tip.className = 'mstip'; tip.id = 'mstip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true; document.body.appendChild(tip);
 var anchor = null, hideT = 0, watch = 0;
@@ -2510,7 +2543,7 @@ const SND = (function () {
   }
   function unlock() {
     if (!ensure()) return;
-    if (ac.state === 'suspended') ac.resume().then(sync).catch(() => {});
+    if (ac.state !== 'running' && ac.state !== 'closed') ac.resume().then(sync).catch(() => {});
     sync();
   }
   function stopMusic(tau) {
@@ -2882,10 +2915,12 @@ function mapHTML(V) {
   const cur = V.pos ? { r: V.pos.r, l: V.pos.l } : null;
   const ex = 200, ey = H - 26;
   let edges = '', hot = '';
+  const edgeKey = V.act + ':' + (V.pos ? V.pos.r + '-' + V.pos.l : 'start');
+  const freshEdges = CL.edgeKey !== edgeKey; CL.edgeKey = edgeKey;
   const edge = (a, b, lit, hotE, seed) => {
     const d = mapEdge(a[0], a[1], b[0], b[1], seed);
     edges += '<path d="' + d + '" class="me-shadow"/>';
-    if (lit) edges += '<path d="' + d + '" class="me-lit"/>';
+    if (lit) edges += '<path d="' + d + '" pathLength="1" class="me-lit' + (freshEdges ? ' me-draw' : '') + '"/>';
     else if (hotE) edges += '<path d="' + d + '" class="me-hot"/>';
     else edges += '<path d="' + d + '" class="me-dash"/>';
   };
@@ -2970,11 +3005,24 @@ function mapCue(hide) {
 function mapScrollTo(V) {
   const key = V.act + ':' + (V.pos ? V.pos.r + '-' + V.pos.l : 'start');
   if (CL.mapKey === key) return;
+  if (!mapTarget()) return; /* no target yet: keep the key unclaimed so the next paint retries */
   CL.mapKey = key;
-  const t = mapTarget(); if (!t) return;
-  const tr = t.getBoundingClientRect();
-  if (tr.top >= 70 && tr.bottom <= innerHeight - 40) return;
-  window.scrollTo({ top: Math.max(0, tr.top + scrollY - innerHeight * .55), behavior: REDUCE ? 'auto' : 'smooth' });
+  if (!CL.mapUL) {
+    CL.mapUL = true;
+    ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(ev => window.addEventListener(ev, () => { CL.mapUser = true; }, { passive: true }));
+  }
+  CL.mapUser = false;
+  const go = force => {
+    if (CL.mapKey !== key) return; /* left the map or moved on */
+    if (force && CL.mapUser) return; /* player is scrolling themselves */
+    const t = mapTarget(); if (!t) return;
+    const tr = t.getBoundingClientRect();
+    if (tr.top >= 70 && tr.bottom <= innerHeight - 40) { mapCue(); return; }
+    window.scrollTo({ top: Math.max(0, tr.top + scrollY - innerHeight * .55), behavior: REDUCE ? 'auto' : 'smooth' });
+  };
+  requestAnimationFrame(() => go(false));
+  clearTimeout(CL.mapT);
+  CL.mapT = setTimeout(() => go(true), 900); /* re-check after the screen-in transition has settled */
 }
 /* after the map is in the DOM: slide the hero token along to the new node */
 function mapAfterPaint() {
@@ -3074,11 +3122,11 @@ function sndSync(V, prev) {
   const fresh = CL.sndHand ? hu.filter(u => CL.sndHand.indexOf(u) < 0) : (was && was !== 'combat' ? hu : []);
   fresh.slice(0, 6).forEach((u, i) => SND.fire('draw', 0.05 * i));
   CL.sndHand = hu;
-  if (CL.sndT !== undefined && c.t !== CL.sndT && !c.duel) SND.ui('turn');
+  if (CL.sndT !== undefined && c.t !== CL.sndT && !c.duel) { SND.ui('turn'); turnBanner('Turn ' + c.t, false); }
   CL.sndT = c.t;
   let enemyActed = false;
   c.en.forEach(e => {
-    if (e.ac > prev) { if (!enemyActed && !c.duel) { enemyActed = true; SND.ui('enemyturn'); } SND.enemy(e.key, 'atk'); }
+    if (e.ac > prev) { if (!enemyActed && !c.duel) { enemyActed = true; SND.ui('enemyturn'); turnBanner('Enemy turn', true); } SND.enemy(e.key, 'atk'); }
     if (e.ds > prev) SND.enemy(e.key, 'die', 0.12);
     const pk = V.act + ':' + V.floor + ':' + e.idx;
     CL.sndP2 = CL.sndP2 || {};
@@ -3108,6 +3156,16 @@ function sndSync(V, prev) {
     if (f.x[0] === '−') { SND.hit(CL.sndHero || me, 0.08 + 0.09 * n); SND.enemy(((c.en.find(e => 'e' + e.idx === f.t) || {}).key) || 'moth', 'hit', 0.1 + 0.09 * n); n++; }
     else if (f.x === 'Blocked') { SND.block(CL.sndHero || me, 0.06 + 0.09 * n); n++; }
   });
+}
+
+function turnBanner(txt, enemy) {
+  let b = document.getElementById('tbanner');
+  if (b) b.remove();
+  b = document.createElement('div');
+  b.id = 'tbanner'; b.className = 'tbanner' + (enemy ? ' en' : '');
+  b.setAttribute('aria-hidden', 'true'); b.textContent = txt;
+  document.body.appendChild(b);
+  setTimeout(() => { if (b.parentNode) b.remove(); }, REDUCE ? 900 : 1000);
 }
 
 function toast(msg) {
@@ -3283,7 +3341,7 @@ function enemyHTML(V, e, prev) {
   let ecls = '';
   if (e.key === 'bell' && cb.toll) ecls += ' toll';
   if (e.p2) ecls += ' p2 p2-' + e.key;
-  const cls = 'enemy' + (BOSS_SIZE[e.key] ? ' boss' : '') + (targeting ? ' target' : '') + (it.tot && !e.dead && toMe ? ' threat' : '') + (e.dead ? ' dying' : '') + tele;
+  const cls = 'enemy' + (BOSS_SIZE[e.key] ? ' boss' : '') + (targeting ? ' target' : '') + (it.tot && !e.dead && toMe ? ' threat' : '') + (e.dead ? ' dying' : '') + tele + (e.ac > prev && !e.dead ? ' lunge' : '');
   return '<button type="button" class="' + cls + '"' + dyAs + ' data-act="enemy" data-arg="' + e.idx + '" data-float="e' + e.idx + '" aria-label="' + esc(e.n + ', ' + e.hp + ' of ' + e.max + ' HP. Next: ' + it.x) + '">' +
     '<span class="intentbar ' + it.c + '" style="--pd:-' + (Date.now() % 1800) + 'ms">' + icon + (it.v !== '' ? '<span class="ival">' + it.v + '</span>' : '') + '<span class="itext">' + esc(it.x) + '</span></span>' +
     '<span class="pwrap">' + tgtLabel + '<span class="art">' + enemyArt(e, est, ecls) + '</span>' + bigShield(e.block, popE) + '</span>' +
@@ -3519,13 +3577,18 @@ function duelIntroHTML(V) {
     '<p>You climbed together. Now you fight each other with the decks, relics and HP you leave the boss with. Turns alternate; every Attack hits your rival. From round 9, sudden death drains HP each turn.</p>' +
     '<div class="row">' + doneBtn(V, 'Ready to duel') + '</div>' + waitNote(V) + '</section>';
 }
+function rematchBtn(V) {
+  const me = V.P[V.me], o = V.P[1 - V.me];
+  if (me.dn) return '<button type="button" class="btn" disabled>Waiting for partner…</button>';
+  return '<button type="button" class="btn primary" data-act="rematch">Play again' + (o && o.dn ? ' (partner ready)' : '') + '</button>';
+}
 function duelEndHTML(V) {
   const won = V.win === V.me;
   return '<section class="panel"><span class="actbanner">Duel over</span><h2>' + (won ? 'You wear the last mask' : 'Your mask shatters') + '</h2>' +
     '<div class="vstage solo tier-gold" style="--ce:0s"><div class="vheroes">' + portraitHTML(V.P[V.win].h, 'vp', true, undefined, 'cheer') + '</div>' + confettiHTML(true) + '</div>' +
     '<p>' + esc(vName(V, V.win)) + ' wins the duel and leaves the Masked Spire alone.</p>' +
     '<p class="muted">Enemies defeated: you ' + V.P[V.me].k + ', rival ' + V.P[1 - V.me].k + '.</p>' +
-    '<div class="row"><button type="button" class="btn primary" data-act="leave">Back to title</button></div></section>';
+    '<div class="row">' + rematchBtn(V) + '<button type="button" class="btn" data-act="leave">Back to title</button></div></section>';
 }
 let ENDFX = null; /* { key, t } start time of the current end-screen effect, so re-renders don't replay it */
 function endFxHTML(V, won) {
@@ -3582,7 +3645,7 @@ function endHTMLBase(V, won) {
   V.deck.forEach(d => { const n = CARDS[d[1]].n; counts[n] = (counts[n] || 0) + 1; });
   const deck = '<div class="dchips">' + Object.keys(counts).sort().map((n, i) => '<span class="dchip" style="--i:' + i + '">' + esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '') + '</span>').join('') + '</div>';
   const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules">' + stat('Floors cleared', floors, 0) + stat('Turns', rs.tn, 1) + stat('Cards played', rs.cp, 2) + stat('Damage dealt', rs.dm, 3) + stat('Cards taken', V.deck.filter(d => CARDS[d[1]] && CARDS[d[1]].t !== 'status' && !((HEROES[V.P[V.me].h] || { starter: [] }).starter.indexOf(d[1]) >= 0)).length, 4) + stat('Gold', V.P[V.me].g, 5) + '</ul><p class="muted">Final deck (' + V.deck.length + ')</p>' + deck + '</div>';
-  const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : '';
+  const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : rematchBtn(V);
   const marker = '<div class="row"><button type="button" class="btn primary" data-act="leave">';
   if (!REDUCE && !endTickOn) { endTickOn = true; requestAnimationFrame(endTick); }
   return html.replace(marker, () => sum + '<div class="row">' + again + '<button type="button" class="btn' + (again ? '' : ' primary') + '" data-act="leave">');
@@ -4058,6 +4121,7 @@ function paint(V) {
   }
   if (!CL.seen) { CL.lastFx = maxFx; CL.seen = true; }
   const prev = CL.lastFx;
+  if (V && V.fx) V.fx.forEach(f => { if (f.k === 'coin' && f.s > prev && f.x) toast('🪙 ' + f.x); });
   const sk = V ? V.scr : (CL.role || 'title');
   if (CL.scrKey !== undefined && CL.scrKey !== sk) {
     if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); if (['combat', 'map', 'reward', 'duelintro', 'duelend'].indexOf(sk) >= 0) { let w = document.getElementById('trwipe'); if (!w) { w = document.createElement('div'); w.id = 'trwipe'; w.setAttribute('aria-hidden', 'true'); w.addEventListener('animationend', () => w.classList.remove('go', 'duel', 'quick')); document.body.appendChild(w); } w.classList.remove('go', 'duel', 'quick'); void w.offsetWidth; w.classList.add('go'); if (sk === 'map' || sk === 'reward') w.classList.add('quick'); else if (sk !== 'combat') w.classList.add('duel'); setTimeout(() => w.classList.remove('go', 'duel', 'quick'), 1000); } clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
@@ -4634,6 +4698,7 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'reward': send('reward', Number(arg)); break;
     case 'bossreward': send('bossreward', Number(arg)); break;
     case 'done': send('done'); break;
+    case 'rematch': send('rematch'); break;
     case 'restheal': send('restheal'); break;
     case 'restremove': CL.overlay = { mode: 'remove', from: 'rest' }; paint(V); break;
     case 'shopremove': CL.overlay = { mode: 'remove', from: 'shop' }; paint(V); break;
@@ -4719,48 +4784,6 @@ document.getElementById('app').addEventListener('keydown', ev => {
 (function () {
   const app = document.getElementById('app');
   if (!app) return;
-  let opener = null, wasOpen = false;
-  app.addEventListener('click', ev => {
-    const b = ev.target.closest && ev.target.closest('[data-act]');
-    if (b && ['deck', 'restremove', 'shopremove'].includes(b.dataset.act)) opener = b.dataset.act;
-  }, true);
-  new MutationObserver(() => {
-    const ov = app.querySelector('.overlay');
-    if (ov && !wasOpen) {
-      const f = ov.querySelector('[data-act="close"]');
-      try { if (f) f.focus({ preventScroll: true }); } catch (e) {}
-    } else if (!ov && wasOpen && opener) {
-      const el = app.querySelector(`[data-act='${opener}']`);
-      try { if (el) el.focus({ preventScroll: true }); } catch (e) {}
-    }
-    wasOpen = !!ov;
-  }).observe(app, { childList: true, subtree: true });
-  document.addEventListener('keydown', ev => {
-    if (document.getElementById('pilev')) return;
-    const ov = app.querySelector('.overlay');
-    if (!ov || !CL.overlay) return;
-    if (ev.key === 'Escape') {
-      ev.preventDefault(); ev.stopPropagation();
-      CL.overlay = null;
-      const V = curView();
-      if (V) paint(V);
-      return;
-    }
-    if (ev.key === 'Tab') {
-      const f = [...ov.querySelectorAll('button:not([disabled]),[tabindex="0"]')];
-      if (!f.length) return;
-      const i = f.indexOf(document.activeElement);
-      if (i < 0 || (ev.shiftKey && i === 0) || (!ev.shiftKey && i === f.length - 1)) {
-        ev.preventDefault();
-        f[ev.shiftKey ? f.length - 1 : 0].focus();
-      }
-    }
-  }, true);
-})();
-/* duplicate of the block above (disabled; safe to delete) */
-(function () {
-  const app = document.getElementById('app');
-  if (true) return;
   let opener = null, wasOpen = false;
   app.addEventListener('click', ev => {
     const b = ev.target.closest && ev.target.closest('[data-act]');

@@ -5,7 +5,7 @@ const { createEngine } = require('../public/engine.js');
 const E = createEngine({ rng: () => 0.5 });
 const { HEROES, CARDS, RAR, RELICS } = E;
 
-const NEW_CARDS = ['estrike', 'eguard', 'emberlash', 'rimespiral', 'cinderbolt', 'scorch', 'frostward', 'gust', 'icelance', 'stormcrash', 'rimeshroud', 'tempest', 'stonemask'];
+const NEW_CARDS = ['sparkjolt', 'estrike', 'eguard', 'emberlash', 'rimespiral', 'cinderbolt', 'scorch', 'frostward', 'gust', 'icelance', 'stormcrash', 'rimeshroud', 'tempest', 'stonemask'];
 const isRar = v => ['c', 'u', 'r'].includes(v);
 
 test('elementalist hero entry is complete', () => {
