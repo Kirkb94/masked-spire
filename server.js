@@ -109,7 +109,7 @@ function makeCode() {
 }
 function createRoom(tok) {
   const code = makeCode();
-  const room = { code, sockets: new Set(), last: Date.now(), pending: false };
+  const room = { code, sockets: new Set(), last: Date.now(), pending: false, away: [false, false], dropAt: [0, 0], timers: [null, null] };
   room.E = createEngine({ onChange: () => scheduleBroadcast(room) });
   const G = room.E.baseG('coop');
   G.code = code;
@@ -136,6 +136,23 @@ function setConn(room) {
   const G = room.E.G;
   G.P.forEach((p, i) => { p.conn = [...room.sockets].some(s => s.pi === i); });
 }
+/* Partner presence: online | away (tab hidden) | reconnecting (dropped recently) | offline (dropped a while ago) */
+const PRESENCE_OFFLINE_MS = 60 * 1000;
+function presenceOf(room, i) {
+  if ([...room.sockets].some(s => s.pi === i)) return room.away[i] ? 'away' : 'online';
+  return Date.now() - room.dropAt[i] < PRESENCE_OFFLINE_MS ? 'reconnecting' : 'offline';
+}
+function sendPresence(room, i) {
+  const G = room.E.G;
+  if (!G || G.P.length < 2 || !G.P[1 - i]) return;
+  const msg = JSON.stringify({ t: 'presence', st: presenceOf(room, i) });
+  for (const s of room.sockets) if (s.pi === 1 - i) { try { s.send(msg); } catch (e) {} }
+}
+function sendPartnerPresence(ws, room) {
+  const G = room.E.G;
+  if (!G || G.P.length < 2 || ws.pi == null) return;
+  try { ws.send(JSON.stringify({ t: 'presence', st: presenceOf(room, 1 - ws.pi) })); } catch (e) {}
+}
 function closeRoom(room, msg) {
   for (const ws of room.sockets) { try { ws.send(JSON.stringify({ t: 'err', msg, fatal: true })); } catch (e) {} ws.room = null; ws.pi = null; }
   room.sockets.clear();
@@ -151,6 +168,14 @@ function detach(ws) {
   if (!G) return;
   setConn(room);
   scheduleBroadcast(room);
+  if (pi != null && pi >= 0 && pi < 2) {
+    room.dropAt[pi] = Date.now();
+    room.away[pi] = false;
+    clearTimeout(room.timers[pi]);
+    sendPresence(room, pi);
+    room.timers[pi] = setTimeout(() => { if (rooms.get(room.code) === room) sendPresence(room, pi); }, PRESENCE_OFFLINE_MS + 200);
+    if (room.timers[pi].unref) room.timers[pi].unref();
+  }
   return { room, pi };
 }
 
@@ -225,6 +250,10 @@ wss.on('connection', (ws, req) => {
       ws.room = room; ws.pi = pi; room.sockets.add(ws);
       setConn(room);
       ws.send(JSON.stringify({ t: 'joined', code: room.code, pi }));
+      clearTimeout(room.timers[pi]);
+      room.away[pi] = false;
+      sendPresence(room, pi);
+      sendPartnerPresence(ws, room);
       broadcast(room);
     } else if (m.t === 'act') {
       const room = ws.room;
@@ -234,6 +263,11 @@ wss.on('connection', (ws, req) => {
       const y = typeof m.y === 'number' || typeof m.y === 'string' ? (typeof m.y === 'string' ? m.y.slice(0, 20) : m.y) : null;
       try { room.E.doAction(ws.pi, a, x, y); } catch (e) { console.error('action failed', room.code, a, e); }
       scheduleBroadcast(room);
+    } else if (m.t === 'away') {
+      const room = ws.room;
+      if (!room || ws.pi == null) return;
+      room.away[ws.pi] = m.v === true;
+      sendPresence(room, ws.pi);
     } else if (m.t === 'leave') {
       const r = detach(ws);
       if (!r) return;
@@ -248,13 +282,18 @@ wss.on('connection', (ws, req) => {
 });
 
 /* keep connections alive through Render's proxy, and drop dead ones */
+const HEARTBEAT_MS = 10000; // a socket that misses two sweeps is dropped, so ~10-20s to notice a silent disconnect
 setInterval(() => {
   for (const ws of wss.clients) {
-    if (!ws.isAlive) { try { ws.terminate(); } catch (e) {} continue; }
+    if (!ws.isAlive) {
+      console.log('heartbeat: dropping dead socket' + (ws.room ? ' in room ' + ws.room.code : ''));
+      try { ws.terminate(); } catch (e) {}
+      continue;
+    }
     ws.isAlive = false;
     try { ws.ping(); } catch (e) {}
   }
-}, 25000);
+}, HEARTBEAT_MS).unref();
 
 /* clean up abandoned rooms */
 setInterval(() => {

@@ -197,7 +197,12 @@ const RELICS = {
   quill:       { n: 'Golden Quill', d: 'Gain 1 extra Energy on your first turn.' },
   heartstone:  { n: 'Heartstone', d: 'Raise your Max HP by 12 when picked up.' },
   thornring:   { n: 'Thorn Ring', d: 'Start each combat with 2 Thorns.' },
-  bellshard:   { n: 'Bell Shard', d: 'Enemies start each combat with 1 Vulnerable.' }
+  bellshard:   { n: 'Bell Shard', d: 'Enemies start each combat with 1 Vulnerable.' },
+  cinder:      { n: 'Cinder Charm', d: 'Start each combat with 1 Strength.' },
+  satchel:     { n: 'Gilded Satchel', d: 'Gain 30 gold when picked up.' },
+  tonic:       { n: 'Bitter Tonic', d: 'Heal 15 HP when picked up.' },
+  ribbon:      { n: 'Silk Ribbon', d: 'Boss relic. Draw 1 extra card every turn.', boss: 1 },
+  wardenseal:  { n: 'Warden\'s Seal', d: 'Boss relic. Start each combat with 12 Block.', boss: 1 }
 };
 
 /* ---------- Enemies ---------- */
@@ -302,8 +307,13 @@ function equipHero(p, hero) {
   const h = HEROES[hero];
   p.hero = hero; p.hp = h.hp; p.maxHp = h.hp; p.deck = h.starter.map(mk); p.relics = [h.relic];
 }
-function freeRelic(pi) { const left = Object.keys(RELICS).filter(k => !RELICS[k].start && !hasR(pi, k)); return left.length ? pick(left) : null; }
-function gainRelic(pi, r) { if (!r) return; const p = P(pi); p.relics.push(r); if (r === 'heartstone') { p.maxHp += 12; p.hp += 12; } }
+function freeRelic(pi, boss) {
+  const free = Object.keys(RELICS).filter(k => !RELICS[k].start && !hasR(pi, k));
+  const tier = free.filter(k => !!RELICS[k].boss === !!boss);
+  const left = tier.length ? tier : free;
+  return left.length ? pick(left) : null;
+}
+function gainRelic(pi, r) { if (!r) return; const p = P(pi); p.relics.push(r); if (r === 'heartstone') { p.maxHp += 12; p.hp += 12; } if (r === 'satchel') p.gold += 30; if (r === 'tonic') p.hp = Math.min(p.maxHp, p.hp + 15); }
 function rollTier(kind) { const o = RAR_ODDS[kind] || RAR_ODDS.fight, x = Math.random() * 100; return x < o[0] ? 'c' : x < o[0] + o[1] ? 'u' : 'r'; }
 function cardChoices(pi, n, kind) {
   const pool = HEROES[P(pi).hero].pool, out = [];
@@ -362,7 +372,7 @@ function makeEnemy(key, idx, dup, hpOverride, raw) {
 }
 function newSide(pi) {
   const p = P(pi);
-  return { isP: true, pi, hp: p.hp, max: p.maxHp, block: 0, energy: 3, flow: 0, flowEnd: 0, rage: 0, str: 0, weak: 0, vuln: 0, frail: 0, drain: 0, hush: 0, hushNow: 0,
+  return { isP: true, pi, hp: p.hp, max: p.maxHp, block: 0, energy: 3, flow: 0, flowEnd: 0, rage: 0, str: hasR(pi, 'cinder') ? 1 : 0, weak: 0, vuln: 0, frail: 0, drain: 0, hush: 0, hushNow: 0,
     thorns: hasR(pi, 'thornring') ? 2 : 0, composure: 0, rhythm: 0, keep: 0, rampart: 0, keepAll: 0, bloodpact: 0, ragegain: 0, stance: hasR(pi, 'hornedmask') ? 'calm' : null, switches: 0, mantra: 0, serenity: 0, ironplus: 0,
     draw: shuffle(p.deck.map(c => mk(c.id))), hand: [], discard: [], exhaust: [], played: 0, lastAttack: 5, atkTotal: 0,
     ready: false, down: p.hp <= 0, turnN: 0, animS: 0, animK: '', fwS: 0, fwN: 0, hurtNow: false };
@@ -396,7 +406,7 @@ function startTurnSide(s) {
   const first = s.turnN === 1, pi = s.pi;
   let keep = 0;
   if (!first && P(pi).hero === 'bulwark') keep = s.keepAll ? s.block : Math.floor(s.block / 2);
-  s.block = keep + (first && hasR(pi, 'locket') ? 6 : 0) + (first && hasR(pi, 'lanternhelm') ? 8 : 0);
+  s.block = keep + (first && hasR(pi, 'locket') ? 6 : 0) + (first && hasR(pi, 'lanternhelm') ? 8 : 0) + (first && hasR(pi, 'wardenseal') ? 12 : 0);
   s.energy = Math.max(0, 3 + (first && hasR(pi, 'quill') ? 1 : 0) - s.drain);
   if (s.drain) log(heroName(pi) + ' is Shackled: ' + s.energy + ' Energy.');
   s.drain = 0;
@@ -407,7 +417,7 @@ function startTurnSide(s) {
   s.played = 0;
   s.switches = 0;
   s.ready = false;
-  draw(5 + (first && hasR(pi, 'hourglass') ? 2 : 0));
+  draw(5 + (first && hasR(pi, 'hourglass') ? 2 : 0) + (hasR(pi, 'ribbon') ? 1 : 0));
 }
 function draw(n) {
   const s = A;
@@ -749,7 +759,7 @@ function win() {
       G.screen = 'victory'; clearSave(); return render();
     }
     G.P.forEach((p, pi) => {
-      const relic = freeRelic(pi); gainRelic(pi, relic);
+      const relic = freeRelic(pi, true); gainRelic(pi, relic);
       const healed = Math.ceil((p.maxHp - p.hp) * 0.4); p.hp += healed;
       const gold = rnd(60, 80); p.gold += gold;
       p.actclear = { act: Act, relic, healed, gold, cards: cardChoices(pi, 3, 'boss'), taken: false };
@@ -909,6 +919,36 @@ function enemyTotal(e) {
   if (e.key === 'cog' && e.p2) t += describeIntent(e, intentOf(e, 1), T).tot;
   return t;
 }
+function previewCard(id, s, e) {
+  const f = s.flow || 0, r = s.rage || 0, bl = s.block || 0, sw = s.sw || 0;
+  const tbl = {
+    strike: [7], lunge: [5], riposte: [5], flurry: [2, 3], needle: [3], crescendo: [4 + 4 * f], bladedance: [3, 2 + f],
+    pinpoint: [7], hamstring: [7], whirl: [5], coup: [e.hp * 2 < e.max ? 22 : 14], cascade: [6], finale: [5 * f],
+    bstrike: [6], bash: [Math.floor(bl / 2)], counter: [6], bulldoze: [Math.floor(bl / 2)], flare: [4], heavyswing: [16],
+    rstrike: [7], haymaker: [14], cleave: [7], uppercut: [12], frenzy: [3, 4], headbutt: [9], reckless: [9], rampage: [5 + 3 * r], feast: [18],
+    eruption: [9], wildswing: [8], formbreak: [6 + 6 * sw], avalanche: [7, 1 + sw]
+  };
+  const row = tbl[id];
+  if (!row || (id === 'finale' && !f)) return null;
+  const hits = row[1] || 1, st = s.st || [], sx = s.sx || [];
+  let d = row[0] + (s.sr || 0) + r + (s.wh || 0) + (st[7] || 0) * f;
+  if (st[0] > 0) d = Math.floor(d * 0.75);
+  if (s.sn === 'fury') d = Math.floor(d * 1.5);
+  if (s.sn === 'iron' && !sx[2]) d = Math.floor(d * 0.75);
+  const es = e.st || [];
+  if (es[3] > 0) d = Math.floor(d * 1.5);
+  if (es[6]) d = Math.floor(d / 2);
+  d = Math.max(0, Math.floor(d * (e.key === 'cog' && e.p2 ? 1.25 : 1)));
+  if (es[7]) d = Math.min(d, 1);
+  let hp = e.hp, blk = e.block || 0, loss = 0, blocked = 0, parried = 0, parry = !!es[9];
+  for (let i = 0; i < hits; i++) {
+    if (hp <= 0) break;
+    if (parry && d > 0) { parry = false; parried++; continue; }
+    const ab = Math.min(blk, d);
+    blk -= ab; blocked += ab; hp -= d - ab; loss += d - ab;
+  }
+  return { d, hits, loss, blocked, parried, lethal: hp <= 0, hp: Math.max(0, hp) };
+}
 function sideView(s) {
   const hero = P(s.pi).hero;
   return {
@@ -916,7 +956,8 @@ function sideView(s) {
     st: [s.weak, s.vuln, s.frail, s.hushNow, s.drain, s.thorns, s.composure, s.rhythm, s.keep, s.rampart, s.keepAll, s.bloodpact, s.ragegain],
     sn: s.stance, sw: s.switches, sx: [s.mantra, s.serenity, s.ironplus],
     rdy: s.ready ? 1 : 0, dn: s.down ? 1 : 0, an: [s.animS, s.animK], fw: [s.fwS, s.fwN], hn: s.hand.length,
-    kb: hero === 'bulwark' ? (s.keepAll ? s.block : Math.floor(s.block / 2)) : 0
+    kb: hero === 'bulwark' ? (s.keepAll ? s.block : Math.floor(s.block / 2)) : 0,
+    sr: s.str || 0, wh: hasR(s.pi, 'whetstone') ? 1 : 0
   };
 }
 function buildView(me) {
@@ -975,7 +1016,7 @@ function fitView(V) {
 return {
   get G() { return G; }, set G(v) { G = v; },
   get uidN() { return uidN; }, set uidN(v) { uidN = v; },
-  doAction, buildView, newPlayer, baseG, equipHero, startCombat, startDuel, win,
+  doAction, buildView, previewCard, newPlayer, baseG, equipHero, startCombat, startDuel, win,
   CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES, PRICE
 };
 }

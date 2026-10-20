@@ -115,6 +115,11 @@ button { font: inherit; color: inherit; }
 .intentbar svg { width: 26px; height: 26px; flex: 0 0 auto; }
 .intentbar .ival { font-family: var(--display); font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
 .intentbar .itext { font-size: 15px; line-height: 1.25; }
+.enemy { position: relative; }
+.pv { display: block; position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 5; width: max-content; max-width: 96%; text-align: center; pointer-events: none; padding: 2px 7px; border-radius: 6px; font-weight: 700; font-size: 13px; line-height: 1.2; background: rgba(42,34,51,.94); color: #fff; border: 1px solid rgba(255,255,255,.35); box-shadow: 0 2px 8px rgba(0,0,0,.6); }
+.pv:empty { display: none; }
+.pv.lethal { background: rgba(122,16,32,.95); border-color: #ff6b7d; }
+.pv.safe { background: rgba(29,58,42,.95); border-color: #6fd69a; }
 .k-atk { background: var(--atk-bg); color: var(--atk-fg); }
 .k-def { background: var(--def-bg); color: var(--def-fg); }
 .k-buf { background: var(--buf-bg); color: var(--buf-fg); }
@@ -132,6 +137,15 @@ button { font: inherit; color: inherit; }
 .float.heal { color: #8AF59A; }
 .float.buff { color: var(--gold); font-size: 22px; }
 .float.miss { color: var(--muted); font-size: 22px; }
+.float.big { animation-name: floatbig; animation-duration: 1.2s; color: #FF4A4A; }
+@keyframes floatbig { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.5); } 12% { opacity: 1; transform: translate(-50%, 0) scale(1.45); } 28% { transform: translate(-50%, -6px) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -70px) scale(1); } }
+.blockflash { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; background: radial-gradient(circle, rgba(140,200,255,.55), rgba(80,150,255,.15) 70%); box-shadow: inset 0 0 22px 4px rgba(150,210,255,.9); animation: blockflash .55s ease-out forwards; }
+@keyframes blockflash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0 4px #fff; }
+.battle.shake1 { animation: shake1 .35s linear; }
+.battle.shake2 { animation: shake2 .45s linear; }
+@keyframes shake1 { 10% { transform: translate(-4px, 2px); } 30% { transform: translate(4px, -2px); } 50% { transform: translate(-3px, 1px); } 70% { transform: translate(2px, -1px); } 100% { transform: none; } }
+@keyframes shake2 { 10% { transform: translate(-8px, 4px); } 25% { transform: translate(8px, -4px); } 40% { transform: translate(-6px, 3px); } 60% { transform: translate(5px, -2px); } 80% { transform: translate(-2px, 1px); } 100% { transform: none; } }
 
 .controls { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; align-items: center; padding: 12px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
 .energy { width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle at 35% 30%, #FFE08A, #B8861E); color: #1A1208; font-family: var(--display); font-weight: 700; font-size: 24px; font-variant-numeric: tabular-nums; border: 3px solid #5A4010; box-shadow: 0 0 14px #E8BE5266; }
@@ -162,6 +176,7 @@ button { font: inherit; color: inherit; }
 @keyframes flash { 20% { opacity: .45; } 100% { opacity: 0; } }
 @keyframes die { 0%, 55% { opacity: 1; } 100% { opacity: 0; transform: translateY(10px); } }
 @keyframes floatup { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.8); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -56px) scale(1); } }
+.card.flyghost { position: fixed; margin: 0; z-index: 60; pointer-events: none; transition: none; transform-origin: 50% 50%; }
 
 /* Map */
 .mapcard { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
@@ -228,6 +243,8 @@ button { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .card, .node.avail, .idle, .enemy.acting, .enemy.hit .art, .portrait.lunge, .portrait.hurt, .portrait.hurt::after { transition: none; animation: none; }
   .float { animation-duration: .01s; }
+  .float.big { animation-duration: .01s; }
+  .battle.shake1, .battle.shake2 { animation: none; }
 }
 
 /* Hero resources and hero select */
@@ -348,6 +365,14 @@ button { font: inherit; color: inherit; }
 .netwarn { padding: 10px 14px; border-radius: 10px; background: #4A2A10; border: 1px solid #8A5A20; color: #FFD9A0; font-weight: 700; }
 .chip.partner { background: #24323A; }
 .chip.partner.off { background: #4A2A10; }
+.chip.partner.away { background: #3A3A22; }
+.chip.partner.re { background: #4A3A10; }
+.chip.partner .pdot { display: inline-block; width: .6em; height: .6em; border-radius: 50%; margin-right: .4em; background: #5fd38d; }
+.chip.partner.away .pdot { background: #e0c14a; }
+.chip.partner.re .pdot { background: #f0a030; animation: pdotpulse 1s ease-in-out infinite; }
+.chip.partner.off .pdot { background: #d9534f; }
+@keyframes pdotpulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .chip.partner.re .pdot { animation: none; } }
 .chip.code { font-family: var(--display); letter-spacing: .12em; }
 .bigcode { font-family: var(--display); letter-spacing: .2em; color: var(--gold); font-size: 1.3em; margin-left: 8px; }
 .codein { font-family: var(--display); font-size: 22px; letter-spacing: .2em; text-transform: uppercase; width: 150px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-height: 48px; }
@@ -586,6 +611,35 @@ body, button, .btn, .card, .node, .hand { touch-action: manipulation; }
 .sndpanel label { display: flex; align-items: center; gap: 10px; }
 .sndpanel input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--gold); }
 .sndpanel input[type=range] { width: 130px; accent-color: var(--gold); }
+.sndpanel .sechead { font-family: var(--display); font-weight: 700; color: var(--gold); margin-top: 2px; }
+/* ---------- Display settings: larger text, high contrast / colorblind-safe ---------- */
+html.bigtext #app { zoom: 1.25; }
+html.hc {
+  --bg: #000; --panel: #0C0C10; --panel2: #1A1A22; --line: #9A9AA8;
+  --ink: #FFFFFF; --muted: #F0F0F0; --faint: #D8D8D8;
+  --teal: #56E0FF; --gold: #F0E442; --blood: #E8743B; --skill: #56B4E9; --power: #F0E442; --status: #BBBBBB;
+  --atk-bg: #3B1200; --atk-fg: #FFC49B;
+  --def-bg: #00263F; --def-fg: #BFE6FF;
+  --buf-bg: #2E2A00; --buf-fg: #FFF08A;
+  --deb-bg: #2A0A22; --deb-fg: #FFC6EC;
+}
+html.hc :focus-visible { outline: 4px solid #FFFFFF; outline-offset: 3px; box-shadow: 0 0 0 7px #000; }
+html.hc .card { border-width: 4px; }
+html.hc .intentbar { border: 3px solid currentColor; border-bottom-width: 4px; }
+html.hc .intentbar.k-atk { border-style: solid; border-color: #E8743B; }
+html.hc .intentbar.k-def { border-style: dashed; border-color: #56B4E9; }
+html.hc .intentbar.k-buf { border-style: dotted; border-color: #F0E442; }
+html.hc .intentbar.k-deb { border-style: double; border-color: #CC79A7; }
+html.hc .intentbar svg { width: 30px; height: 30px; }
+html.hc .shield { border: 2px dashed #56B4E9; background: #00263F; color: #FFFFFF; }
+html.hc .badge.bad { border-style: double; border-width: 3px; border-color: #CC79A7; }
+html.hc .badge.good { border-style: dotted; border-width: 2px; border-color: #F0E442; }
+html.hc .enemy, html.hc .btn { border-color: #C8C8D4; }
+html.hc .btn.primary { color: #000; }
+html.hc .float { text-shadow: 0 0 3px #000, 0 2px 0 #000, 0 0 10px #000; }
+html.hc .float.block { color: #BFE6FF; }
+html.hc .hpbar { border-color: #FFFFFF; background: #2A0A12; }
+html.hc .hpbar > i { background: #E8743B; }
 
 /* ---------- Map art ---------- */
 .mapcard .mapwrap { max-width: 540px; height: auto; border-radius: 14px; overflow: hidden; border: 1px solid #000A; box-shadow: inset 0 0 40px #000B, 0 6px 22px #0008; background: #0C0A12; }
@@ -1229,11 +1283,30 @@ const CL = { role: 'none', V: null, sel: null, overlay: null, lastFx: 0, seen: f
 })();
 CL.net = { state: '', peers: 0, err: '' };
 let toastTimer = null;
+/* ---------- Display settings (larger text, high contrast); applied as classes on <html>, saved in localStorage ---------- */
+const A11Y = (function () {
+  const K = 'masked-spire-display';
+  const prefs = { big: false, hc: false };
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(K) || 'null'); } catch (e) {}
+  if (saved && typeof saved === 'object') { prefs.big = saved.big === true; prefs.hc = saved.hc === true; }
+  else { try { prefs.hc = !!(window.matchMedia && matchMedia('(prefers-contrast: more)').matches); } catch (e) {} }
+  function apply() { const c = document.documentElement.classList; c.toggle('bigtext', prefs.big); c.toggle('hc', prefs.hc); }
+  function set(k, v) { if (k !== 'big' && k !== 'hc') return; prefs[k] = !!v; try { localStorage.setItem(K, JSON.stringify(prefs)); } catch (e) {} apply(); }
+  apply();
+  return { prefs, set };
+})();
 /* ---------- Audio: synthesized soundtrack and effects (Web Audio, no files) ---------- */
 const SND = (function () {
   const AK = 'masked-spire-audio';
-  const prefs = { music: true, sfx: true, vol: 0.6 };
+  const prefs = { music: true, sfx: true, vol: 0.6, musicVol: 0.5, sfxVol: 0.7, mute: false };
   try { const s = JSON.parse(localStorage.getItem(AK) || 'null'); if (s && typeof s === 'object') { if (typeof s.music === 'boolean') prefs.music = s.music; if (typeof s.sfx === 'boolean') prefs.sfx = s.sfx; if (typeof s.vol === 'number') prefs.vol = Math.max(0, Math.min(1, s.vol)); } } catch (e) {}
+  try { const s2 = JSON.parse(localStorage.getItem(AK) || 'null'); if (s2 && typeof s2 === 'object') { if (typeof s2.musicVol === 'number') prefs.musicVol = Math.max(0, Math.min(1, s2.musicVol)); if (typeof s2.sfxVol === 'number') prefs.sfxVol = Math.max(0, Math.min(1, s2.sfxVol)); if (typeof s2.mute === 'boolean') prefs.mute = s2.mute; } } catch (e) {}
+  prefs.vol = 0.6; /* legacy field; master gain is now fixed, loudness is set by musicVol/sfxVol */
+  const MASTER = 0.6;
+  const masterGain = () => prefs.mute ? 0 : MASTER;
+  const musicBase = () => 1.1 * prefs.musicVol;
+  const sfxBase = () => 1.2857 * prefs.sfxVol;
   const savePrefs = () => { try { localStorage.setItem(AK, JSON.stringify(prefs)); } catch (e) {} };
   const mf = m => 440 * Math.pow(2, (m - 69) / 12);
   const hs = (i, s) => { const x = Math.sin(i * 127.1 + (s || 0) * 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -1318,7 +1391,8 @@ const SND = (function () {
   const brass = (V, t, notes, d, v, lp) => notes.forEach(n => { V.tone({ t, f: mf(n), d, a: 0.05, r: 0.25, v, type: 'sawtooth', lp: lp || 1500, lp2: (lp || 1500) * 2.4, q: 1.2 }); V.tone({ t, f: mf(n), d, a: 0.05, r: 0.25, v: v * 0.6, type: 'sawtooth', det: 8, lp: lp || 1500, lp2: (lp || 1500) * 2.4 }); });
 
   /* ----- music tracks: step(c) is called once per 16th note ----- */
-  const BPM = { menu: [70, 70, 70], a1: [54, 78, 92], a2: [76, 100, 116], a3: [48, 66, 80] };
+  const BPM = { menu: [70, 70, 70], a1: [54, 78, 92], a2: [76, 100, 116], a3: [48, 66, 80], duel: [84, 104, 124] };
+  const DU_CH = [[40, 47, 52, 59], [41, 48, 53, 60], [38, 45, 50, 57], [43, 50, 55, 62]];
   const MODE = { calm: 0, fight: 1, boss: 2 };
   const MENU_CH = [[50, 57, 62, 65], [46, 53, 58, 62], [43, 55, 58, 62], [45, 57, 61, 64]];
   const MENU_R = [38, 34, 31, 33];
@@ -1367,6 +1441,16 @@ const SND = (function () {
       if (mi && [0, 8, 10].includes(st)) thump(V, t, st === 8 ? 0.1 : 0.17, st === 8 ? 60 : 80);
       if (mi === 2 && [3, 6, 12, 14].includes(st)) thump(V, t, 0.1, 70);
       if (mi === 2) { if (st === 0) { V.tone({ t, f: 110, d: 0.1, r: 1.2, v: 0.16, type: 'square', lp: 3000, parts: INH }); } if (st === 14) V.noise({ t, d: sd * 2, a: sd * 1.8, r: 0.1, type: 'hp', f: 2000, f2: 8000, v: 0.04 }); if ([0, 6, 10].includes(st)) brass(V, t, [ch[0] + 12, ch[1] + 12], sd * 2.4, 0.026, 1700); }
+    },
+    duel(c) {
+      const { V, t, i, sd, mi } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = DU_CH[ci];
+      if (i % 32 === 0) { pad(V, t, ch, sd * 32, mi ? 0.03 : 0.024, 800, 'sawtooth'); V.tone({ t, f: mf(ch[0] - 12), d: sd * 32, a: 0.5, r: 1, v: 0.1, type: 'sine' }); }
+      if ([0, 6, 10].includes(st)) thump(V, t, st ? 0.14 : 0.22, 75);
+      if (st % 2 === 0) V.tone({ t, f: mf(ch[0] - 12), d: sd * 1.6, a: 0.01, r: 0.12, v: mi ? 0.09 : 0.06, type: 'sawtooth', lp: 420 });
+      if (st % 4 === 2) metal(V, t, mi ? 0.09 : 0.05, 900 + hs(i, 20) * 400);
+      if (st === 0 && bar % 2 === 0) brass(V, t, [ch[1], ch[2]], sd * 6, 0.03, 1100);
+      if (mi && st % 4 === 0 && hs(i, 21) > 0.4) brass(V, t, [ch[Math.floor(hs(i, 22) * 4)] + 24], sd * 3, 0.02, 1400);
+      if (mi === 2 && [3, 7, 11, 15].includes(st)) thump(V, t, 0.1, 65);
     },
     a3(c) {
       const { V, t, i, sd, mi } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = A3_CH[ci];
@@ -1544,11 +1628,11 @@ const SND = (function () {
     if (!hasAC) return null;
     try {
       ac = new (window.AudioContext || window.webkitAudioContext)();
-      master = ac.createGain(); master.gain.value = prefs.vol;
+      master = ac.createGain(); master.gain.value = masterGain();
       const comp = ac.createDynamicsCompressor(); comp.threshold.value = -14; comp.knee.value = 18; comp.ratio.value = 4; comp.attack.value = 0.005; comp.release.value = 0.2;
       master.connect(comp); comp.connect(ac.destination);
-      musicBus = ac.createGain(); musicBus.gain.value = 0.55; musicBus.connect(master);
-      sfxBus = ac.createGain(); sfxBus.gain.value = 0.9; sfxBus.connect(master);
+      musicBus = ac.createGain(); musicBus.gain.value = musicBase(); musicBus.connect(master);
+      sfxBus = ac.createGain(); sfxBus.gain.value = sfxBase(); sfxBus.connect(master);
       sV = voices(ac, sfxBus);
     } catch (e) { ac = null; }
     return ac;
@@ -1560,13 +1644,13 @@ const SND = (function () {
   }
   function stopMusic() {
     if (timer) { clearInterval(timer); timer = null; }
-    if (curBus && ac) { const b = curBus; try { b.gain.cancelScheduledValues(ac.currentTime); b.gain.setTargetAtTime(0, ac.currentTime, 0.35); } catch (e) {} setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 2500); }
+    if (curBus && ac) { const b = curBus; try { b.gain.cancelScheduledValues(ac.currentTime); b.gain.setTargetAtTime(0, ac.currentTime, 0.6); } catch (e) {} setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 5000); }
     curBus = null; playing = null;
   }
   function startMusic(key, mode) {
     stopMusic();
     if (!ac || !prefs.music || ac.state !== 'running') return;
-    const bus = ac.createGain(); bus.gain.setValueAtTime(0, ac.currentTime); bus.gain.setTargetAtTime(1, ac.currentTime + 0.05, 0.6); bus.connect(musicBus);
+    const bus = ac.createGain(); bus.gain.setValueAtTime(0, ac.currentTime); bus.gain.setTargetAtTime(1, ac.currentTime + 0.3, 0.9); bus.connect(musicBus);
     curBus = bus; playing = { key, mode }; const V = voices(ac, bus), mi = MODE[mode] || 0, tr = TRACKS[key], sd = 60 / BPM[key][mi] / 4;
     stepI = 0; nextT = ac.currentTime + 0.12;
     const pump = () => {
@@ -1583,16 +1667,16 @@ const SND = (function () {
   function scene(key, mode) { want = { key, mode: mode || 'calm' }; sync(); }
   function duck(sec) {
     if (!ac || !musicBus) return;
-    const t = ac.currentTime; musicBus.gain.cancelScheduledValues(t); musicBus.gain.setTargetAtTime(0.1, t, 0.1); musicBus.gain.setTargetAtTime(0.55, t + sec, 0.8);
+    const t = ac.currentTime; musicBus.gain.cancelScheduledValues(t); musicBus.gain.setTargetAtTime(Math.min(0.1, musicBase()), t, 0.1); musicBus.gain.setTargetAtTime(musicBase(), t + sec, 0.8);
   }
   function stinger(name) {
     if (!ac || !prefs.sfx && !prefs.music || ac.state !== 'running') return;
     const s = STING[name]; if (!s) return;
     if (prefs.music) duck(s.len * 0.8);
-    const out = ac.createGain(); out.gain.value = 1; out.connect(prefs.music ? master : sfxBus);
+    const out = ac.createGain(); out.gain.value = prefs.music ? prefs.sfxVol / 0.7 : 1; out.connect(prefs.music ? master : sfxBus);
     playSting(voices(ac, out), ac.currentTime + 0.05, name);
   }
-  const ok = () => ac && prefs.sfx && ac.state === 'running';
+  const ok = () => ac && prefs.sfx && !prefs.mute && ac.state === 'running';
   function gv(g) { const n = ac.createGain(); n.gain.value = g; n.connect(sfxBus); return voices(ac, n); }
   function hero(h, kind, delay) {
     if (!ok()) return; const H = HERO[h]; if (!H) return;
@@ -1622,22 +1706,35 @@ const SND = (function () {
   function ui(name, delay) { if (!ok() || !UI[name]) return; UI[name](sV, ac.currentTime + 0.01 + (delay || 0)); }
 
   /* ----- settings panel ----- */
-  function applyVol() { if (master && ac) master.gain.setTargetAtTime(prefs.vol, ac.currentTime, 0.05); }
-  function setPref(k, v) { prefs[k] = v; savePrefs(); if (k === 'vol') applyVol(); if (k === 'music') { if (!v) stopMusic(); else { unlock(); sync(); } } syncPanel(); }
+  function applyVol() {
+    if (!ac) return; const t = ac.currentTime;
+    if (master) master.gain.setTargetAtTime(masterGain(), t, 0.05);
+    if (musicBus) { musicBus.gain.cancelScheduledValues(t); musicBus.gain.setTargetAtTime(musicBase(), t, 0.05); }
+    if (sfxBus) sfxBus.gain.setTargetAtTime(sfxBase(), t, 0.05);
+  }
+  /* hit / block sound hooks: placeholders reuse existing hero sounds; overwrite HOOKS.hit / HOOKS.block to use real files later */
+  const HOOKS = { hit: (h, delay) => hero(h, 'hit', delay), block: (h, delay) => hero(h, 'guard', delay) };
+  function hit(h, delay) { try { HOOKS.hit(h, delay); } catch (e) {} }
+  function block(h, delay) { try { HOOKS.block(h, delay); } catch (e) {} }
+  function setPref(k, v) { prefs[k] = v; savePrefs(); if (k === 'musicVol' || k === 'sfxVol' || k === 'mute') { if (k !== 'mute') unlock(); applyVol(); } if (k === 'music') { if (!v) stopMusic(); else { unlock(); sync(); } } syncPanel(); }
   let panel = null;
   const SPK = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8 L7 8 L12 4 L12 16 L7 12 L3 12Z"/><path d="M15 7 Q17.5 10 15 13"/></svg>';
   function syncPanel() {
     if (!panel) return;
     panel.querySelector('[data-k="music"]').checked = prefs.music;
     panel.querySelector('[data-k="sfx"]').checked = prefs.sfx;
-    panel.querySelector('[data-k="vol"]').value = Math.round(prefs.vol * 100);
+    panel.querySelector('[data-k="musicVol"]').value = Math.round(prefs.musicVol * 100);
+    panel.querySelector('[data-k="sfxVol"]').value = Math.round(prefs.sfxVol * 100);
+    panel.querySelector('[data-k="mute"]').checked = prefs.mute;
+    panel.querySelector('[data-k="big"]').checked = A11Y.prefs.big;
+    panel.querySelector('[data-k="hc"]').checked = A11Y.prefs.hc;
   }
   function togglePanel() {
     if (!panel) {
-      panel = document.createElement('div'); panel.id = 'sndpanel'; panel.className = 'sndpanel'; panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Sound settings');
-      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Volume <input type="range" min="0" max="100" step="5" data-k="vol" aria-label="Volume"></label>';
-      panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx') setPref(k, e.target.checked); });
-      panel.addEventListener('input', e => { if (e.target.getAttribute('data-k') === 'vol') setPref('vol', Number(e.target.value) / 100); });
+      panel = document.createElement('div'); panel.id = 'sndpanel'; panel.className = 'sndpanel'; panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Sound and display settings');
+      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label><input type="checkbox" data-k="big"> Larger text</label><label><input type="checkbox" data-k="hc"> High contrast (colorblind-safe)</label>';
+      panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx' || k === 'mute') setPref(k, e.target.checked); else if (k === 'big' || k === 'hc') A11Y.set(k, e.target.checked); });
+      panel.addEventListener('input', e => { const k = e.target.getAttribute('data-k'); if (k === 'musicVol' || k === 'sfxVol') { setPref(k, Math.max(0, Math.min(1, Number(e.target.value) / 100))); if (k === 'sfxVol') ui('click'); } });
       document.body.appendChild(panel);
     }
     panel.hidden = !panel.hidden; syncPanel(); unlock();
@@ -1647,7 +1744,7 @@ const SND = (function () {
     ['pointerdown', 'keydown', 'touchend'].forEach(ev => document.addEventListener(ev, first, { passive: true }));
     document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume().then(sync).catch(() => {}); });
   }
-  return { prefs, scene, stinger, hero, enemy, ui, togglePanel, unlock, SPK, _t: { voices, TRACKS, STING, playSting, BPM, MODE, HERO, ARCH, EVOICE, UI }, get ctx() { return ac; }, get playing() { return playing; } };
+  return { prefs, scene, stinger, hero, enemy, ui, hit, block, HOOKS, togglePanel, unlock, SPK, _t: { voices, TRACKS, STING, playSting, BPM, MODE, HERO, ARCH, EVOICE, UI }, get ctx() { return ac; }, get playing() { return playing; } };
 })();
 
 /* ---------- Scenery, map art, chest and victory (client only) ---------- */
@@ -1899,8 +1996,8 @@ function sndSync(V, prev) {
   if (!V || scr === 'lobby') { SND.scene('menu'); return; }
   const ak = 'a' + Math.min(3, Math.max(1, V.act || 1));
   let key = ak, mode = 'calm';
-  if (scr === 'combat' && V.cb) { mode = V.cb.duel || V.cb.k === 'boss' ? 'boss' : 'fight'; if (V.cb.duel) key = 'a3'; }
-  else if (scr === 'duelintro' || scr === 'duelend') key = 'a3';
+  if (scr === 'combat' && V.cb) { mode = V.cb.duel || V.cb.k === 'boss' ? 'boss' : 'fight'; if (V.cb.duel) key = 'duel'; }
+  else if (scr === 'duelintro' || scr === 'duelend') key = 'duel';
   else if (scr === 'victory') key = 'menu';
   else if (scr === 'defeat') key = 'none';
   SND.scene(key, mode);
@@ -1939,8 +2036,8 @@ function sndSync(V, prev) {
   let n = 0;
   (V.fx || []).forEach(f => {
     if (f.s <= prev || !f.x || f.t[0] !== 'e') return;
-    if (f.x[0] === '−') { SND.hero(CL.sndHero || me, 'hit', 0.08 + 0.09 * n); SND.enemy(((c.en.find(e => 'e' + e.idx === f.t) || {}).key) || 'moth', 'hit', 0.1 + 0.09 * n); n++; }
-    else if (f.x === 'Blocked') { SND.hero(CL.sndHero || me, 'guard', 0.06 + 0.09 * n); n++; }
+    if (f.x[0] === '−') { SND.hit(CL.sndHero || me, 0.08 + 0.09 * n); SND.enemy(((c.en.find(e => 'e' + e.idx === f.t) || {}).key) || 'moth', 'hit', 0.1 + 0.09 * n); n++; }
+    else if (f.x === 'Blocked') { SND.block(CL.sndHero || me, 0.06 + 0.09 * n); n++; }
   });
 }
 
@@ -1968,12 +2065,22 @@ function vName(V, pi) {
   const h = V.P[pi].h; const base = h ? HEROES[h].n.replace('The ', '') : 'Player ' + (pi + 1);
   return V.n > 1 && V.P[0].h === V.P[1].h ? base + ' ' + (pi + 1) : base;
 }
+const PRES_LABEL = { online: ['Online', ''], away: ['Away', ' away'], reconnecting: ['Reconnecting…', ' re'], offline: ['Offline', ' off'] };
+function partnerState(V) {
+  const o = V.n > 1 ? V.P[1 - V.me] : null;
+  if (!o) return 'online';
+  let s = CL.role === 'online' && PRES_LABEL[CL.pres] ? CL.pres : '';
+  if (o.on && (s === '' || s === 'reconnecting' || s === 'offline')) s = 'online';
+  else if (!o.on && (s === '' || s === 'online' || s === 'away')) s = 'reconnecting';
+  return s;
+}
 function topbar(V) {
   const me = V.P[V.me];
   let partner = '';
   if (V.n > 1) {
     const o = V.P[1 - V.me];
-    partner = '<span class="chip partner' + (o.on ? '' : ' off') + '" title="Your partner">' + (o.on ? '' : '⚠ ') + esc(vName(V, 1 - V.me)) + ' · ' + o.hp + '/' + o.mx + ' HP</span>';
+    const ps = PRES_LABEL[partnerState(V)];
+    partner = '<span class="chip partner' + ps[1] + '" role="status" title="Your partner: ' + ps[0] + '" aria-label="Partner ' + esc(vName(V, 1 - V.me)) + ', ' + ps[0] + ', ' + o.hp + ' of ' + o.mx + ' HP"><span class="pdot" aria-hidden="true"></span>' + esc(vName(V, 1 - V.me)) + ' · ' + ps[0] + ' · ' + o.hp + '/' + o.mx + ' HP</span>';
   }
   return '<header class="topbar"><span class="name">' + esc(HEROES[me.h].n) + '</span>' +
     '<span class="stat" title="Health">' + ICON.heart + me.hp + ' / ' + me.mx + '</span>' +
@@ -2064,6 +2171,7 @@ function enemyHTML(V, e, prev) {
     '<span class="einfo"><span class="ename">' + esc(e.n) + '</span>' +
     '<span class="hpline">' + (e.block ? '<span class="shield">' + ICON.shield + e.block + '</span>' : '') + '<span class="hpbar' + (e.block ? ' blocked' : '') + '"><i style="width:' + Math.max(0, e.hp / e.max * 100) + '%"></i></span>' + e.hp + '/' + e.max + '</span>' +
     (badges.length ? '<span class="badges">' + badges.join('') + '</span>' : '') +
+    '<span class="pv" data-pv="' + e.idx + '"></span>' +
     '<span class="then">Then: ' + esc(e.nx) + '</span>' +
     '<span class="enote">' + esc(EN[e.key].note) + '</span></span></button>';
 }
@@ -2283,6 +2391,8 @@ function lobbyHTML(V) {
   };
   return '<section class="panel"><div class="row"><div style="display:flex;flex-direction:column;gap:4px"><span class="actbanner">Co-op lobby</span><h2>Room code <span class="bigcode">' + esc((V.code || '').toUpperCase()) + '</span></h2></div></div>' +
     '<p class="muted" style="margin:0">' + (host ? 'Send your partner this site’s link and the code. They choose “Join with code” on the title screen.' : 'You joined the host’s room. Pick your hero; the host starts the run.') + ' You can both play the same hero.</p>' +
+    '<div class="row"><button type="button" class="btn" data-act="copycode">Copy code</button><button type="button" class="btn" data-act="copylink">Copy invite link</button>' + (navigator.share ? '<button type="button" class="btn" data-act="sharelink">Share…</button>' : '') + '</div>' +
+    '<p class="netline" role="status" aria-live="polite">' + esc(CL.copied || '') + '</p>' +
     '<ul class="lobbyl">' + slot(0) + slot(1) + '</ul>' +
     heroPickCards('hero', V.P[me].h) +
     '<div class="row">' + (host ? '<button type="button" class="btn primary" data-act="start"' + (ready ? '' : ' disabled') + '>' + (p2 ? (ready ? 'Start the climb' : 'Waiting for both heroes…') : 'Waiting for partner…') + '</button>' : '<span class="muted">' + (ready ? 'Waiting for the host to start…' : 'Waiting for both heroes…') + '</span>') +
@@ -2296,6 +2406,21 @@ function overlayHTML(V) {
     (V.deckCut ? '<p class="muted">Deck list unavailable right now.</p>' : '') +
     '<div class="cards">' + V.deck.map(([u, id]) => cardHTML(id, remove ? 'remove' : 'noop', u)).join('') + '</div>' +
     (remove ? '' : '<h3>Relics</h3><div class="relicrow">' + V.P[V.me].rl.map(r => '<span><b>' + esc(RELICS[r].n) + '</b> · ' + esc(RELICS[r].d) + '</span>').join('') + '</div>') + '</section></div>';
+}
+function shakeScreen(level) {
+  if (REDUCE) return;
+  const app = document.querySelector('#app .battle');
+  if (!app) return;
+  app.classList.remove('shake1', 'shake2');
+  void app.offsetWidth;
+  app.classList.add(level > 1 ? 'shake2' : 'shake1');
+  setTimeout(() => app.classList.remove('shake1', 'shake2'), 500);
+}
+function flashBlock(host) {
+  const b = document.createElement('span');
+  b.className = 'blockflash';
+  host.appendChild(b);
+  setTimeout(() => b.remove(), 650);
 }
 function flushFx(V, prev) {
   if (!V.fx) return;
@@ -2313,6 +2438,16 @@ function flushFx(V, prev) {
     s.textContent = f.x;
     s.style.marginTop = ((n - 1) * 30) + 'px';
     s.style.animationDelay = ((n - 1) * 90) + 'ms';
+    const dm = /^−(\d+)/.exec(f.x);
+    const dmg = dm && !/^(buff|heal|block|miss)$/.test(f.k || '') ? Number(dm[1]) : 0;
+    if (dmg) {
+      s.style.fontSize = Math.min(56, 32 + Math.floor(dmg * 0.6)) + 'px';
+      if (dmg >= 12) {
+        s.classList.add('big');
+        if (f.t[0] === 'e' || f.t === 'p' + V.me) shakeScreen(dmg >= 20 ? 2 : 1);
+      }
+    }
+    if (f.x === 'Blocked' || f.k === 'block') flashBlock(host);
     host.appendChild(s);
     setTimeout(() => s.remove(), 1400);
   });
@@ -2337,7 +2472,7 @@ function paint(V) {
     body = topbar(V);
     const o = V.n > 1 ? V.P[1 - V.me] : null;
     if (CL.role === 'online' && CL.net.state !== 'Connected') body += '<div class="netwarn">' + esc(CL.net.state || 'Reconnecting…') + ' Your game keeps running on the server.</div>';
-    if (o && !o.on) body += '<div class="netwarn">Your partner is disconnected. The game keeps running on the server; they can reload the page or rejoin with code ' + esc((V.code || '').toUpperCase()) + '.</div>';
+    if (o && (partnerState(V) === 'reconnecting' || partnerState(V) === 'offline')) body += '<div class="netwarn">Your partner is disconnected. The game keeps running on the server; they can reload the page or rejoin with code ' + esc((V.code || '').toUpperCase()) + '.</div>';
     if (V.scr === 'map') body += mapHTML(V);
     else if (V.scr === 'combat') body += combatHTML(V, prev);
     else if (V.scr === 'reward') body += rewardHTML(V);
@@ -2364,6 +2499,8 @@ function paint(V) {
   try { sndSync(V, prev); } catch (e) {}
   if (V && V.scr === 'map') { try { mapAfterPaint(); } catch (e) {} }
   CL.lastFx = Math.max(prev, maxFx);
+  CL.pvV = V;
+  try { showPreview(V); } catch (e) {}
   updateNetBar();
 }
 
@@ -2392,6 +2529,7 @@ function dropSock(sock, code) {
   if (CL.role === 'online') { CL.net.state = 'Connection lost. Reconnecting…'; render(); scheduleReconnect(); }
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && CL.role === 'online' && ws && ws.readyState === 1 && !hbPongBy) hbLast = 0; });
+document.addEventListener('visibilitychange', () => { if (CL.role === 'online') wsSend({ t: 'away', v: !!document.hidden }); });
 function soloView() { return E.G ? E.buildView(0) : null; }
 function render() {
   if (CL.role === 'online') return paint(CL.V);
@@ -2459,25 +2597,37 @@ function connect() {
     wsTries = 0; actLock = 0; srvRestart = 0; CL.net.state = 'Connected'; CL.err = '';
     hbStart(sock);
     if (CL.pending) wsSend(CL.pending); else if (CL.code) wsSend({ t: 'join', code: CL.code, tok: CL.tok, build: BUILD_ID });
+    if (document.hidden) wsSend({ t: 'away', v: true });
     render();
   };
   sock.onmessage = ev => {
     let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
     hbPongBy = 0;
     if (m.t === 'pong') return;
-    if (m.t === 'restart') { srvRestart = Date.now(); updateNetBar(); }
-    else if (m.t === 'joined') { CL.code = m.code; CL.pending = null; try { sessionStorage.setItem(CODEKEY, m.code); } catch (e) {} render(); }
+    if (m.t === 'presence') { if (PRES_LABEL[m.st]) { CL.pres = m.st; render(); } }
+    else if (m.t === 'restart') { srvRestart = Date.now(); updateNetBar(); }
+    else if (m.t === 'joined') { CL.pres = ''; CL.code = m.code; CL.pending = null; try { sessionStorage.setItem(CODEKEY, m.code); } catch (e) {} render(); }
     else if (m.t === 'view') {
       actLock = 0;
       CL.V = m.v;
       if (CL.sel != null && (!m.v.cb || !m.v.cb.hand.some(h => h[0] === CL.sel))) CL.sel = null;
       render();
     } else if (m.t === 'err') {
-      actLock = 0; CL.err = m.msg || 'Server error';
+      actLock = 0;
+      const slow = !m.fatal && /slow down/i.test(m.msg || '');
+      if (slow) { netFlash('Slow down: too many actions too quickly. Wait a moment.'); return; }
+      CL.err = m.msg || 'Server error';
       if (m.fatal) { const msg = CL.err; leaveAll(); CL.err = msg; render(); } else render();
     }
   };
-  sock.onclose = ev => dropSock(sock, ev && ev.code);
+  sock.onclose = ev => {
+    if (ev && ev.code === 1013 && ws === sock && CL.role === 'online') {
+      const msg = 'Too many connections. Close other tabs and try again.';
+      leaveAll(); CL.err = msg; render();
+      return;
+    }
+    dropSock(sock, ev && ev.code);
+  };
   sock.onerror = () => {};
 }
 function scheduleReconnect() {
@@ -2494,19 +2644,80 @@ function goOnline(first) {
   if (!wsSend(first)) { if (!ws) connect(); }
   render();
 }
+function flyCard(el, targetKey) {
+  if (REDUCE || !el || !el.animate) return null;
+  const t = document.querySelector('[data-float="' + targetKey + '"]');
+  if (!t) return null;
+  const r = el.getBoundingClientRect(), tr = t.getBoundingClientRect();
+  if (!r.width) return null;
+  const g = el.cloneNode(true);
+  g.removeAttribute('data-act'); g.removeAttribute('data-arg'); g.removeAttribute('id');
+  g.setAttribute('aria-hidden', 'true'); g.tabIndex = -1; g.classList.remove('sel');
+  g.classList.add('flyghost');
+  g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+  document.body.appendChild(g);
+  const dx = tr.left + tr.width / 2 - (r.left + r.width / 2), dy = tr.top + tr.height / 2 - (r.top + r.height / 2);
+  const an = g.animate([
+    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+    { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(.35)', opacity: 0.2 }
+  ], { duration: 380, easing: 'ease-in', fill: 'forwards' });
+  an.onfinish = () => g.remove();
+  setTimeout(() => g.remove(), 700);
+  return g;
+}
+function sendCard(V, u, tgtIdx) {
+  const h = V && V.cb && V.cb.hand.find(x => x[0] === u);
+  const el = document.querySelector('.hand [data-act="card"][data-arg="' + u + '"]');
+  let g = null;
+  if (h && el) {
+    const d = CARDS[h[1]];
+    let key;
+    if (tgtIdx != null) key = 'e' + tgtIdx;
+    else if (d.t === 'attack' && V.cb.duel && V.n > 1) key = 'p' + (1 - V.me);
+    else if (d.t === 'attack') { const live = V.cb.en.filter(e => !e.dead); key = live.length ? 'e' + live[0].idx : 'p' + V.me; }
+    else key = 'p' + V.me;
+    g = flyCard(el, key);
+  }
+  if (!send('card', u, tgtIdx) && g) g.remove();
+}
 function send(a, x, y) {
   if (CL.role === 'online') {
     if (!wsConnected()) { netFlash('Offline: action not sent.'); return false; }
     if (Date.now() < actLock) return false;
-    if (wsSend({ t: 'act', a, x: x == null ? null : x, y: y == null ? null : y })) actLock = Date.now() + 1200;
-  } else E.doAction(0, a, x, y);
+    if (wsSend({ t: 'act', a, x: x == null ? null : x, y: y == null ? null : y })) { actLock = Date.now() + 1200; return true; }
+    return false;
+  }
+  E.doAction(0, a, x, y);
+  return true;
+}
+function inviteURL() { return location.origin + location.pathname + '?room=' + encodeURIComponent((CL.code || '').toUpperCase()); }
+let copiedTimer = 0;
+function lobbyCopy(text, okMsg) {
+  const done = msg => {
+    CL.copied = msg; render();
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => { CL.copied = ''; render(); }, 2500);
+  };
+  const fallback = () => {
+    let ok = false;
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta); ta.select();
+      ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+    } catch (e) {}
+    done(ok ? okMsg : 'Copy failed. Select and copy manually: ' + text);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => done(okMsg), fallback);
+  else fallback();
 }
 function leaveAll() {
   if (CL.role === 'online') { wsSend({ t: 'leave' }); }
   clearTimeout(wsTimer);
   if (ws) { const s = ws; ws = null; try { s.close(); } catch (e) {} }
   try { sessionStorage.removeItem(CODEKEY); } catch (e) {}
-  E.G = null; CL.role = 'none'; CL.V = null; CL.sel = null; CL.overlay = null; CL.seen = false; CL.code = ''; CL.pending = null; wsTries = 0;
+  E.G = null; CL.role = 'none'; CL.V = null; CL.sel = null; CL.overlay = null; CL.seen = false; CL.code = ''; CL.pending = null; CL.pres = ''; wsTries = 0;
   CL.net = { state: '', peers: 0, err: '' };
   render();
 }
@@ -2548,6 +2759,13 @@ document.getElementById('app').addEventListener('click', ev => {
       E.G = s.G; CL.role = 'solo'; render();
       break;
     }
+    case 'copycode': lobbyCopy((CL.code || '').toUpperCase(), 'Room code copied.'); break;
+    case 'copylink': lobbyCopy(inviteURL(), 'Invite link copied.'); break;
+    case 'sharelink':
+      if (navigator.share) navigator.share({ title: 'Masked Spire co-op', text: 'Join my Masked Spire co-op run! Room ' + (CL.code || '').toUpperCase(), url: inviteURL() }).catch(() => {});
+      else lobbyCopy(inviteURL(), 'Invite link copied.');
+      break;
+    case 'snd': SND.togglePanel(); break;
     case 'leave': leaveAll(); break;
     case 'hero': send('hero', arg); break;
     case 'start': send('start'); break;
@@ -2561,13 +2779,20 @@ document.getElementById('app').addEventListener('click', ev => {
       if (d.tg && !V.cb.duel) {
         const live = V.cb.en.filter(e => !e.dead);
         if (live.length > 1) { CL.sel = CL.sel === u ? null : u; paint(V); break; }
-        send('card', u, live.length ? live[0].idx : null);
-      } else send('card', u, null);
+        sendCard(V, u, live.length ? live[0].idx : null);
+      } else sendCard(V, u, null);
       CL.sel = null;
       break;
     }
-    case 'enemy': if (CL.sel != null) { const u = CL.sel; CL.sel = null; send('card', u, Number(arg)); } break;
+    case 'enemy': if (CL.sel != null) { const u = CL.sel; CL.sel = null; sendCard(V, u, Number(arg)); } break;
     case 'end': CL.sel = null; send('end'); break;
+    case 'chest':
+      if (CL.curChest && !(CL.chest && CL.chest.key === CL.curChest.key)) {
+        CL.chest = { key: CL.curChest.key, t: performance.now() };
+        chestSfx(CL.curChest.relic);
+        render();
+      }
+      break;
     case 'reward': send('reward', Number(arg)); break;
     case 'bossreward': send('bossreward', Number(arg)); break;
     case 'done': send('done'); break;
@@ -2581,6 +2806,40 @@ document.getElementById('app').addEventListener('click', ev => {
     default: break;
   }
 });
+/* Damage preview: fills the .pv placeholders in place (no repaint, so hover can't loop). */
+function showPreview(V) {
+  const app = document.getElementById('app');
+  app.querySelectorAll('.pv').forEach(el => { el.textContent = ''; el.className = 'pv'; });
+  if (!V || !V.cb || V.cb.duel) return;
+  const u = CL.sel != null ? CL.sel : CL.hov;
+  if (u == null) return;
+  const h = V.cb.hand.find(x => x[0] === u);
+  const s = V.cb.S[V.me];
+  if (!h || !s) return;
+  V.cb.en.forEach(e => {
+    if (e.dead) return;
+    const el = app.querySelector('.pv[data-pv="' + e.idx + '"]');
+    if (!el) return;
+    const r = E.previewCard(h[1], s, e);
+    if (!r) return;
+    let t = (r.hits > 1 ? r.d + '×' + r.hits : '' + r.d) + ' dmg · ';
+    t += r.lethal ? 'Lethal' : r.loss > 0 ? '−' + r.loss + ' HP → ' + r.hp : 'No HP damage';
+    if (r.blocked) t += ' · ' + r.blocked + ' blocked';
+    if (r.parried) t += ' · ' + r.parried + ' hit parried';
+    el.textContent = t;
+    el.className = 'pv' + (r.lethal ? ' lethal' : r.loss === 0 ? ' safe' : '');
+  });
+}
+const pvHover = ev => {
+  const c = ev.target.closest ? ev.target.closest('.card[data-act="card"]') : null;
+  const u = c ? Number(c.dataset.arg) : null;
+  if (u === (CL.hov == null ? null : CL.hov)) return;
+  CL.hov = u; showPreview(CL.pvV);
+};
+document.getElementById('app').addEventListener('mouseover', pvHover);
+document.getElementById('app').addEventListener('focusin', pvHover);
+document.getElementById('app').addEventListener('mouseleave', () => { CL.hov = null; showPreview(CL.pvV); });
+document.getElementById('app').addEventListener('focusout', () => { CL.hov = null; showPreview(CL.pvV); });
 document.getElementById('app').addEventListener('submit', ev => {
   const f = ev.target.closest('[data-form="join"]');
   if (!f) return;
@@ -2636,7 +2895,11 @@ document.getElementById('app').addEventListener('input', ev => { if (ev.target.i
   const cleanCode = s => { s = String(s || '').trim().toLowerCase(); return /^[a-z0-9]{5}$/.test(s) ? s : ''; };
   code = cleanCode(code) || null;
   const q = cleanCode(new URLSearchParams(location.search).get('room'));
-  if (q && !code) CL.joinCode = q.toUpperCase();
+  if (q) {
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    CL.joinCode = q.toUpperCase();
+    code = q;
+  }
   if (code) goOnline({ t: 'join', code, tok: CL.tok });
   else render();
 })();
