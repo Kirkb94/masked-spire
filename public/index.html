@@ -707,7 +707,7 @@ body, button, .btn, .card, .node, .hand { touch-action: manipulation; }
 'use strict';
 const KEY = 'masked-spire-solo-v1';
 const SAVE_VERSION = 2; /* bump whenever the solo run state shape changes */
-const BUILD_ID = 'dev';
+let BUILD_ID = 'dev'; /* the server replaces this line with the real build when it serves the page */
 let saveGV = null; /* engine state version, cached */
 const TOKKEY = 'masked-spire-token';
 const REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2458,7 +2458,7 @@ function connect() {
   sock.onopen = () => {
     wsTries = 0; actLock = 0; srvRestart = 0; CL.net.state = 'Connected'; CL.err = '';
     hbStart(sock);
-    if (CL.pending) wsSend(CL.pending); else if (CL.code) wsSend({ t: 'join', code: CL.code, tok: CL.tok });
+    if (CL.pending) wsSend(CL.pending); else if (CL.code) wsSend({ t: 'join', code: CL.code, tok: CL.tok, build: BUILD_ID });
     render();
   };
   sock.onmessage = ev => {
@@ -2488,6 +2488,7 @@ function scheduleReconnect() {
   updateNetBar();
 }
 function goOnline(first) {
+  if (first && (first.t === 'create' || first.t === 'join')) first.build = BUILD_ID;
   CL.role = 'online'; CL.V = null; CL.seen = false; CL.sel = null; CL.overlay = null; CL.err = ''; CL.pending = first;
   if (first && first.code) CL.code = first.code;
   if (!wsSend(first)) { if (!ws) connect(); }
@@ -2590,6 +2591,43 @@ document.getElementById('app').addEventListener('submit', ev => {
   goOnline({ t: 'join', code, tok: CL.tok });
 });
 document.getElementById('app').addEventListener('input', ev => { if (ev.target.id === 'joincode') CL.joinCode = ev.target.value; });
+
+/* ---------- Build badge ---------- */
+(function buildBadge() {
+  const st = document.createElement('style');
+  st.textContent = '#buildbadge{position:fixed;right:6px;bottom:4px;z-index:50;margin:0;padding:2px 6px;font:11px system-ui,sans-serif;color:#fff;background:rgba(0,0,0,.35);opacity:.6;border:0;border-radius:4px;cursor:pointer;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#buildbadge:hover{opacity:1}#buildbadge:focus-visible{opacity:1;outline:3px solid #ffd54a;outline-offset:2px}';
+  document.head.appendChild(st);
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'buildbadge';
+  b.title = 'Tap to copy the build version for bug reports';
+  const label = () => { b.textContent = BUILD_ID; b.setAttribute('aria-label', 'Build ' + BUILD_ID + '. Press to copy for bug reports.'); };
+  label();
+  let timer = 0;
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t);
+    return new Promise((ok, no) => {
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta); ta.select();
+      let done = false;
+      try { done = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      if (done) ok(); else no(new Error('copy failed'));
+    });
+  }
+  b.addEventListener('click', () => {
+    const text = 'Masked Spire ' + BUILD_ID + (CL.role === 'online' && CL.code ? ' \u00b7 room ' + CL.code : '');
+    copyText(text).catch(() => copyText(text)).then(() => { b.textContent = 'Copied'; }, () => { b.textContent = text; });
+    clearTimeout(timer);
+    timer = setTimeout(label, 1500);
+  });
+  document.body.appendChild(b);
+  if (BUILD_ID === 'dev' && typeof fetch === 'function' && /^https?:/.test(location.protocol)) {
+    fetch('/version', { cache: 'no-store' }).then(r => r.json()).then(j => {
+      if (j && typeof j.build === 'string' && j.build.length < 60) { BUILD_ID = j.build; label(); }
+    }).catch(() => {});
+  }
+})();
 
 /* ---------- Boot ---------- */
 (function boot() {

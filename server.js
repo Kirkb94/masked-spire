@@ -10,6 +10,25 @@ const { WebSocketServer } = require('ws');
 const { createEngine } = require('./public/engine.js');
 
 const PORT = process.env.PORT || 3000;
+
+/* Build id shown in the UI and checked on create/join. Render sets RENDER_GIT_COMMIT on every deploy. */
+const BUILD = (() => {
+  let v = '0.0.0';
+  try { v = String(require('./package.json').version || v); } catch (e) {}
+  const c = String(process.env.RENDER_GIT_COMMIT || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 7) || 'dev';
+  return ('v' + v.replace(/[^A-Za-z0-9.\-+]/g, '') + ' \u00b7 ' + c);
+})();
+const BUILD_PLACEHOLDER = "let BUILD_ID = 'dev';";
+let INDEX_HTML = null; // index.html with the real build injected, read once at startup
+try {
+  const src = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+  if (src.indexOf(BUILD_PLACEHOLDER) === -1) console.warn('BUILD placeholder not found in index.html; clients will fetch /version');
+  else INDEX_HTML = Buffer.from(src.split(BUILD_PLACEHOLDER).join("let BUILD_ID = '" + BUILD + "';"), 'utf8');
+} catch (e) { console.warn('Could not preload index.html', e && e.message); }
+console.log('Build ' + BUILD);
+/* A client that sends no build (old cached page) or 'dev' (not yet resolved) is tolerated. */
+function buildMismatch(m) { return typeof m.build === 'string' && m.build !== 'dev' && m.build !== BUILD; }
+const RELOAD_MSG = 'Reload the page, a new version of the game is out.';
 const PUBLIC = path.join(__dirname, 'public');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
 const IDLE_MS = 30 * 60 * 1000;     // an empty room is kept this long so players can rejoin
@@ -68,9 +87,14 @@ const server = http.createServer((req, res) => {
   } catch (e) { send(res, 400, { 'content-type': 'text/plain' }, 'Bad request'); return; }
   if (pathname.indexOf('\0') !== -1) { send(res, 400, { 'content-type': 'text/plain' }, 'Bad request'); return; }
   if (pathname === '/healthz') { send(res, 200, { 'content-type': 'text/plain' }, head ? undefined : 'ok'); return; }
+  if (pathname === '/version') { send(res, 200, { 'content-type': 'application/json', 'cache-control': 'no-store' }, head ? undefined : JSON.stringify({ build: BUILD })); return; }
   const p = pathname === '/' ? '/index.html' : pathname;
   const file = path.resolve(PUBLIC, '.' + path.sep + p.replace(/^[\/\\]+/, ''));
   if (file !== PUBLIC && !file.startsWith(PUBLIC + path.sep)) { send(res, 403, { 'content-type': 'text/plain' }, 'Forbidden'); return; }
+  if (INDEX_HTML && file === path.join(PUBLIC, 'index.html')) {
+    send(res, 200, { 'content-type': TYPES['.html'], 'cache-control': 'no-cache' }, head ? undefined : INDEX_HTML);
+    return;
+  }
   fs.readFile(file, (err, data) => {
     if (err) { send(res, 404, { 'content-type': 'text/plain' }, 'Not found'); return; }
     send(res, 200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-cache' }, head ? undefined : data);
@@ -175,6 +199,7 @@ wss.on('connection', (ws, req) => {
     const tok = cleanTok(m.tok);
     if (m.t === 'create') {
       if (!tok) return err('Missing player id.');
+      if (buildMismatch(m)) return err(RELOAD_MSG, true);
       if (rooms.size >= MAX_ROOMS) return err('The server is full right now. Try again later.', true);
       detach(ws);
       const room = createRoom(tok);
@@ -184,6 +209,7 @@ wss.on('connection', (ws, req) => {
       broadcast(room);
     } else if (m.t === 'join') {
       if (!tok) return err('Missing player id.', true);
+      if (buildMismatch(m)) return err(RELOAD_MSG, true);
       const code = cleanCode(m.code);
       if (!code) return err('Room codes are 5 letters or numbers.', true);
       const room = rooms.get(code);
