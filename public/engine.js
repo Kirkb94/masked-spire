@@ -406,7 +406,7 @@ function startRound() {
 }
 function startTurnSide(s) {
   A = s;
-  s.turnN++;
+  s.turnN++; { const pp = P(s.pi); if (pp) pp.tn = (pp.tn || 0) + 1; }
   const first = s.turnN === 1, pi = s.pi;
   let keep = 0;
   if (!first && P(pi).hero === 'bulwark') keep = s.keepAll ? s.block : Math.floor(s.block / 2);
@@ -973,7 +973,7 @@ function buildView(me) {
   const V = {
     me, n: G.P.length, mode: G.mode, code: G.code, scr: G.screen, act: G.act, floor: G.floor, tok: p ? p.tok : null, ack: p ? p.ack : 0,
     P: G.P.map(q => ({ h: q.hero, hp: q.hp, mx: q.maxHp, g: q.gold, rl: q.relics, dn: q.done ? 1 : 0, vt: q.vote, on: q.conn ? 1 : 0, k: q.kills })),
-    deck: p ? p.deck.map(x => [x.u, x.id]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff), rs: p ? { cp: p.cp || 0, dm: p.dmg || 0 } : null
+    deck: p ? p.deck.map(x => [x.u, x.id]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff), rs: p ? { cp: p.cp || 0, dm: p.dmg || 0, tn: p.tn || 0 } : null
   };
   const c = G.combat;
   if (G.screen === 'map') {

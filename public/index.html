@@ -195,7 +195,16 @@ html.hc .float.crit { color: #FFF; }
 html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0 4px #fff; }
 .hitflash { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; background: rgba(224,74,94,.45); box-shadow: inset 0 0 18px 3px rgba(255,90,110,.9); animation: blockflash .4s ease-out forwards; }
 html.hc .hitflash { background: rgba(255,255,255,.2); box-shadow: inset 0 0 0 4px #ff4a5e; }
-html.rm .hitflash, html.rm .blockflash, html.rm .healflash { display: none; }
+html.rm .hitflash, html.rm .blockflash, html.rm .healflash, html.rm .slashfx, html.rm .burstfx { display: none; }
+.slashfx { position: absolute; left: -10%; top: 50%; width: 120%; height: 6px; z-index: 5; pointer-events: none; border-radius: 3px; background: linear-gradient(90deg, transparent, #fff 40%, #ffd0d6 60%, transparent); box-shadow: 0 0 10px 2px rgba(255,90,110,.9); transform-origin: left center; opacity: 0; animation: slashfx .32s ease-out both; }
+.slashfx.heavy { height: 9px; }
+.slashfx.heavy::after { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%; border-radius: 3px; background: inherit; box-shadow: inherit; transform: rotate(70deg); transform-origin: center; }
+@keyframes slashfx { 0% { opacity: 0; transform: translateY(-40px) rotate(-35deg) scaleX(0); } 30% { opacity: 1; transform: translateY(-40px) rotate(-35deg) scaleX(1); } 100% { opacity: 0; transform: translateY(-40px) rotate(-35deg) scaleX(1); } }
+html.hc .slashfx { background: #fff; box-shadow: 0 0 0 2px #000; }
+.burstfx { position: absolute; left: 50%; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; z-index: 5; pointer-events: none; border-radius: 50%; border: 3px solid var(--gold); color: var(--gold); box-shadow: 0 0 12px 2px var(--gold); font-size: 14px; line-height: 18px; text-align: center; font-weight: 700; opacity: 0; animation: burstfx .6s ease-out both; }
+.burstfx.bad { border-color: #b46aff; color: #b46aff; box-shadow: 0 0 12px 2px #b46aff; }
+html.hc .burstfx { border-color: #fff; color: #fff; box-shadow: none; }
+@keyframes burstfx { 0% { opacity: 0; transform: scale(.4); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(4); } }
 .healflash { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; background: rgba(110,230,140,.3); box-shadow: inset 0 0 18px 3px rgba(138,245,154,.8); animation: blockflash .5s ease-out forwards; }
 @keyframes hostshake { 25% { transform: translateX(-5px); } 60% { transform: translateX(4px); } }
 .hitshake { animation: hostshake .3s linear; }
@@ -351,7 +360,12 @@ html.rm .piles span.shuf { animation: none; }
 @keyframes rv-spark { 0% { opacity: 0; transform: scale(.6); } 30% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(1.25); } }
 html.rm .reveal .card.rv, html.rm .reveal .card.rv::after { animation: none; }
 @keyframes scr-in { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { #app.scr-in { animation: none; } }
+#trwipe { position: fixed; inset: 0; z-index: 9000; pointer-events: none; display: none; background: linear-gradient(100deg, #0B0709 0%, #0B0709 88%, #E8BE52 94%, rgba(232, 190, 82, 0) 100%); }
+#trwipe.go { display: block; animation: tr-wipe .55s cubic-bezier(.6, 0, .3, 1) forwards; }
+#trwipe.go.duel { background: linear-gradient(100deg, #12070A 0%, #12070A 88%, #D6473F 94%, rgba(214, 71, 63, 0) 100%); animation-duration: .8s; }
+@keyframes tr-wipe { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 0 0 100%); } }
+html.rm #trwipe, html.rm #trwipe.go { display: none; animation: none; }
+@media (prefers-reduced-motion: reduce) { html:not(.rm-off) #app.scr-in, html:not(.rm-off) #trwipe.go { animation: none; } html:not(.rm-off) #trwipe.go { display: none; } }
 html.rm .card, html.rm .node.avail, html.rm .idle, html.rm .enemy.acting, html.rm .enemy.hit .art, html.rm .portrait.lunge, html.rm .portrait.hurt, html.rm .portrait.hurt::after { transition: none; animation: none; }
 @keyframes floatfade { 0% { opacity: 0; transform: translate(-50%, 0); } 12% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, 0); } }
 html.rm .float, html.rm .float.big { animation-name: floatfade; animation-duration: 1.1s; animation-timing-function: linear; }
@@ -770,6 +784,7 @@ body.dragging, body.dragging * { user-select: none; -webkit-user-select: none; }
 .hand .card { scroll-snap-align: center; }
 @media (hover: none) { .card:hover, .hand .card:hover { transform: none; } .card.sel, .hand .card.sel { transform: translateY(-12px); } }
 @media (pointer: coarse) { .btn, .topbar .btn, .controls .endwrap .btn { min-height: 44px; } .hand { padding-top: 24px; padding-bottom: 14px; } }
+@media (max-width: 640px), (pointer: coarse) { .btn, .topbar .btn, .controls .endwrap .btn { min-height: 44px; } .controls .endwrap .btn.kbhelp { min-width: 44px; } }
 /* ---------- Sound panel ---------- */
 .sndfloat { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); z-index: 40; min-height: 40px; padding: 6px 12px; display: flex; gap: 6px; align-items: center; font-size: 16px; }
 .btn.snd { display: inline-flex; gap: 6px; align-items: center; }
@@ -967,6 +982,7 @@ html.rm #rotate svg { animation: none; }
 @keyframes sc-mote { 0% { opacity: 0; transform: translateY(6px); } 30% { opacity: .8; } 100% { opacity: 0; transform: translateY(-26px); } }
 html.rm .scenehd *, html.rm .scenehd { animation: none !important; }
 html.rm .scenehd .sc-ember, html.rm .scenehd .sc-mote { opacity: .5; }
+@media (prefers-reduced-motion: reduce) { html:not(.rm-off) .scenehd *, html:not(.rm-off) .scenehd { animation: none !important; } }
 @media (prefers-reduced-motion: reduce) { #rotate svg { animation: none; } }
 @media (pointer: coarse) and (orientation: portrait) { html:not(.allow-portrait) #rotate { display: flex; } }
 #rotate .btn { min-height: 48px; padding: 10px 18px; margin-top: 6px; }
@@ -1258,7 +1274,7 @@ let REDUCE = false;
   let saved = null;
   try { saved = localStorage.getItem(RMKEY); } catch (e) {}
   if (saved === 'on') REDUCE = true;
-  else if (saved === 'off') REDUCE = false;
+  else if (saved === 'off') { REDUCE = false; document.documentElement.classList.add('rm-off'); }
   else REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   document.documentElement.classList.toggle('rm', REDUCE);
 })();
@@ -1318,6 +1334,7 @@ function setReduceMotion(v) {
   if (REDUCE) { try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {} }
   try { localStorage.setItem(RMKEY, REDUCE ? 'on' : 'off'); } catch (e) {}
   document.documentElement.classList.toggle('rm', REDUCE);
+  document.documentElement.classList.toggle('rm-off', !REDUCE);
 }
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 const ROMAN = ['I', 'II', 'III'];
@@ -2301,7 +2318,11 @@ const SND = (function () {
     relic(V, t) { [784, 988, 1175, 1568, 1976].forEach((f, k) => V.tone({ t: t + k * 0.07, f, d: 0.05, r: 0.9, v: 0.06, parts: BELL })); },
     lid(V, t) { V.tone({ t, f: 90, f2: 160, d: 0.28, a: 0.02, r: 0.08, v: 0.09, type: 'sawtooth', lp: 500, q: 5, vib: [24, 120] }); },
     thud(V, t) { thump(V, t, 0.3, 90); V.noise({ t, d: 0.08, type: 'lp', f: 900, v: 0.12 }); },
+    crackle(V, t) { for (let k = 0; k < 5; k++) V.noise({ t: t + k * 0.07 + hs(k, 71) * 0.05, d: 0.02 + hs(k, 72) * 0.02, type: 'hp', f: 2500 + hs(k, 73) * 2500, v: 0.05, r: 0.03 }); V.noise({ t, d: 0.25, a: 0.03, type: 'lp', f: 500, v: 0.05, r: 0.2 }); },
     burst(V, t) { V.noise({ t, d: 0.5, a: 0.01, type: 'hp', f: 2500, f2: 9000, v: 0.14, r: 0.3 }); [1047, 1319, 1568, 2093].forEach((f, k) => V.tone({ t: t + k * 0.06, f, d: 0.06, r: 1.1, v: 0.06, parts: BELL })); },
+    flip(V, t) { V.noise({ t, d: 0.06, type: 'bp', f: 2200, f2: 900, q: 1, v: 0.06, r: 0.05 }); V.tone({ t: t + 0.02, f: 300, d: 0.02, r: 0.08, v: 0.04, type: 'triangle' }); },
+    gleamu(V, t) { [1319, 1760].forEach((f, k) => V.tone({ t: t + k * 0.07, f, d: 0.04, r: 0.6, v: 0.05, parts: BELL })); },
+    gleamr(V, t) { [1047, 1319, 1568, 2093, 2637].forEach((f, k) => V.tone({ t: t + k * 0.06, f, d: 0.05, r: 1.0, v: 0.055, parts: BELL })); },
     turn(V, t) { V.tone({ t, f: 660, d: 0.04, r: 0.5, v: 0.06, parts: BELL }); },
     enemyturn(V, t) { V.tone({ t, f: 110, d: 0.04, r: 0.6, v: 0.1, parts: INH, type: 'triangle' }); },
     toll(V, t) { V.tone({ t, f: 98, d: 0.05, a: 0.004, r: 3.2, v: 0.28, parts: BELL }); },
@@ -2355,7 +2376,7 @@ const SND = (function () {
     if (sfxBus) sfxBus.gain.setTargetAtTime(sfxBase(), t, 0.05);
   }
   /* hit / block sound hooks: placeholders reuse existing hero sounds; overwrite HOOKS.hit / HOOKS.block to use real files later */
-  const HOOKS = { hit: (h, delay) => hero(h, 'hit', delay), block: (h, delay) => hero(h, 'guard', delay), hover: () => ui('hover'), click: () => ui('click'), card: () => ui('card'), draw: delay => ui('draw', delay), endturn: () => ui('endturn'), transition: () => ui('transition') };
+  const HOOKS = { hit: (h, delay) => hero(h, 'hit', delay), block: (h, delay) => hero(h, 'guard', delay), hover: () => ui('hover'), click: () => ui('click'), card: () => ui('card'), draw: delay => ui('draw', delay), endturn: () => ui('endturn'), transition: () => ui('transition'), reveal: (rar, delay) => { delay = delay || 0; ui('flip', delay); if (rar === 'r') ui('gleamr', delay + 0.25); else if (rar === 'u') ui('gleamu', delay + 0.25); } };
   function fire(name, a, b) { try { if (HOOKS[name]) HOOKS[name](a, b); } catch (e) {} }
   function hit(h, delay) { try { HOOKS.hit(h, delay); } catch (e) {} }
   function block(h, delay) { try { HOOKS.block(h, delay); } catch (e) {} }
@@ -2384,12 +2405,24 @@ const SND = (function () {
       panel.addEventListener('input', e => { const k = e.target.getAttribute('data-k'); if (k === 'musicVol' || k === 'sfxVol') { setPref(k, Math.max(0, Math.min(1, Number(e.target.value) / 100))); if (k === 'sfxVol') ui('click'); } });
       panel.insertAdjacentHTML('beforeend', '<div class="sechead">Help</div><button type="button" class="btn" data-help="1">How to play</button>'); panel.addEventListener('click', e => { if (e.target.closest('[data-help]')) { panel.hidden = true; if (window.MSTutorial) window.MSTutorial.open(); } }); document.body.appendChild(panel);
     }
+    const opener = document.activeElement;
     panel.hidden = !panel.hidden; syncPanel(); unlock();
+    if (!panel._k) {
+      panel._k = 1;
+      document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape' || panel.hidden || e.defaultPrevented) return;
+        if (document.querySelector('#mstut,#endconf,#kbhelp,#pilev')) return;
+        e.preventDefault(); panel.hidden = true;
+        const o = panel._opener && panel._opener.isConnected ? panel._opener : document.querySelector('[data-act="snd"]');
+        try { if (o) o.focus(); } catch (x) {}
+      });
+    }
+    if (!panel.hidden) { panel._opener = opener; const f = panel.querySelector('input,select,button'); if (f) { try { f.focus(); } catch (x) {} } }
   }
   if (typeof document !== 'undefined') {
     const first = () => { unlock(); };
     ['pointerdown', 'keydown', 'touchend'].forEach(ev => document.addEventListener(ev, first, { passive: true }));
-    document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume().then(sync).catch(() => {}); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { stopAmb(); return; } if (ac && ac.state !== 'running') ac.resume().then(sync).catch(() => {}); else syncAmb(); });
   }
   return { prefs, scene, ambient, stinger, hero, enemy, ui, fire, hit, block, HOOKS, togglePanel, unlock, SPK, _t: { voices, TRACKS, STING, playSting, BPM, MODE, HERO, ARCH, EVOICE, UI }, get ctx() { return ac; }, get playing() { return playing; } };
 })();
@@ -2696,8 +2729,10 @@ function chestStage(V, tier, relic, key, title) {
   return { open: !!c, ce, html: '<div class="vstage tier-' + tier + (c ? ' opened' : '') + '" style="--ce:' + f1(ce) + 's;--ph:' + ph + '">' + heroCheer(V) +
     '<div class="vchest">' + (c ? '<div class="chestbtn open">' + inner + '</div>' : '<button type="button" class="chestbtn" data-act="chest" aria-label="Open the ' + esc(title || 'chest') + '">' + inner + '<span class="vhint">Tap to open</span></button>') + '</div>' + (c ? confettiHTML() : '') + '</div>' };
 }
-function chestSfx(relic) {
+function chestSfx(relic, cards) {
   SND.ui('lid', 0.1); SND.ui('thud', 0.65); SND.ui('burst', 0.55); SND.ui('coin', 0.75); if (relic) SND.ui('relic', 1.15);
+  /* reward cards flip in at 1.55s + 0.22s per card (see .reveal .card.rv); no flip under Reduce motion */
+  if (!REDUCE && cards) cards.forEach((id, i) => SND.fire('reveal', RAR[id] || 'c', 1.55 + i * 0.22 + 0.1));
 }
 
 /* ----- audio: map game state onto music scenes and event sounds ----- */
@@ -2721,6 +2756,8 @@ function sndSync(V, prev) {
     else if (scr === 'victory') SND.stinger('final');
     else if (scr === 'defeat') SND.stinger('defeat');
     else if (scr === 'treasure') SND.ui('thud');
+    else if (scr === 'rest') SND.ui('crackle');
+    else if (scr === 'shop') SND.ui('coin');
   }
   if (!V.cb || scr !== 'combat') { CL.sndHand = null; return; }
   const c = V.cb, me = V.P[V.me].h;
@@ -3186,30 +3223,51 @@ function endFxHTML(V, won) {
   return '<div class="endfx conf" style="--ce:' + f1(ce) + 's" aria-hidden="true">' + s + '</div>';
 }
 function endHTML(V, won) { return endHTMLBase(V, won) + endFxHTML(V, won); }
+/* End-screen run stats: count up from the ENDFX start time so re-renders continue the animation instead of restarting it */
+let endTickOn = false;
+function endFxInit(V) {
+  const key = V.scr + ':' + (V.code || '') + ':' + V.act + ':' + V.floor;
+  if (!ENDFX || ENDFX.key !== key) ENDFX = { key, t: performance.now() };
+}
+function endCountVal(to, i) {
+  to = Number(to) || 0;
+  if (REDUCE || !ENDFX) return to;
+  const e = (performance.now() - ENDFX.t) / 1000 - (0.4 + i * 0.35);
+  const p = Math.max(0, Math.min(1, e / 1.2));
+  return Math.round(to * (1 - Math.pow(1 - p, 3)));
+}
+function endTick() {
+  endTickOn = false;
+  const els = document.querySelectorAll('.runsum .cnt');
+  if (!els.length || !ENDFX) return;
+  let more = false;
+  els.forEach(el => {
+    const to = Number(el.dataset.to) || 0, v = endCountVal(to, Number(el.dataset.i) || 0);
+    if (el.textContent !== String(v)) el.textContent = v;
+    if (v < to) more = true;
+  });
+  if (more) { endTickOn = true; requestAnimationFrame(endTick); }
+}
 function endHTMLBase(V, won) {
   const html = endHTML0(V, won);
+  endFxInit(V);
+  if (!document.getElementById('endcnt-css')) {
+    const st = document.createElement('style');
+    st.id = 'endcnt-css';
+    st.textContent = '.runsum .cnt{display:inline-block;min-width:2ch;font-variant-numeric:tabular-nums}';
+    document.head.appendChild(st);
+  }
   const per = ROWS + 1;
   const floors = won ? 3 * per : Math.max(0, (V.act - 1) * per + V.floor - 1);
-  const rs = V.rs || { cp: 0, dm: 0 };
+  const rs = V.rs || { cp: 0, dm: 0, tn: 0 };
+  const stat = (label, to, i) => { to = Number(to) || 0; return '<li>' + label + ': <b class="cnt" data-to="' + to + '" data-i="' + i + '">' + endCountVal(to, i) + '</b></li>'; };
   const counts = {};
   V.deck.forEach(d => { const n = CARDS[d[1]].n; counts[n] = (counts[n] || 0) + 1; });
   const deck = Object.keys(counts).sort().map(n => esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '')).join(', ');
-  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules"><li>Floors cleared: ' + floors + '</li><li>Cards played: ' + rs.cp + '</li><li>Damage dealt: ' + rs.dm + '</li></ul><p class="muted">Final deck (' + V.deck.length + '): ' + deck + '</p></div>';
+  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules">' + stat('Floors cleared', floors, 0) + stat('Turns', rs.tn, 1) + stat('Cards played', rs.cp, 2) + stat('Damage dealt', rs.dm, 3) + '</ul><p class="muted">Final deck (' + V.deck.length + '): ' + deck + '</p></div>';
   const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : '';
   const marker = '<div class="row"><button type="button" class="btn primary" data-act="leave">';
-  return html.replace(marker, () => sum + '<div class="row">' + again + '<button type="button" class="btn' + (again ? '' : ' primary') + '" data-act="leave">');
-}
-function endHTML0(V, won) {
-  const html = endHTML0(V, won);
-  const per = ROWS + 1;
-  const floors = won ? 3 * per : Math.max(0, (V.act - 1) * per + V.floor - 1);
-  const rs = V.rs || { cp: 0, dm: 0 };
-  const counts = {};
-  V.deck.forEach(d => { const n = CARDS[d[1]].n; counts[n] = (counts[n] || 0) + 1; });
-  const deck = Object.keys(counts).sort().map(n => esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '')).join(', ');
-  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules"><li>Floors cleared: ' + floors + '</li><li>Cards played: ' + rs.cp + '</li><li>Damage dealt: ' + rs.dm + '</li></ul><p class="muted">Final deck (' + V.deck.length + '): ' + deck + '</p></div>';
-  const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : '';
-  const marker = '<div class="row"><button type="button" class="btn primary" data-act="leave">';
+  if (!REDUCE && !endTickOn) { endTickOn = true; requestAnimationFrame(endTick); }
   return html.replace(marker, () => sum + '<div class="row">' + again + '<button type="button" class="btn' + (again ? '' : ' primary') + '" data-act="leave">');
 }
 function endHTML0(V, won) {
@@ -3350,6 +3408,25 @@ function flashBlock(host) {
   host.appendChild(b);
   setTimeout(() => b.remove(), 650);
 }
+function slashFx(host, dmg, delay) {
+  if (REDUCE) return;
+  const b = document.createElement('span');
+  b.className = 'slashfx' + (dmg >= 12 ? ' heavy' : '');
+  b.style.animationDelay = delay + 'ms';
+  host.appendChild(b);
+  setTimeout(() => b.remove(), 700 + delay);
+}
+function burstFx(host, text, delay) {
+  if (REDUCE) return;
+  const bad = /^−|Weak|Vulnerable|Frail|Hush|Erased|gold|next turn|Void/.test(text || '');
+  const b = document.createElement('span');
+  b.className = 'burstfx' + (bad ? ' bad' : '');
+  b.setAttribute('aria-hidden', 'true');
+  b.textContent = bad ? '▼' : '▲';
+  b.style.animationDelay = delay + 'ms';
+  host.appendChild(b);
+  setTimeout(() => b.remove(), 800 + delay);
+}
 function flushFx(V, prev) {
   if (!V.fx) return;
   const counts = {};
@@ -3386,6 +3463,8 @@ function flushFx(V, prev) {
     }
     if (f.x === 'Blocked' || f.k === 'block') { flashBlock(host); buzz(12); }
     if (f.k === 'heal') flashHeal(host);
+    if (dmg) slashFx(host, dmg, (n - 1) * 90);
+    if (f.k === 'buff') burstFx(host, f.x, (n - 1) * 90);
     host.appendChild(s);
     setTimeout(() => s.remove(), 1800);
   });
@@ -3464,7 +3543,7 @@ function paint(V) {
   const prev = CL.lastFx;
   const sk = V ? V.scr : (CL.role || 'title');
   if (CL.scrKey !== undefined && CL.scrKey !== sk) {
-    if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
+    if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); if (['combat', 'duelintro', 'duelend'].indexOf(sk) >= 0) { let w = document.getElementById('trwipe'); if (!w) { w = document.createElement('div'); w.id = 'trwipe'; w.setAttribute('aria-hidden', 'true'); w.addEventListener('animationend', () => w.classList.remove('go', 'duel')); document.body.appendChild(w); } w.classList.remove('go', 'duel'); void w.offsetWidth; w.classList.add('go'); if (sk !== 'combat') w.classList.add('duel'); setTimeout(() => w.classList.remove('go', 'duel'), 1000); } clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
     if (!REDUCE && ['reward', 'actclear', 'victory', 'defeat', 'duelend'].indexOf(sk) < 0) SND.fire('transition');
   }
   CL.scrKey = sk;
@@ -3542,16 +3621,16 @@ function paint(V) {
 /* ---------- Render + networking (Render server) ---------- */
 CL.roomOK = true;
 const CODEKEY = 'masked-spire-room';
-let ws = null, wsTimer = null, wsTries = 0, hbTimer = null, hbPongBy = 0, hbLast = 0;
+let ws = null, wsTimer = null, wsTries = 0, hbTimer = null, hbPongBy = 0, hbLast = 0, hbSentAt = 0;
 function hbStop() { clearInterval(hbTimer); hbTimer = null; hbPongBy = 0; }
 function hbStart(sock) {
-  hbStop(); hbLast = Date.now();
+  hbStop(); hbLast = 0; hbSentAt = 0; CL.ping = -1;
   hbTimer = setInterval(() => {
     if (ws !== sock) { hbStop(); return; }
     const now = Date.now();
     if (hbPongBy && now > hbPongBy) { dropSock(sock, 0); return; }
-    if (!hbPongBy && sock.readyState === 1 && now - hbLast >= 20000) {
-      try { sock.send('{"t":"ping"}'); hbPongBy = now + 10000; hbLast = now; } catch (e) {}
+    if (!hbPongBy && sock.readyState === 1 && now - hbLast >= 8000) {
+      try { sock.send('{"t":"ping"}'); hbPongBy = now + 10000; hbLast = now; hbSentAt = now; } catch (e) {}
     }
   }, 2000);
 }
@@ -3634,10 +3713,11 @@ function retryNow() {
 function netFlash(msg) { netNote = msg; netNoteUntil = Date.now() + 2500; updateNetBar(); }
 function updateNetBar() {
   updateColdScreen();
+  updateNetPill();
   let bar = document.getElementById('netbar');
   if (!bar) {
     const st = document.createElement('style');
-    st.textContent = '#netbar{position:fixed;top:0;left:0;right:0;z-index:9999;display:none;align-items:center;justify-content:center;gap:12px;padding:8px 12px;background:#7a1f1f;color:#fff;font:600 14px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.5)}#netbar button{font:inherit;padding:3px 10px;border-radius:6px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer}#netbar button:focus-visible{outline:3px solid #ffd54a;outline-offset:2px}';
+    st.textContent = '#netbar{position:fixed;top:0;left:0;right:0;z-index:9999;display:none;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;text-align:center;padding:calc(8px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) 8px calc(12px + env(safe-area-inset-left,0px));background:#7a1f1f;color:#fff;font:600 14px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.5)}#netbar button{font:inherit;padding:3px 10px;border-radius:6px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer}#netbar button:focus-visible{outline:3px solid #ffd54a;outline-offset:2px}';
     document.head.appendChild(st);
     bar = document.createElement('div');
     bar.id = 'netbar'; bar.setAttribute('role', 'status'); bar.setAttribute('aria-live', 'polite');
@@ -3660,6 +3740,44 @@ function updateNetBar() {
   if (text.textContent !== msg) text.textContent = msg;
   btn.style.display = showBtn ? '' : 'none';
   bar.style.display = msg ? 'flex' : 'none';
+}
+function updateNetPill() {
+  let el = document.getElementById('netpill');
+  if (!el) {
+    const st = document.createElement('style');
+    st.textContent = '#netpill{position:fixed;top:calc(6px + env(safe-area-inset-top,0px));right:calc(6px + env(safe-area-inset-right,0px));z-index:9998;display:none;align-items:center;gap:6px;max-width:70vw;padding:3px 9px;border-radius:12px;background:rgba(20,16,30,.82);color:#fff;font:600 12px/1.3 system-ui,sans-serif;pointer-events:none;white-space:nowrap}#netpill .np-dot{flex:none;width:9px;height:9px;border-radius:50%;background:#4caf50}#netpill.mid .np-dot{background:#ffb300}#netpill.bad .np-dot{background:#e53935}#netpill .np-peer{overflow:hidden;text-overflow:ellipsis;color:#ffd54a}#netpill.bad .np-peer{color:#ff8a80}#netpill .np-peer:empty{display:none}';
+    document.head.appendChild(st);
+    el = document.createElement('div');
+    el.id = 'netpill';
+    el.innerHTML = '<span class="np-dot" aria-hidden="true"></span><span class="np-ping" aria-hidden="true"></span><span class="np-peer" role="status" aria-live="polite"></span>';
+    document.body.appendChild(el);
+  }
+  const V = CL.V;
+  if (CL.role !== 'online' || !V) { el.style.display = 'none'; return; }
+  const up = wsConnected();
+  let lvl = 'ok', ping = '', peer = '';
+  if (!up) { lvl = 'bad'; ping = 'Offline'; }
+  else {
+    const p = CL.ping;
+    if (p > 0) { lvl = p < 150 ? 'ok' : p < 350 ? 'mid' : 'bad'; ping = p + ' ms'; } else ping = '… ms';
+    if (V.n > 1) {
+      let ps = 'online';
+      try { ps = partnerState(V); } catch (e) {}
+      const who = V.cb && V.cb.duel ? 'Opponent' : 'Partner';
+      if (ps === 'away') peer = who + ' away';
+      else if (ps === 'reconnecting') { peer = who + ' reconnecting…'; if (lvl === 'ok') lvl = 'mid'; }
+      else if (ps === 'offline') { peer = who + ' disconnected'; lvl = 'bad'; }
+    }
+  }
+  const pe = el.querySelector('.np-ping'), pr = el.querySelector('.np-peer');
+  if (pe.textContent !== ping) pe.textContent = ping;
+  if (pr.textContent !== peer) pr.textContent = peer;
+  const nb = document.getElementById('netbar');
+  el.style.marginTop = nb && nb.style.display === 'flex' ? nb.offsetHeight + 'px' : '';
+  const cls = lvl === 'ok' ? '' : lvl;
+  if (el.className !== cls) el.className = cls;
+  el.title = up ? 'Ping ' + ping : 'Disconnected';
+  el.style.display = 'flex';
 }
 setInterval(updateNetBar, 500);
 /* ---- Co-op quick-chat emotes (ids must match EMOTE_IDS in server.js) ---- */
@@ -3732,7 +3850,7 @@ function connect() {
   sock.onmessage = ev => {
     let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
     hbPongBy = 0;
-    if (m.t === 'pong') return;
+    if (m.t === 'pong') { if (hbSentAt) { CL.ping = Math.max(1, Date.now() - hbSentAt); hbSentAt = 0; updateNetPill(); } return; }
     if (m.t === 'presence') { if (PRES_LABEL[m.st]) { CL.pres = m.st; render(); } }
     else if (m.t === 'emote') showEmote(m);
     else if (m.t === 'nosession') {
@@ -3890,8 +4008,7 @@ document.getElementById('app').addEventListener('click', ev => {
   const V = curView();
   switch (act) {
     case 'solo': CL.role = 'pick'; E.G = null; render(); break;
-    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(h, CL.tok)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; render(); saveSolo(); break; }
-    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(h, CL.tok)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; render(); saveSolo(); break; }
+    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(h, CL.tok)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; ENDFX = null; render(); saveSolo(); break; }
     case 'solohero': { const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(arg, CL.tok)]; E.G = G; CL.role = 'solo'; CL.seen = false; render(); saveSolo(); break; }
     case 'host': CL.err = ''; goOnline({ t: 'create', tok: CL.tok, diff: prefDiff() }); break;
     case 'continue': {
@@ -3940,7 +4057,9 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'chest':
       if (CL.curChest && !(CL.chest && CL.chest.key === CL.curChest.key)) {
         CL.chest = { key: CL.curChest.key, t: performance.now() };
-        chestSfx(CL.curChest.relic);
+        const cv = curView();
+        const rc = cv && cv.scr === 'reward' && cv.rw && !cv.rw.taken ? cv.rw.cards : cv && cv.scr === 'actclear' && cv.ac && !cv.ac.taken ? cv.ac.cards : null;
+        chestSfx(CL.curChest.relic, rc);
         render();
       }
       break;
@@ -4012,6 +4131,90 @@ document.getElementById('app').addEventListener('keydown', ev => {
   ev.preventDefault();
   pileView(b.dataset.arg, b);
 });
+/* Deck overlay (map/rest/shop) accessibility: initial focus, focus trap, Escape, focus return */
+(function () {
+  const app = document.getElementById('app');
+  if (!app) return;
+  let opener = null, wasOpen = false;
+  app.addEventListener('click', ev => {
+    const b = ev.target.closest && ev.target.closest('[data-act]');
+    if (b && ['deck', 'restremove', 'shopremove'].includes(b.dataset.act)) opener = b.dataset.act;
+  }, true);
+  new MutationObserver(() => {
+    const ov = app.querySelector('.overlay');
+    if (ov && !wasOpen) {
+      const f = ov.querySelector('[data-act="close"]');
+      try { if (f) f.focus({ preventScroll: true }); } catch (e) {}
+    } else if (!ov && wasOpen && opener) {
+      const el = app.querySelector(`[data-act='${opener}']`);
+      try { if (el) el.focus({ preventScroll: true }); } catch (e) {}
+    }
+    wasOpen = !!ov;
+  }).observe(app, { childList: true, subtree: true });
+  document.addEventListener('keydown', ev => {
+    if (document.getElementById('pilev')) return;
+    const ov = app.querySelector('.overlay');
+    if (!ov || !CL.overlay) return;
+    if (ev.key === 'Escape') {
+      ev.preventDefault(); ev.stopPropagation();
+      CL.overlay = null;
+      const V = curView();
+      if (V) paint(V);
+      return;
+    }
+    if (ev.key === 'Tab') {
+      const f = [...ov.querySelectorAll('button:not([disabled]),[tabindex="0"]')];
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (i < 0 || (ev.shiftKey && i === 0) || (!ev.shiftKey && i === f.length - 1)) {
+        ev.preventDefault();
+        f[ev.shiftKey ? f.length - 1 : 0].focus();
+      }
+    }
+  }, true);
+})();
+/* duplicate of the block above (disabled; safe to delete) */
+(function () {
+  const app = document.getElementById('app');
+  if (true) return;
+  let opener = null, wasOpen = false;
+  app.addEventListener('click', ev => {
+    const b = ev.target.closest && ev.target.closest('[data-act]');
+    if (b && ['deck', 'restremove', 'shopremove'].includes(b.dataset.act)) opener = b.dataset.act;
+  }, true);
+  new MutationObserver(() => {
+    const ov = app.querySelector('.overlay');
+    if (ov && !wasOpen) {
+      const f = ov.querySelector('[data-act="close"]');
+      try { if (f) f.focus({ preventScroll: true }); } catch (e) {}
+    } else if (!ov && wasOpen && opener) {
+      const el = app.querySelector(`[data-act='${opener}']`);
+      try { if (el) el.focus({ preventScroll: true }); } catch (e) {}
+    }
+    wasOpen = !!ov;
+  }).observe(app, { childList: true, subtree: true });
+  document.addEventListener('keydown', ev => {
+    if (document.getElementById('pilev')) return;
+    const ov = app.querySelector('.overlay');
+    if (!ov || !CL.overlay) return;
+    if (ev.key === 'Escape') {
+      ev.preventDefault(); ev.stopPropagation();
+      CL.overlay = null;
+      const V = curView();
+      if (V) paint(V);
+      return;
+    }
+    if (ev.key === 'Tab') {
+      const f = [...ov.querySelectorAll('button:not([disabled]),[tabindex="0"]')];
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      if (i < 0 || (ev.shiftKey && i === 0) || (!ev.shiftKey && i === f.length - 1)) {
+        ev.preventDefault();
+        f[ev.shiftKey ? f.length - 1 : 0].focus();
+      }
+    }
+  }, true);
+})();
 /* Combat keyboard shortcuts */
 let kbT = null; /* idx of the keyboard-highlighted enemy while a card is selected */
 (function () {
@@ -4102,6 +4305,108 @@ document.addEventListener('keydown', ev => {
     kbMark();
   }
 });
+/* focus-management block, disabled to avoid double Tab trapping (safe to delete) */
+(function () {
+  return;
+  const app = document.getElementById('app');
+  let opener = null, open = false;
+  const OV = '.overlay[role="dialog"]';
+  app.addEventListener('click', ev => {
+    const b = ev.target.closest && ev.target.closest('[data-act="deck"],[data-act="restremove"],[data-act="shopremove"]');
+    if (b) opener = b.getAttribute('data-act');
+  }, true);
+  function sync() {
+    const ov = app.querySelector(OV);
+    if (!ov) {
+      if (open) {
+        open = false;
+        const t = opener && app.querySelector('[data-act="' + opener + '"]');
+        try { if (t) t.focus({ preventScroll: true }); } catch (e) {}
+      }
+      return;
+    }
+    open = true;
+    for (let n = ov; n && n !== app; n = n.parentElement) {
+      for (const s of n.parentElement.children) if (s !== n) s.setAttribute('inert', '');
+    }
+    if (document.getElementById('pilev') || document.getElementById('mstut')) return;
+    if (!ov.contains(document.activeElement)) {
+      const b = ov.querySelector('[data-act="close"]');
+      try { if (b) b.focus({ preventScroll: true }); } catch (e) {}
+    }
+  }
+  new MutationObserver(sync).observe(app, { childList: true, subtree: true });
+  document.addEventListener('keydown', ev => {
+    if (!open) return;
+    if (document.querySelector('#mstut,#endconf,#kbhelp,#pilev')) return;
+    const ov = app.querySelector(OV);
+    if (!ov) return;
+    if (ev.key === 'Escape') {
+      const b = ov.querySelector('[data-act="close"]');
+      if (b) { ev.preventDefault(); ev.stopPropagation(); b.click(); }
+      return;
+    }
+    if (ev.key === 'Tab') {
+      const f = [...ov.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select,[tabindex]:not([tabindex="-1"])')].filter(el => el.offsetParent !== null);
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      ev.preventDefault();
+      if (i < 0) f[ev.shiftKey ? f.length - 1 : 0].focus();
+      else f[(i + (ev.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    }
+  }, true);
+})();
+/* duplicate focus-management block, disabled (safe to delete) */
+(function () {
+  return;
+  const app = document.getElementById('app');
+  let opener = null, open = false;
+  const OV = '.overlay[role="dialog"]';
+  app.addEventListener('click', ev => {
+    const b = ev.target.closest && ev.target.closest('[data-act="deck"],[data-act="restremove"],[data-act="shopremove"]');
+    if (b) opener = b.getAttribute('data-act');
+  }, true);
+  function sync() {
+    const ov = app.querySelector(OV);
+    if (!ov) {
+      if (open) {
+        open = false;
+        const t = opener && app.querySelector('[data-act="' + opener + '"]');
+        try { if (t) t.focus({ preventScroll: true }); } catch (e) {}
+      }
+      return;
+    }
+    open = true;
+    for (let n = ov; n && n !== app; n = n.parentElement) {
+      for (const s of n.parentElement.children) if (s !== n) s.setAttribute('inert', '');
+    }
+    if (document.getElementById('pilev') || document.getElementById('mstut')) return;
+    if (!ov.contains(document.activeElement)) {
+      const b = ov.querySelector('[data-act="close"]');
+      try { if (b) b.focus({ preventScroll: true }); } catch (e) {}
+    }
+  }
+  new MutationObserver(sync).observe(app, { childList: true, subtree: true });
+  document.addEventListener('keydown', ev => {
+    if (!open) return;
+    if (document.querySelector('#mstut,#endconf,#kbhelp,#pilev')) return;
+    const ov = app.querySelector(OV);
+    if (!ov) return;
+    if (ev.key === 'Escape') {
+      const b = ov.querySelector('[data-act="close"]');
+      if (b) { ev.preventDefault(); ev.stopPropagation(); b.click(); }
+      return;
+    }
+    if (ev.key === 'Tab') {
+      const f = [...ov.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select,[tabindex]:not([tabindex="-1"])')].filter(el => el.offsetParent !== null);
+      if (!f.length) return;
+      const i = f.indexOf(document.activeElement);
+      ev.preventDefault();
+      if (i < 0) f[ev.shiftKey ? f.length - 1 : 0].focus();
+      else f[(i + (ev.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    }
+  }, true);
+})();
 /* Sound hook layer: delegated hover / click / end-turn sounds for any [data-act] control */
 (function () {
   const root = document.getElementById('app');

@@ -77,7 +77,7 @@ function checkMsg(m) {
   if (!m || typeof m !== 'object' || Array.isArray(m)) return 'Malformed message: expected a JSON object.';
   if (typeof m.t !== 'string' || m.t.length > 16) return 'Malformed message: missing type.';
   switch (m.t) {
-    case 'ping': case 'leave': return '';
+    case 'ping': case 'leave': case 'sync': return '';
     case 'create':
       if (typeof m.tok !== 'string' || m.tok.length > 64) return 'Malformed message: bad player id.';
       if (m.build !== undefined && (typeof m.build !== 'string' || m.build.length > 64)) return 'Malformed message: bad build.';
