@@ -39,6 +39,8 @@ const MAX_CONN_TOTAL = 2000;        // backstop for the whole server
 const MSG_BURST = 30, MSG_RATE = 15;        // all messages: burst size, refills per second
 const JOIN_BURST = 5, JOIN_RATE = 0.5;      // create/join: burst size, refills per second
 const STRIKE_WINDOW_MS = 10000, MAX_STRIKES = 100; // this many dropped messages in the window => disconnect
+const EMOTE_IDS = ['hi', 'gg', 'thanks', 'nice', 'oops', 'help', 'wait', 'ready']; // preset quick-chat ids (keep in sync with index.html)
+const EMOTE_BURST = 3, EMOTE_RATE = 0.5;    // per player slot: burst size, refills per second
 const CRASH_WINDOW_MS = 60000, MAX_CRASHES = 10;   // this many uncaught errors in the window => exit so Render restarts us
 
 const ipCounts = new Map();
@@ -91,6 +93,9 @@ function checkMsg(m) {
       return '';
     case 'away':
       if (typeof m.v !== 'boolean') return 'Malformed message: bad away flag.';
+      return '';
+    case 'emote':
+      if (typeof m.id !== 'string' || m.id.length > 16) return 'Malformed message: bad emote.';
       return '';
     default: return 'Unknown message type.';
   }
@@ -337,6 +342,15 @@ wss.on('connection', (ws, req) => {
         ws.send(JSON.stringify({ t: 'view', v: room.E.buildView(ws.pi) }));
       } catch (e) {}
       sendPartnerPresence(ws, room);
+    } else if (m.t === 'emote') {
+      const room = ws.room;
+      if (!room || ws.pi == null || !room.E.G || room.E.G.P.length < 2) return;
+      if (EMOTE_IDS.indexOf(m.id) === -1) return;
+      if (!room.emoteB) room.emoteB = [{ n: EMOTE_BURST, t: Date.now() }, { n: EMOTE_BURST, t: Date.now() }];
+      const eb = room.emoteB[ws.pi];
+      if (!eb || !takeToken(eb, EMOTE_RATE, EMOTE_BURST)) return; // silently drop spam
+      const out = JSON.stringify({ t: 'emote', id: m.id, from: ws.pi });
+      for (const s of room.sockets) { try { s.send(out); } catch (e) {} }
     } else if (m.t === 'away') {
       const room = ws.room;
       if (!room || ws.pi == null) return;

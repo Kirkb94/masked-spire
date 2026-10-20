@@ -2881,6 +2881,54 @@ function updateNetBar() {
   bar.style.display = msg ? 'flex' : 'none';
 }
 setInterval(updateNetBar, 500);
+/* ---- Co-op quick-chat emotes (ids must match EMOTE_IDS in server.js) ---- */
+const EMOTES = { hi: '\uD83D\uDC4B Hi!', gg: 'GG', thanks: '\uD83D\uDE4F Thanks!', nice: '\uD83D\uDC4D Nice!', oops: '\uD83D\uDE05 Oops', help: '\uD83C\uDD98 Need help', wait: '\u270B Wait', ready: '\u2705 Ready' };
+let emoteCool = 0, emoteHide = 0;
+function emoteUI() {
+  let root = document.getElementById('emoteroot');
+  if (!root) {
+    const st = document.createElement('style');
+    st.textContent = '#emoteroot{position:fixed;left:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:900;display:none;flex-direction:column;align-items:flex-start;gap:6px;font:600 14px system-ui,sans-serif}#emotetoggle{min-width:44px;min-height:44px;border-radius:22px;border:1px solid #fff8;background:#241d33;color:#fff;font-size:20px;cursor:pointer}#emotepanel{display:none;flex-wrap:wrap;gap:6px;max-width:260px;padding:8px;border-radius:10px;background:#241dd9f0;background:rgba(36,29,51,.96);border:1px solid #fff4}#emotepanel.open{display:flex}#emotepanel button{min-height:40px;padding:6px 10px;border-radius:8px;border:1px solid #fff6;background:#3a2f55;color:#fff;font:inherit;cursor:pointer}#emotepanel button:disabled{opacity:.45;cursor:default}#emotetoggle:focus-visible,#emotepanel button:focus-visible{outline:3px solid #ffd54a;outline-offset:2px}#emotebubble{position:fixed;left:50%;top:48px;transform:translateX(-50%);z-index:901;display:none;max-width:80vw;padding:8px 14px;border-radius:16px;background:#fff;color:#111;font:700 16px system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.5);pointer-events:none}';
+    document.head.appendChild(st);
+    root = document.createElement('div'); root.id = 'emoteroot';
+    const panel = document.createElement('div'); panel.id = 'emotepanel'; panel.setAttribute('role', 'group'); panel.setAttribute('aria-label', 'Quick chat');
+    Object.keys(EMOTES).forEach(id => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = EMOTES[id]; b.dataset.emote = id;
+      b.addEventListener('click', () => {
+        if (Date.now() < emoteCool) return;
+        if (wsSend({ t: 'emote', id })) { emoteCool = Date.now() + 1200; panel.classList.remove('open'); tog.setAttribute('aria-expanded', 'false'); emoteUI(); }
+      });
+      panel.appendChild(b);
+    });
+    const tog = document.createElement('button'); tog.type = 'button'; tog.id = 'emotetoggle'; tog.textContent = '\uD83D\uDCAC';
+    tog.setAttribute('aria-label', 'Quick chat to partner'); tog.setAttribute('aria-expanded', 'false');
+    tog.addEventListener('click', () => { const o = panel.classList.toggle('open'); tog.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+    root.addEventListener('keydown', e => { if (e.key === 'Escape' && panel.classList.contains('open')) { panel.classList.remove('open'); tog.setAttribute('aria-expanded', 'false'); tog.focus(); } });
+    root.appendChild(panel); root.appendChild(tog); document.body.appendChild(root);
+    const bub = document.createElement('div'); bub.id = 'emotebubble'; bub.setAttribute('role', 'status'); bub.setAttribute('aria-live', 'polite'); document.body.appendChild(bub);
+  }
+  const V = CL.V;
+  const show = CL.role === 'online' && wsConnected() && !!V && V.n > 1;
+  root.style.display = show ? 'flex' : 'none';
+  if (!show) document.getElementById('emotepanel').classList.remove('open');
+  const cool = Date.now() < emoteCool;
+  document.querySelectorAll('#emotepanel button').forEach(b => { b.disabled = cool; });
+  const bub = document.getElementById('emotebubble');
+  if (bub.style.display !== 'none' && Date.now() > emoteHide) bub.style.display = 'none';
+}
+function showEmote(m) {
+  const label = EMOTES[m.id];
+  if (!label || !CL.V) return;
+  emoteUI();
+  const mine = m.from === CL.V.me;
+  let who = 'Partner';
+  try { if (!mine && CL.V.P[m.from]) who = vName(CL.V, m.from); else if (mine) who = 'You'; } catch (e) {}
+  const bub = document.getElementById('emotebubble');
+  bub.textContent = who + ': ' + label;
+  bub.style.display = 'block';
+  emoteHide = Date.now() + 3000;
+}
+setInterval(emoteUI, 500);
 window.addEventListener('online', () => { if (CL.role === 'online' && !wsConnected() && !(ws && ws.readyState === 0)) { wsTries = 0; connect(); } else requestSync(); });
 function connect() {
   clearTimeout(wsTimer);
@@ -2905,6 +2953,7 @@ function connect() {
     hbPongBy = 0;
     if (m.t === 'pong') return;
     if (m.t === 'presence') { if (PRES_LABEL[m.st]) { CL.pres = m.st; render(); } }
+    else if (m.t === 'emote') showEmote(m);
     else if (m.t === 'nosession') {
       if (CL.code && !rejoinTried) { rejoinTried = true; wsSend({ t: 'join', code: CL.code, tok: CL.tok, build: BUILD_ID }); }
     }
