@@ -67,6 +67,15 @@ button { font: inherit; color: inherit; }
 .card:hover { transform: translateY(-8px); }
 .card.sel { transform: translateY(-16px); box-shadow: 0 0 0 4px var(--teal), 0 10px 24px #0008; }
 .card.dim { opacity: .5; }
+.hand .card { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+#cardzoom { position: fixed; left: 0; top: 0; z-index: 70; padding: 14px; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .12s ease, visibility 0s linear .12s; }
+#cardzoom.on { opacity: 1; visibility: visible; transition: opacity .12s ease; }
+html.rm #cardzoom, html.rm #cardzoom.on { transition: none; }
+#cardzoom .card { width: min(270px, 72vw); min-height: 300px; padding: 22px 18px 18px; gap: 10px; cursor: default; transform: none; transition: none; box-shadow: 0 14px 40px #000A; }
+#cardzoom .card .cname { font-size: 26px; }
+#cardzoom .card .cdesc { font-size: 19px; line-height: 1.4; }
+#cardzoom .card .ctype { font-size: 13px; padding-left: 26px; }
+#cardzoom .card .cost { width: 44px; height: 44px; font-size: 24px; top: -16px; left: -16px; }
 .card .cost { position: absolute; top: -13px; left: -13px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--bg); border: 3px solid var(--c); font-family: var(--display); font-weight: 700; font-size: 20px; }
 .card .ctype { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--c); font-weight: 700; }
 .card .cname { font-family: var(--display); font-weight: 700; font-size: 20px; line-height: 1.1; }
@@ -87,6 +96,15 @@ button { font: inherit; color: inherit; }
 .battle { display: flex; flex-direction: column; gap: 14px; }
 .stage { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 18px; align-items: end; padding: 18px; border-radius: 12px; background: radial-gradient(ellipse at 50% 100%, #1F3A3A 0%, #15121A 70%); border: 1px solid var(--line); }
 .herobox { position: relative; display: flex; flex-direction: column; gap: 10px; }
+/* combat parallax + ambient particles (decorative, behind all stage content) */
+.stage { position: relative; isolation: isolate; }
+.cfx { position: absolute; inset: 0; z-index: -1; overflow: hidden; border-radius: inherit; pointer-events: none; contain: strict; }
+.cfx .pl { position: absolute; left: 0; bottom: 0; width: 200%; background-repeat: repeat-x; background-size: 50% 100%; background-position: left bottom; will-change: transform; animation: cfx-drift var(--p) linear infinite; animation-delay: var(--ph); }
+.cfx .pl0 { height: 62%; }
+.cfx .pl1 { height: 38%; }
+@keyframes cfx-drift { to { transform: translate3d(-50%, 0, 0); } }
+html.rm .cfx { display: none; }
+@media (max-width: 900px), (pointer: coarse) { .cfx .pl1 { display: none; } .cfx .mp:nth-child(n+9) { display: none; } }
 .portrait { position: relative; width: 100%; aspect-ratio: 5 / 6; max-width: 100%; border-radius: 12px; overflow: hidden; background: #1C6670; border: 2px solid #2E8E99; }
 .portrait svg { width: 100%; height: 100%; display: block; }
 .portrait.hurt::after { content: ""; position: absolute; inset: 0; background: #E04A5E; opacity: 0; animation: flash .4s ease; }
@@ -151,7 +169,11 @@ html.rm .shield.pop { animation: none; }
 html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0 4px #fff; }
 .hitflash { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; background: rgba(224,74,94,.45); box-shadow: inset 0 0 18px 3px rgba(255,90,110,.9); animation: blockflash .4s ease-out forwards; }
 html.hc .hitflash { background: rgba(255,255,255,.2); box-shadow: inset 0 0 0 4px #ff4a5e; }
-html.rm .hitflash { display: none; }
+html.rm .hitflash, html.rm .blockflash, html.rm .healflash { display: none; }
+.healflash { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; background: rgba(110,230,140,.3); box-shadow: inset 0 0 18px 3px rgba(138,245,154,.8); animation: blockflash .5s ease-out forwards; }
+@keyframes hostshake { 25% { transform: translateX(-5px); } 60% { transform: translateX(4px); } }
+.hitshake { animation: hostshake .3s linear; }
+html.rm .hitshake { animation: none; }
 .battle.shake1 { animation: shake1 .35s linear; }
 .battle.shake2 { animation: shake2 .45s linear; }
 @keyframes shake1 { 10% { transform: translate(-4px, 2px); } 30% { transform: translate(4px, -2px); } 50% { transform: translate(-3px, 1px); } 70% { transform: translate(2px, -1px); } 100% { transform: none; } }
@@ -946,6 +968,33 @@ html.rm #rotate svg { animation: none; }
 })();
 </script>
 <div id="app"></div>
+<div id="sr-live" aria-live="polite" aria-atomic="true" role="status" style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0"></div>
+<script>
+(function () {
+'use strict';
+var prev = null, t = null;
+window.msAnnounceLogs = function (V) {
+  var logs = V && V.scr === 'combat' && V.cb && Array.isArray(V.cb.logs) ? V.cb.logs : null;
+  if (!logs) { prev = null; return; }
+  var cur = logs.slice();
+  if (prev === null) { prev = cur; return; }
+  var k = 0;
+  for (; k < cur.length; k++) {
+    var ov = Math.min(prev.length, cur.length - k), ok = true;
+    for (var i = 0; i < ov; i++) { if (cur[k + i] !== prev[i]) { ok = false; break; } }
+    if (ok) break;
+  }
+  prev = cur;
+  if (k <= 0) return;
+  var fresh = cur.slice(0, k).slice(0, 4).reverse();
+  var el = document.getElementById('sr-live');
+  if (!el || !fresh.length) return;
+  clearTimeout(t);
+  el.textContent = '';
+  t = setTimeout(function () { el.textContent = fresh.join('. '); }, 60);
+};
+})();
+</script>
 <script>
 (function () {
 'use strict';
@@ -2292,6 +2341,45 @@ function sceneryBG(act, boss, duel) {
   return (SCN[key] = "url('data:image/svg+xml;utf8," + encodeURIComponent(s).replace(/'/g, '%27') + "')");
 }
 
+/* ----- combat parallax + ambient particles (client only) ----- */
+const CFX = {};
+const CFX_DEF = {
+  1: [['pine', '#0F2A27', .5, 90], ['mist', '#BEE8DA', .07, 40]],
+  2: [['stack', '#120805', .5, 72], ['mist', '#FFB45A', .07, 45]],
+  3: [['shard', '#2A1A5A', .45, 90], ['mist', '#B49AFF', .07, 60]],
+  d: [['pillar', '#1A0A12', .5, 72], ['mist', '#E04A5E', .08, 40]]
+};
+function cfxStrip(kind, fill, op, seed) {
+  const R = sceneRng(seed);
+  let s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" preserveAspectRatio="none"><g fill="' + fill + '" opacity="' + op + '">';
+  const put = (x, w, f) => { s += f(x); if (x - w < 0) s += f(x + 800); if (x + w > 800) s += f(x - 800); };
+  if (kind === 'mist') {
+    for (let j = 0; j < 5; j++) { const x = j * 160 + R() * 40, rx = 110 + R() * 80, cy = 150 + R() * 40; put(x, rx, X => '<ellipse cx="' + f1(X) + '" cy="' + f1(cy) + '" rx="' + f1(rx) + '" ry="22"/>'); }
+  } else {
+    for (let j = 0; j < 9; j++) {
+      const x = j * 89 + R() * 30, w = 50 + R() * 30, h = 70 + R() * 100;
+      if (kind === 'pine') put(x, w, X => '<path d="' + pineP(X, 210, w, h) + '"/>');
+      else if (kind === 'stack') put(x, 30, X => '<rect x="' + f1(X) + '" y="' + f1(200 - h) + '" width="' + f1(w / 3) + '" height="' + f1(h + 10) + '"/>');
+      else if (kind === 'shard') put(x, w, X => '<path d="' + shardP(X, 210, w * .6, h * 1.1) + '"/>');
+      else put(x, 30, X => '<rect x="' + f1(X) + '" y="' + f1(200 - h * 1.2) + '" width="26" height="260"/>');
+    }
+  }
+  s += '</g></svg>';
+  return "url('data:image/svg+xml;utf8," + encodeURIComponent(s).replace(/'/g, '%27') + "')";
+}
+function cfxHTML(act, duel) {
+  const key = duel ? 'd' : act, def = CFX_DEF[key];
+  if (!def) return '';
+  if (!CFX[key]) CFX[key] = def.map((d, i) => cfxStrip(d[0], d[1], d[2], (duel ? 90 : act * 17) + i * 5 + 1));
+  const ph = '-' + f1((Date.now() / 1000) % 360) + 's';
+  let s = CFX[key].map((bg, i) => '<i class="pl pl' + i + '" style="background-image:' + bg + ';--p:' + def[i][3] + 's"></i>').join('');
+  const R = sceneRng(duel ? 91 : act * 19 + 4);
+  for (let k = 0; k < 10; k++) {
+    s += '<i class="mp mp' + (duel ? 2 : act) + '" style="left:' + f1(R() * 100) + '%;top:' + f1(10 + R() * 85) + '%;--d:' + (-Math.floor(R() * 12)) + 's;--p:' + [6, 8, 12][k % 3] + 's;--s:' + f1(2 + R() * 3) + 'px"></i>';
+  }
+  return '<div class="cfx" aria-hidden="true" style="--ph:' + ph + '">' + s + '</div>';
+}
+
 /* ----- the map ----- */
 const NODE_T = ['fight', 'elite', 'rest', 'shop', 'treasure'];
 function mapParticles(act) {
@@ -2751,10 +2839,10 @@ function combatHTML(V, prev) {
   const selCard = CL.sel != null ? cb.hand.find(h => h[0] === CL.sel) : null;
   const actStage = ACTS[V.act - 1].stage;
   return '<section class="battle" aria-label="Battle">' +
-    '<div class="stage' + (duel ? ' duel' : '') + '" style="background:' + sceneryBG(V.act, cb.k === 'boss', !!duel) + ' center bottom / cover no-repeat, radial-gradient(ellipse at 50% 100%, ' + (duel ? '#3A1420' : actStage) + ' 0%, #15121A 70%)">' + left +
+    '<div class="stage' + (duel ? ' duel' : '') + '" style="background:' + sceneryBG(V.act, cb.k === 'boss', !!duel) + ' center bottom / cover no-repeat, radial-gradient(ellipse at 50% 100%, ' + (duel ? '#3A1420' : actStage) + ' 0%, #15121A 70%)">' + cfxHTML(V.act, !!duel) + left +
     '<div class="enemies">' + right + '</div></div>' +
     turnChip(V, cb) +
-    '<div class="lastlog" aria-live="polite">' + esc(cb.logs[0] || '') + '</div>' +
+    '<div class="lastlog">' + esc(cb.logs[0] || '') + '</div>' +
     '<div class="dock"><div class="controls"><div class="energy" title="Energy">' + s.energy + '<small>energy</small></div>' +
     '<div class="incoming">' + inc + '<div class="piles"><span data-pile="draw" data-act="pile" data-arg="draw" role="button" tabindex="0" aria-haspopup="dialog">Draw ' + cb.piles[0] + '</span><span data-pile="discard" data-act="pile" data-arg="discard" role="button" tabindex="0" aria-haspopup="dialog">Discard ' + cb.piles[1] + '</span><span data-pile="exhaust" data-act="pile" data-arg="exhaust" role="button" tabindex="0" aria-haspopup="dialog">Exhaust ' + cb.piles[2] + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
     '<div class="endwrap"><button type="button" class="btn kbhelp" data-act="keys" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">?</button><button type="button" class="btn primary" data-act="end"' + (canEnd ? '' : ' disabled') + '>' + endLabel + '</button></div></div>' +
@@ -2979,7 +3067,22 @@ function flashHit(host) {
   host.appendChild(b);
   setTimeout(() => b.remove(), 500);
 }
+function flashHeal(host) {
+  if (REDUCE) return;
+  const b = document.createElement('span');
+  b.className = 'healflash';
+  host.appendChild(b);
+  setTimeout(() => b.remove(), 600);
+}
+function shakeHost(host) {
+  if (REDUCE) return;
+  host.classList.remove('hitshake');
+  void host.offsetWidth;
+  host.classList.add('hitshake');
+  setTimeout(() => host.classList.remove('hitshake'), 400);
+}
 function flashBlock(host) {
+  if (REDUCE) return;
   const b = document.createElement('span');
   b.className = 'blockflash';
   host.appendChild(b);
@@ -3012,10 +3115,12 @@ function flushFx(V, prev) {
     }
     if (dmg) {
       flashHit(host);
+      shakeHost(host);
       if (f.t === 'p' + V.me) buzz(dmg >= 12 ? [60, 30, 60] : dmg >= 6 ? 40 : 20);
       else if (f.t[0] === 'e') buzz(10);
     }
     if (f.x === 'Blocked' || f.k === 'block') { flashBlock(host); buzz(12); }
+    if (f.k === 'heal') flashHeal(host);
     host.appendChild(s);
     setTimeout(() => s.remove(), 1800);
   });
@@ -3132,6 +3237,7 @@ function paint(V) {
   const ae = document.activeElement;
   const focusedCard = ae && ae.closest && ae.closest('.hand [data-act="card"]') ? ae.dataset.arg : null;
   app.innerHTML = body;
+  try { window.msAnnounceLogs(V); } catch (e) {}
   const newHand = app.querySelector('.hand');
   if (newHand) {
     newHand.querySelectorAll('[data-act="card"]').forEach(el => {
@@ -3456,6 +3562,7 @@ function inviteURL() { return location.origin + location.pathname + '?room=' + e
 let copiedTimer = 0;
 function lobbyNote(msg) {
   CL.copied = msg; render();
+  toast(msg);
   clearTimeout(copiedTimer);
   copiedTimer = setTimeout(() => { CL.copied = ''; render(); }, 2500);
 }
@@ -3748,6 +3855,94 @@ document.addEventListener('keydown', ev => {
     else if (act === 'card' || act === 'enemy') SND.fire('card');
     else SND.fire('click');
   }, true);
+})();
+/* ---------- Card zoom: hover / keyboard focus (mouse) or long-press (touch) shows an enlarged hand card ---------- */
+const CZ = { el: null, src: null, pend: null, u: null, timer: 0, lp: null, touch: false, swallow: 0 };
+const CZ_SEL = '.hand .card[data-act="card"]';
+function czHide() {
+  clearTimeout(CZ.timer); CZ.timer = 0; CZ.pend = null; CZ.src = null; CZ.u = null; CZ.touch = false;
+  if (CZ.el) CZ.el.classList.remove('on');
+}
+function czShow(src) {
+  if (DRAG || !src || !src.isConnected) return;
+  const V = curView(), u = Number(src.dataset.arg);
+  const h = V && V.cb && V.cb.hand.find(x => x[0] === u);
+  if (!h || !CARDS[h[1]]) { czHide(); return; }
+  if (!CZ.el) {
+    CZ.el = document.createElement('div'); CZ.el.id = 'cardzoom'; CZ.el.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(CZ.el);
+  }
+  CZ.el.innerHTML = cardHTML(h[1], 'zoom', u, { live: liveSide(V) });
+  const b = CZ.el.querySelector('.card'); if (b) b.tabIndex = -1;
+  CZ.src = src; CZ.u = u; CZ.pend = null;
+  const r = src.getBoundingClientRect(), w = CZ.el.offsetWidth, ht = CZ.el.offsetHeight;
+  const left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), Math.max(8, window.innerWidth - w - 8));
+  let top = Math.max(8, r.top - ht - 8);
+  if (top + ht > window.innerHeight - 8) top = Math.max(8, window.innerHeight - ht - 8);
+  CZ.el.style.left = left + 'px'; CZ.el.style.top = top + 'px';
+  CZ.el.classList.add('on');
+}
+function czSchedule(card, delay) {
+  if (card && (card === CZ.src || card === CZ.pend)) return;
+  czHide();
+  if (!card) return;
+  CZ.pend = card;
+  if (!delay) { czShow(card); return; }
+  CZ.timer = setTimeout(() => { CZ.timer = 0; czShow(card); }, delay);
+}
+(function () {
+  const app = document.getElementById('app');
+  const cardOf = t => (t && t.closest ? t.closest(CZ_SEL) : null);
+  app.addEventListener('pointerover', ev => {
+    if (ev.pointerType !== 'mouse' || DRAG) return;
+    czSchedule(cardOf(ev.target), 350);
+  });
+  app.addEventListener('mouseleave', czHide);
+  app.addEventListener('focusin', ev => {
+    const c = cardOf(ev.target);
+    let vis = false; try { vis = !!c && c.matches(':focus-visible'); } catch (e) {}
+    if (vis) czSchedule(c, 0);
+  });
+  app.addEventListener('focusout', czHide);
+  app.addEventListener('pointerdown', ev => {
+    if (ev.pointerType === 'mouse') { czHide(); return; }
+    const c = cardOf(ev.target);
+    clearTimeout(CZ.lp && CZ.lp.t); CZ.lp = null;
+    if (!c) return;
+    CZ.lp = { x: ev.clientX, y: ev.clientY, t: setTimeout(() => {
+      CZ.lp = null;
+      if (DRAG && DRAG.active) return;
+      czShow(c);
+      if (CZ.src === c) CZ.touch = true;
+    }, 450) };
+  });
+  document.addEventListener('pointermove', ev => {
+    if (CZ.lp && Math.hypot(ev.clientX - CZ.lp.x, ev.clientY - CZ.lp.y) > 10) { clearTimeout(CZ.lp.t); CZ.lp = null; }
+  }, true);
+  const lpEnd = () => {
+    if (CZ.lp) { clearTimeout(CZ.lp.t); CZ.lp = null; }
+    if (CZ.touch) { czHide(); CZ.swallow = Date.now() + 500; }
+  };
+  document.addEventListener('pointerup', lpEnd, true);
+  document.addEventListener('pointercancel', lpEnd, true);
+  document.addEventListener('click', ev => {
+    if (CZ.swallow && Date.now() < CZ.swallow) { ev.stopPropagation(); ev.preventDefault(); }
+    CZ.swallow = 0;
+  }, true);
+  document.addEventListener('contextmenu', ev => {
+    if ((CZ.lp || CZ.touch) && cardOf(ev.target)) ev.preventDefault();
+  });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') czHide(); }, true);
+  document.addEventListener('scroll', czHide, true);
+  window.addEventListener('resize', czHide);
+  window.addEventListener('blur', czHide);
+  /* The page re-renders by replacing #app's children: re-attach to the matching card, or hide if it is gone. */
+  new MutationObserver(() => {
+    if (CZ.src && !CZ.src.isConnected) {
+      const u = CZ.u, n = document.querySelector('.hand .card[data-act="card"][data-arg="' + u + '"]');
+      if (n && (n.matches(':hover') || n === document.activeElement)) czShow(n); else czHide();
+    } else if (CZ.pend && !CZ.pend.isConnected) czHide();
+  }).observe(app, { childList: true });
 })();
 /* Damage preview: fills the .pv placeholders in place (no repaint, so hover can't loop). */
 function showPreview(V) {
