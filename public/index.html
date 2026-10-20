@@ -771,6 +771,90 @@ html.hc .hpbar > i { background: #E8743B; }
 @media (max-width: 640px) { .vstage { grid-template-columns: 1fr; justify-items: center; } .vheroes .portrait { width: min(96px, 26vw); } }
 html.rm .mp, html.rm .mgear, html.rm .mfloat, html.rm .ch-spin, html.rm .ch-bob, html.rm .me-hot, html.rm .maptok .portrait, html.rm .rg.cheer .rgw, html.rm .rg.cheer .pt-armF, html.rm .rg.cheer .pt-wep, html.rm .rg.cheer .pt-head, html.rm .chestbtn:not(.open) .ch-all, html.rm .vhint, html.rm .confetti i { animation: none; }
 html.rm .mp { opacity: .45; } html.rm .confetti { display: none; }
+/* ---------- Landscape-only touch layout (phones and tablets) ---------- */
+#rotate { display: none; position: fixed; inset: 0; z-index: 1000; background: var(--bg); color: var(--ink); flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 24px; }
+#rotate svg { width: 96px; height: 96px; animation: rot-tilt 2.4s ease-in-out infinite; }
+#rotate p { margin: 0; color: var(--muted); max-width: 32ch; }
+@keyframes rot-tilt { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+html.rm #rotate svg { animation: none; }
+@media (prefers-reduced-motion: reduce) { #rotate svg { animation: none; } }
+@media (pointer: coarse) and (orientation: portrait) { #rotate { display: flex; } }
+@media (pointer: coarse) and (orientation: landscape) {
+  :root { --u: min(1vh, 1.4vw); }
+  body { padding-block: 6px; padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); }
+  #app { gap: calc(var(--u) * .9); }
+  .panel { padding: 12px 16px; gap: 8px; }
+  .topbar { padding: 4px 10px; gap: 2px 14px; font-size: 15px; }
+  .topbar .name { font-size: 17px; }
+  .topbar .btn { min-height: 40px; padding: 4px 12px; font-size: 15px; }
+  body:has(.battle) { overflow: hidden; }
+  #app:has(.battle) { height: calc(100dvh - 12px); }
+  .battle { flex: 1 1 auto; min-height: 0; gap: calc(var(--u) * .8); }
+  .stage { flex: 1 1 auto; min-height: 0; overflow: auto; grid-template-columns: minmax(150px, calc(var(--u) * 28)) minmax(0, 1fr); gap: calc(var(--u) * 1.2); padding: calc(var(--u) * 1.2); align-items: end; }
+  .stage.duel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .herobox { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; }
+  .herobox .portrait { width: calc(var(--u) * 14); align-self: center; }
+  .herobox.mini { flex-direction: row; align-items: center; }
+  .herobox.mini .pwrap { width: calc(var(--u) * 8); }
+  .heroes { gap: 8px; }
+  .hname { font-size: 18px; }
+  .stancetip { display: none; }
+  .enemies { gap: calc(var(--u) * 1); }
+  .enemy, .enemy.boss { width: calc(var(--u) * 27); min-width: 150px; }
+  .enemy.boss { width: calc(var(--u) * 34); }
+  .enemy .art { height: calc(var(--u) * 14); }
+  .enemy.boss .art { height: calc(var(--u) * 17); }
+  .einfo { padding: 6px 10px 8px; gap: 3px; }
+  .ename { font-size: 17px; }
+  .intentbar { padding: 5px 10px; }
+  .intentbar .ival { font-size: 22px; }
+  .enote, .then { font-size: 13px; }
+  .lastlog { min-height: 0; font-size: 14px; line-height: 1.2; }
+  .hint { min-height: 1.2em; font-size: 16px; line-height: 1.1; }
+  .dock { position: static; margin: 0; padding: 0; background: none; box-shadow: none; display: block; }
+  .controls { grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; padding: 6px 12px; }
+  .controls .endwrap { grid-column: auto; display: block; }
+  .energy { width: max(48px, calc(var(--u) * 6.5)); height: max(48px, calc(var(--u) * 6.5)); font-size: 20px; }
+  .energy small { font-size: 9px; margin-top: -4px; }
+  .incoming .big { font-size: 17px; }
+  .incoming .muted { font-size: 14px; line-height: 1.2; }
+  .piles { font-size: 13px; gap: 2px 12px; }
+  .hand { padding: 18px 12px 8px; gap: calc(var(--u) * 1.2); justify-content: safe center; }
+  .hand .card { width: calc(var(--u) * 17); min-height: calc(var(--u) * 22.5); padding: 10px 9px 8px; gap: 4px; }
+  .hand .card .cname { font-size: 16px; }
+  .hand .card .cdesc { font-size: 13px; line-height: 1.25; }
+  .hand .card .ctype { font-size: 11px; }
+  .hand .card .cost { width: 30px; height: 30px; font-size: 17px; top: -11px; left: -11px; }
+  .log { padding: 4px 12px; font-size: 13px; }
+  .log summary { font-size: 15px; }
+  .log[open] { max-height: 30vh; overflow: auto; }
+  /* Map: map left, header + legend right, whole map visible */
+  .mapcard { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: repeat(7, min-content) 1fr; column-gap: calc(var(--u) * 2); row-gap: 8px; align-content: start; align-items: start; padding: 10px 14px; }
+  .mapcard > * { grid-column: 2; }
+  .mapcard > .mapwrap { grid-column: 1; grid-row: 1 / span 8; }
+  .mapcard .mapwrap { width: min(540px, 60vw, calc((100dvh - 90px) * .46)); max-width: none; margin: 0; container-type: inline-size; }
+  .mapcard .node { width: max(36px, 10cqw); height: max(36px, 10cqw); border-width: 2px; }
+  .mapcard .node::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; }
+  .mapcard .node svg { width: 60%; height: 60%; }
+  .mapcard .node.bossnode { width: max(48px, 14.8cqw); height: max(48px, 14.8cqw); }
+  .mapcard .node.bossnode svg { width: 62%; height: 62%; }
+  .maptok { width: max(30px, 8cqw); }
+  .maptok .portrait { width: max(30px, 8cqw); height: max(30px, 8cqw); }
+  .maptok.other .portrait { width: max(26px, 6.5cqw); height: max(26px, 6.5cqw); }
+  .legend { flex-direction: column; align-items: flex-start; justify-content: flex-start; font-size: 15px; gap: 6px; }
+  /* Chest / reward / act-clear / treasure: chest left, rewards right */
+  .panel.victory { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); grid-template-rows: repeat(6, min-content) 1fr; column-gap: calc(var(--u) * 2); row-gap: 8px; align-content: start; padding: 12px 16px; max-height: calc(100dvh - 70px); overflow: auto; }
+  .victory > * { grid-column: 2; margin: 0; }
+  .victory > .vstage { grid-column: 1; grid-row: 1 / span 7; align-self: stretch; min-height: calc(var(--u) * 40); }
+  .victory h2 { font-size: 22px; }
+  .victory h3 { font-size: 18px; }
+  .victory .reveal { gap: 8px; }
+  .victory .reveal p { margin: 0; }
+  .victory .cards { gap: 10px; padding: 4px 0; }
+  .victory .card { width: calc(var(--u) * 16); min-height: calc(var(--u) * 20); padding: 10px 9px 8px; }
+  .victory .card .cname { font-size: 16px; }
+  .victory .card .cdesc { font-size: 13px; line-height: 1.25; }
+}
 </style>
 </head>
 <body>
@@ -780,6 +864,7 @@ html.rm .mp { opacity: .45; } html.rm .confetti { display: none; }
     <filter id="soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="8"></feGaussianBlur></filter>
   </defs>
 </svg>
+<div id="rotate" role="alert"><svg viewBox='0 0 64 64' aria-hidden='true'><rect x='20' y='6' width='24' height='46' rx='4' fill='none' stroke='currentColor' stroke-width='3'/><circle cx='32' cy='45' r='2' fill='currentColor'/></svg><h2>Rotate your device</h2><p>Masked Spire is played in landscape. Turn your phone or tablet sideways to continue.</p></div>
 <div id="app"></div>
 <script>
 (function () {
