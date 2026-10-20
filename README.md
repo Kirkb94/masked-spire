@@ -1,6 +1,6 @@
 # Masked Spire
 
-A three-hero roguelike deckbuilder you play in the browser. Solo runs work on their own; 2-player online co-op runs on the server, with a duel between the two players after the final boss.
+A four-hero roguelike deckbuilder (Duelist, Bulwark, Brute, Elementalist) you play in the browser. Solo runs work on their own; 2-player online co-op runs on the server, with a duel between the two players after the final boss.
 
 ## How it works
 
