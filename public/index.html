@@ -571,6 +571,13 @@ button { font: inherit; color: inherit; }
   .controls .endwrap { grid-column: auto; display: block; }
 }
 @media (max-width: 860px) and (orientation: portrait) { .enemies { gap: 12px; } .hand { justify-content: flex-start; } }
+/* Touch polish: no double-tap zoom (pinch-zoom stays available), no sticky hover, 44px targets, snap-scrolling hand */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+body, button, .btn, .card, .node, .hand { touch-action: manipulation; }
+.hand { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; scroll-padding-inline: 16px; }
+.hand .card { scroll-snap-align: center; }
+@media (hover: none) { .card:hover, .hand .card:hover { transform: none; } .card.sel, .hand .card.sel { transform: translateY(-12px); } }
+@media (pointer: coarse) { .btn, .topbar .btn, .controls .endwrap .btn { min-height: 44px; } .hand { padding-top: 24px; padding-bottom: 14px; } }
 /* ---------- Sound panel ---------- */
 .sndfloat { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); z-index: 40; min-height: 40px; padding: 6px 12px; display: flex; gap: 6px; align-items: center; font-size: 16px; }
 .btn.snd { display: inline-flex; gap: 6px; align-items: center; }
@@ -699,6 +706,9 @@ button { font: inherit; color: inherit; }
 (function () {
 'use strict';
 const KEY = 'masked-spire-solo-v1';
+const SAVE_VERSION = 2; /* bump whenever the solo run state shape changes */
+const BUILD_ID = 'dev';
+let saveGV = null; /* engine state version, cached */
 const TOKKEY = 'masked-spire-token';
 const REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -1210,8 +1220,10 @@ const CL = { role: 'none', V: null, sel: null, overlay: null, lastFx: 0, seen: f
 (function () {
   let base = null, tab = null;
   try { base = localStorage.getItem(TOKKEY); } catch (e) {}
+  if (base && !/^[A-Za-z0-9_-]{1,30}$/.test(base)) base = null;
   if (!base) { base = Math.random().toString(36).slice(2, 10); try { localStorage.setItem(TOKKEY, base); } catch (e) {} }
   try { tab = sessionStorage.getItem(TOKKEY); } catch (e) {}
+  if (tab && !/^[A-Za-z0-9_-]{1,9}$/.test(tab)) tab = null;
   if (!tab) { tab = Math.random().toString(36).slice(2, 7); try { sessionStorage.setItem(TOKKEY, tab); } catch (e) {} }
   CL.tok = base + '-' + tab;
 })();
@@ -2358,7 +2370,28 @@ function paint(V) {
 /* ---------- Render + networking (Render server) ---------- */
 CL.roomOK = true;
 const CODEKEY = 'masked-spire-room';
-let ws = null, wsTimer = null, wsTries = 0;
+let ws = null, wsTimer = null, wsTries = 0, hbTimer = null, hbPongBy = 0, hbLast = 0;
+function hbStop() { clearInterval(hbTimer); hbTimer = null; hbPongBy = 0; }
+function hbStart(sock) {
+  hbStop(); hbLast = Date.now();
+  hbTimer = setInterval(() => {
+    if (ws !== sock) { hbStop(); return; }
+    const now = Date.now();
+    if (hbPongBy && now > hbPongBy) { dropSock(sock, 0); return; }
+    if (!hbPongBy && sock.readyState === 1 && now - hbLast >= 20000) {
+      try { sock.send('{"t":"ping"}'); hbPongBy = now + 10000; hbLast = now; } catch (e) {}
+    }
+  }, 2000);
+}
+function dropSock(sock, code) {
+  if (ws !== sock) return;
+  hbStop();
+  if (code === 1012) srvRestart = Date.now();
+  ws = null; actLock = 0;
+  try { sock.close(); } catch (e) {}
+  if (CL.role === 'online') { CL.net.state = 'Connection lost. Reconnecting…'; render(); scheduleReconnect(); }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && CL.role === 'online' && ws && ws.readyState === 1 && !hbPongBy) hbLast = 0; });
 function soloView() { return E.G ? E.buildView(0) : null; }
 function render() {
   if (CL.role === 'online') return paint(CL.V);
@@ -2368,7 +2401,17 @@ function render() {
   paint(soloView());
 }
 function onEngineChange() { if (CL.role === 'solo') { render(); saveSolo(); } }
-function saveSolo() { const G = E.G; try { if (G && G.mode === 'solo' && !['defeat', 'victory'].includes(G.screen) && !(G.combat && G.combat.busy)) localStorage.setItem(KEY, JSON.stringify({ G, uidN: E.uidN })); } catch (e) {} }
+function clearSave() { try { localStorage.removeItem(KEY); } catch (e) {} }
+function engineGV() { if (saveGV === null) saveGV = E.baseG('solo').v; return saveGV; }
+function saveSolo() {
+  const G = E.G;
+  try {
+    if (!G || G.mode !== 'solo') return;
+    if (G.screen === 'defeat' || G.screen === 'victory') { clearSave(); return; }
+    if (G.combat && G.combat.busy) return;
+    localStorage.setItem(KEY, JSON.stringify({ sv: SAVE_VERSION, gv: engineGV(), build: BUILD_ID, savedAt: Date.now(), G, uidN: E.uidN }));
+  } catch (e) {}
+}
 function wsURL() { return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'; }
 function wsSend(o) { if (ws && ws.readyState === 1) { ws.send(JSON.stringify(o)); return true; } return false; }
 let actLock = 0, nextRetryAt = 0, netNote = '', netNoteUntil = 0, srvRestart = 0;
@@ -2414,11 +2457,14 @@ function connect() {
   ws = sock;
   sock.onopen = () => {
     wsTries = 0; actLock = 0; srvRestart = 0; CL.net.state = 'Connected'; CL.err = '';
+    hbStart(sock);
     if (CL.pending) wsSend(CL.pending); else if (CL.code) wsSend({ t: 'join', code: CL.code, tok: CL.tok });
     render();
   };
   sock.onmessage = ev => {
     let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+    hbPongBy = 0;
+    if (m.t === 'pong') return;
     if (m.t === 'restart') { srvRestart = Date.now(); updateNetBar(); }
     else if (m.t === 'joined') { CL.code = m.code; CL.pending = null; try { sessionStorage.setItem(CODEKEY, m.code); } catch (e) {} render(); }
     else if (m.t === 'view') {
@@ -2431,7 +2477,7 @@ function connect() {
       if (m.fatal) { const msg = CL.err; leaveAll(); CL.err = msg; render(); } else render();
     }
   };
-  sock.onclose = ev => { if (ws !== sock) return; if (ev && ev.code === 1012) srvRestart = Date.now(); ws = null; actLock = 0; if (CL.role === 'online') { CL.net.state = 'Connection lost. Reconnecting…'; render(); scheduleReconnect(); } };
+  sock.onclose = ev => dropSock(sock, ev && ev.code);
   sock.onerror = () => {};
 }
 function scheduleReconnect() {
@@ -2463,7 +2509,24 @@ function leaveAll() {
   CL.net = { state: '', peers: 0, err: '' };
   render();
 }
-function loadSave() { try { const s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+function loadSave() {
+  let raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) { return null; }
+  if (!raw) return null;
+  try {
+    const s = JSON.parse(raw), G = s && s.G;
+    const ok = s && typeof s === 'object' && s.sv === SAVE_VERSION && s.gv === engineGV() &&
+      G && typeof G === 'object' && G.mode === 'solo' && G.v === s.gv &&
+      G.screen !== 'defeat' && G.screen !== 'victory' &&
+      Array.isArray(G.P) && G.P.length === 1 && G.P[0] && HEROES[G.P[0].hero] &&
+      Array.isArray(G.P[0].deck) && Array.isArray(G.P[0].relics) && Number.isFinite(G.P[0].hp) &&
+      Number.isInteger(G.act) && G.act >= 1 && G.act <= 3 && G.map && typeof G.map === 'object' &&
+      typeof s.uidN === 'number' && Number.isFinite(s.uidN);
+    if (ok) return s;
+  } catch (e) {}
+  clearSave();
+  return null;
+}
 
 /* ---------- Input ---------- */
 function curView() { return CL.role === 'online' ? CL.V : soloView(); }
@@ -2478,7 +2541,7 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'host': CL.err = ''; goOnline({ t: 'create', tok: CL.tok }); break;
     case 'continue': {
       const s = loadSave();
-      if (!s || !s.G) break;
+      if (!s) { render(); break; }
       E.uidN = s.uidN || 1000; CL.seen = false;
       if (s.G.combat) s.G.combat.busy = false;
       E.G = s.G; CL.role = 'solo'; render();
@@ -2522,7 +2585,7 @@ document.getElementById('app').addEventListener('submit', ev => {
   if (!f) return;
   ev.preventDefault();
   const el = document.getElementById('joincode');
-  const code = String(el ? el.value : '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const code = String(el ? el.value : '').trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
   if (code.length !== 5) { CL.err = 'Room codes are 5 characters.'; return render(); }
   goOnline({ t: 'join', code, tok: CL.tok });
 });
@@ -2532,7 +2595,9 @@ document.getElementById('app').addEventListener('input', ev => { if (ev.target.i
 (function boot() {
   let code = null;
   try { code = sessionStorage.getItem(CODEKEY); } catch (e) {}
-  const q = new URLSearchParams(location.search).get('room');
+  const cleanCode = s => { s = String(s || '').trim().toLowerCase(); return /^[a-z0-9]{5}$/.test(s) ? s : ''; };
+  code = cleanCode(code) || null;
+  const q = cleanCode(new URLSearchParams(location.search).get('room'));
   if (q && !code) CL.joinCode = q.toUpperCase();
   if (code) goOnline({ t: 'join', code, tok: CL.tok });
   else render();

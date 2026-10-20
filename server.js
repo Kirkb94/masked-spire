@@ -29,6 +29,17 @@ function clientIp(req) {
   const v = h['cf-connecting-ip'] || h['true-client-ip'] || String(h['x-forwarded-for'] || '').split(',')[0];
   return String(v || (req.socket && req.socket.remoteAddress) || 'unknown').trim().slice(0, 64);
 }
+/* Input validation: room codes are exactly 5 lowercase letters/digits; player tokens are 1-40 chars of [A-Za-z0-9_-]. */
+function cleanCode(v) {
+  if (typeof v !== 'string') return '';
+  const s = v.trim().slice(0, 16).toLowerCase();
+  return /^[a-z0-9]{5}$/.test(s) ? s : '';
+}
+function cleanTok(v) {
+  if (typeof v !== 'string') return '';
+  const s = v.trim();
+  return /^[A-Za-z0-9_-]{1,40}$/.test(s) ? s : '';
+}
 function takeToken(b, rate, burst) {
   const now = Date.now();
   b.n = Math.min(burst, b.n + (now - b.t) * rate / 1000);
@@ -158,8 +169,10 @@ wss.on('connection', (ws, req) => {
     let m;
     try { m = JSON.parse(String(raw)); } catch (e) { return; }
     if (!m || typeof m.t !== 'string') return;
+    ws.isAlive = true;
+    if (m.t === 'ping') { try { ws.send('{"t":"pong"}'); } catch (e) {} return; }
     if ((m.t === 'create' || m.t === 'join') && !takeToken(joinBucket, JOIN_RATE, JOIN_BURST)) return limited();
-    const tok = typeof m.tok === 'string' ? m.tok.slice(0, 40) : '';
+    const tok = cleanTok(m.tok);
     if (m.t === 'create') {
       if (!tok) return err('Missing player id.');
       if (rooms.size >= MAX_ROOMS) return err('The server is full right now. Try again later.', true);
@@ -170,7 +183,9 @@ wss.on('connection', (ws, req) => {
       ws.send(JSON.stringify({ t: 'joined', code: room.code, pi: 0 }));
       broadcast(room);
     } else if (m.t === 'join') {
-      const code = String(m.code || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!tok) return err('Missing player id.', true);
+      const code = cleanCode(m.code);
+      if (!code) return err('Room codes are 5 letters or numbers.', true);
       const room = rooms.get(code);
       if (!room) return err('No room with code ' + code.toUpperCase() + '. It may have closed, or the server restarted.', true);
       const G = room.E.G;
