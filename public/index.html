@@ -399,6 +399,7 @@ html.rm .hcard:hover { transform: none; }
 .hrelic b { font-family: var(--display); font-size: 18px; color: var(--ink); }
 .trio { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .trio .portrait { border-radius: 10px; }
+@media (max-width: 520px) { .trio { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .actbanner { font-family: var(--display); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 @media (max-width: 860px) { .heropick { grid-template-columns: 1fr; } }
 .heropick { gap: 12px; }
@@ -686,6 +687,21 @@ html.rm .chip.partner.re .pdot { animation: none; }
 .rg.s-lunge .pt-head { animation: var(--i), rg-a-head .7s var(--e) var(--as, 0s) both; }
 .rg.s-lunge .pt-body { animation: var(--i), rg-a-body .7s var(--e) var(--as, 0s) both; }
 @keyframes rg-dash { 0% { transform: none; } 22% { transform: translate(calc(var(--dir) * -6px), 0) skewX(calc(var(--f) * 4deg)); } 40% { transform: translate(calc(var(--dir) * 26px), 0) skewX(calc(var(--f) * -9deg)); } 100% { transform: none; } }
+.rg.s-cast .rgw { animation: rg-cast .8s ease-out var(--as, 0s) both; transform-box: fill-box; transform-origin: 50% 80%; }
+@keyframes rg-cast { 0% { transform: none; } 30% { transform: translateY(-6px) scale(1.06); filter: brightness(1.25); } 55% { transform: translateY(-3px) scale(1.1); filter: brightness(1.5); } 100% { transform: none; filter: none; } }
+.pwrap { position: relative; }
+.elorb { position: absolute; left: 4%; bottom: 16%; width: 22px; height: 22px; border-radius: 50%; pointer-events: none; z-index: 3; background: radial-gradient(circle at 35% 30%, #fff 0, var(--oc) 40%, var(--od) 100%); box-shadow: 0 0 10px 3px var(--oc); }
+.elorb.el-fire { --oc: #FF9A3C; --od: #B52A0A; }
+.elorb.el-frost { --oc: #7FE3FF; --od: #1C6FA8; }
+.elorb.el-storm { --oc: #FFE45C; --od: #A87C00; }
+.elorb.el-stone { --oc: #7BE08A; --od: #2A6B3A; }
+.elorb.cast { animation: elorb-cast .8s ease-out var(--as, 0s) both; }
+.elorb.cast::after { content: ''; position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; border: 3px solid var(--oc); animation: elorb-ring .8s ease-out var(--as, 0s) both; }
+@keyframes elorb-ring { 0% { transform: scale(.5); opacity: 0; } 35% { opacity: 1; } 100% { transform: scale(4.5); opacity: 0; } }
+@keyframes elorb-cast { 0% { transform: scale(1); } 30% { transform: scale(.6); } 55% { transform: scale(2.2) translateX(10px); box-shadow: 0 0 26px 12px var(--oc); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .rg.s-cast .rgw, .elorb.cast, .elorb.cast::after { animation: none; } .elorb.cast::after { display: none; } }
+html.rm .rg.s-cast .rgw, html.rm .elorb.cast, html.rm .elorb.cast::after { animation: none; }
+html.rm .elorb.cast::after { display: none; }
 .rg.s-slam .rgw { animation: rg-slam .9s var(--e) var(--as, 0s) both; }
 .rg.s-slam .pt-armF, .rg.s-slam .pt-wep { animation: var(--i), rg-s-arm .9s var(--e) var(--as, 0s) both; }
 .rg.s-slam .pt-head { animation: var(--i), rg-a-head .9s var(--e) var(--as, 0s) both; }
@@ -862,6 +878,19 @@ html.cb .card .rgem.r-r { clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 7
 html.cb .card.rar-u .rlabel::before { content: '\25B2 '; }
 html.cb .card.rar-r .rlabel::before { content: '\2605 '; }
 html.cb .card.rar-r { border-style: double; border-width: 4px; }
+/* Colorblind mode: intent glyphs (attack / defend / buff / debuff) */
+html.cb .intentbar::before { flex: 0 0 auto; font-size: 18px; line-height: 1; font-weight: 700; padding: 2px 5px; border: 2px solid currentColor; border-radius: 6px; background: rgba(0,0,0,.35); }
+html.cb .intentbar.k-atk::before { content: '\2694'; border-style: solid; }
+html.cb .intentbar.k-def::before { content: '\25A3'; border-style: dashed; }
+html.cb .intentbar.k-buf::before { content: '\271A'; border-style: dotted; }
+html.cb .intentbar.k-deb::before { content: '\2716'; border-style: double; border-width: 3px; }
+@media (max-width: 600px) { html.cb .intentbar::before { font-size: 14px; padding: 1px 3px; } }
+/* Colorblind mode: map node types differ by border style, not just color */
+html.cb .mapcard .node.t-fight { border-style: solid; }
+html.cb .mapcard .node.t-elite { border-style: double; border-width: 4px; }
+html.cb .mapcard .node.t-rest { border-style: dashed; border-width: 3px; }
+html.cb .mapcard .node.t-shop { border-style: dotted; border-width: 3px; }
+html.cb .mapcard .node.t-treasure { border-style: groove; border-width: 4px; }
 html.hc .card .rgem { outline: 2px solid #FFFFFF; }
 
 /* ---------- Map art ---------- */
@@ -1210,7 +1239,7 @@ var T = {
   exhaust: ['Exhaust pile', 'Exhausted cards are removed for the rest of this combat.']
 };
 var KW = [
-  ['weak', 'Weak', 'Deals reduced damage.'],
+  ['weak', 'Weak', 'Each stack: attacks deal 1 less damage. Loses 1 stack each turn.'],
   ['vulnerable', 'Vulnerable', 'Takes increased damage from attacks.'],
   ['frail', 'Frail', 'Gains reduced Block from cards.'],
   ['strength', 'Strength', 'Adds to the damage of each attack.'],
@@ -1796,7 +1825,7 @@ function rigGet(inner, vw, vh, spec) {
 /* ---- Animation state that survives re-renders ----
    The page redraws often, so one-shot animations are remembered with a start time and resumed
    mid-way (negative delay) on every redraw until they finish. */
-const RGDUR = { atk: 750, lunge: 700, slam: 900, smash: 950, foot: 900, hit: 450, hurt: 450, def: 800, guard: 800, buf: 900, buff: 900, deb: 900, phase: 1500, stance: 900, toll: 1200 };
+const RGDUR = { atk: 750, cast: 800, lunge: 700, slam: 900, smash: 950, foot: 900, hit: 450, hurt: 450, def: 800, guard: 800, buf: 900, buff: 900, deb: 900, phase: 1500, stance: 900, toll: 1200 };
 function rgState(key, k, keep) {
   const now = Date.now();
   let a = CL.an[key];
@@ -1888,6 +1917,8 @@ const HERO_ART = {
     '<circle cx="22" cy="66" r="8" fill="#FFB347"/><circle cx="22" cy="66" r="4" fill="#FFF3C4"/>' +
     '<path d="M100 98 L108 88 L106 102Z M102 108 L114 108 L104 112Z" fill="#8FE3FF"/><circle cx="101" cy="104" r="4" fill="#E8FBFF"/></g></g>'
 };
+/* Elementalist portrait: the concept-art SVG as a static image; motion comes from the rig / CSS (cast pulse, element orb). */
+HERO_ART.elementalist = '<rect width="120" height="144" fill="#231A44"/>@@<image href="art/quadrant-mask-elementalist.svg" x="0" y="0" width="120" height="144" preserveAspectRatio="xMidYMid slice"/></g>';
 function heroFx(key) {
   let h = '<g class="sfx sfx-slam"><ellipse cx="96" cy="132" rx="26" ry="8" fill="none" stroke="#FFE08A" stroke-width="3"/></g>';
   if (key === 'duelist') {
@@ -2446,7 +2477,9 @@ const SND = (function () {
     draw(V, t) { V.noise({ t, d: 0.06, a: 0.005, type: 'bp', f: 1400, f2: 3200, q: 1, v: 0.08, r: 0.05 }); },
     heal(V, t) { V.tone({ t, f: 523, d: 0.04, r: 0.35, v: 0.06, parts: BELL }); V.tone({ t: t + 0.09, f: 784, d: 0.04, r: 0.5, v: 0.06, parts: BELL }); },
     endturn(V, t) { V.tone({ t, f: 392, d: 0.05, r: 0.35, v: 0.08, parts: BELL }); V.tone({ t: t + 0.07, f: 262, d: 0.05, r: 0.5, v: 0.08, parts: BELL }); thump(V, t, 0.15, 100); },
-    transition(V, t) { V.noise({ t, d: 0.22, a: 0.08, type: 'bp', f: 300, f2: 1800, q: 0.8, v: 0.05, r: 0.12 }); }
+    transition(V, t) { V.noise({ t, d: 0.22, a: 0.08, type: 'bp', f: 300, f2: 1800, q: 0.8, v: 0.05, r: 0.12 }); },
+    blockup(V, t) { V.tone({ t, f: 220, f2: 330, d: 0.06, a: 0.004, r: 0.12, v: 0.06, type: 'triangle' }); V.noise({ t, d: 0.05, type: 'bp', f: 2600, q: 2, v: 0.05, r: 0.08 }); V.tone({ t: t + 0.04, f: 880, d: 0.02, r: 0.25, v: 0.035, parts: BELL }); },
+    status(V, t) { V.tone({ t, f: 740, f2: 560, d: 0.05, a: 0.004, r: 0.2, v: 0.05, type: 'sine' }); V.tone({ t: t + 0.06, f: 1109, d: 0.03, r: 0.3, v: 0.04, parts: BELL }); }
   };
   function ui(name, delay) { if (!ok() || !UI[name]) return; UI[name](sV, ac.currentTime + 0.01 + (delay || 0)); }
 
@@ -2900,7 +2933,7 @@ function sndSync(V, prev) {
     const h = V.P[s.pi].h;
     if (s.an && s.an[0] > prev) {
       const k = s.an[1];
-      if (k === 'lunge' || k === 'slam' || k === 'smash') { SND.hero(h, 'swing'); CL.sndHero = h; }
+      if (k === 'lunge' || k === 'slam' || k === 'smash' || k === 'cast') { SND.hero(h, 'swing'); CL.sndHero = h; }
       else if (k === 'guard') SND.hero(h, 'guard'); else if (k === 'buff') SND.hero(h, 'buff'); else if (k === 'hurt') SND.hero(h, 'hurt', 0.12);
     }
     if (s.fw && s.fw[0] > prev && s.fw[1] > 0) SND.hero(h, 'foot');
@@ -2911,6 +2944,8 @@ function sndSync(V, prev) {
   (V.fx || []).forEach(f => {
     if (f.s <= prev || !f.x) return;
     if (f.k === 'heal' && f.t[0] === 'p') { SND.ui('heal', 0.05 * n); n++; return; }
+    if (f.k === 'block') { SND.ui('blockup', 0.05 * n); n++; return; }
+    if (f.k === 'buff' && /Weak|Vulnerable|Frail|Hushed|Reflecting|En Garde|Intangible|Ritual|Strength|Thorns|Erased|Energy next turn/.test(f.x)) { SND.ui('status', 0.05 * n); n++; return; }
     if (f.t[0] !== 'e') return;
     if (f.x[0] === '−') { SND.hit(CL.sndHero || me, 0.08 + 0.09 * n); SND.enemy(((c.en.find(e => 'e' + e.idx === f.t) || {}).key) || 'moth', 'hit', 0.1 + 0.09 * n); n++; }
     else if (f.x === 'Blocked') { SND.block(CL.sndHero || me, 0.06 + 0.09 * n); n++; }
@@ -3147,7 +3182,7 @@ function heroBoxHTML(V, s, prev, mini) {
     else if (V.cb.duel) tag = V.cb.duel.a === pi ? '<span class="ptag turn">' + (you ? 'Your turn' : 'Their turn') + '</span>' : '';
     else if (s.rdy) tag = '<span class="ptag ready">Ready</span>';
   }
-  return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, animCls, true, hst, rcls) + bigShield(s.block, popH, 'shield-p' + pi) + '</div>' +
+  return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, animCls, true, hst, rcls) + (hero === 'elementalist' && s.el ? '<span class="elorb el-' + s.el + (hst && hst.k === 'cast' ? ' cast' : '') + '" style="' + (hst && hst.k === 'cast' ? '--as:' + hst.as + 'ms' : '') + '" title="Last element: ' + s.el + '"></span>' : '') + bigShield(s.block, popH, 'shield-p' + pi) + '</div>' +
     '<div class="hstats"><span class="hname">' + esc(vName(V, pi)) + (V.n > 1 ? (you ? ' <span class="muted">(you)</span>' : '') : '') + ' ' + tag + '</span>' +
     '<div class="hpline">' + (s.block ? '<span class="shield">' + ICON.shield + s.block + '</span>' : '') + hpBar('p' + pi, s.hp, s.mx, s.block) + s.hp + '/' + s.mx + '</div>' +
     '<div class="row">' + resourceHTML(hero, s) + (!you ? '<span class="muted">' + s.hn + ' cards · ' + s.energy + ' energy</span>' : '') + '</div>' +
@@ -3807,7 +3842,7 @@ function paint(V) {
   let body = '';
   if (!V) {
     if (CL.role === 'pick') body = pickHTML();
-    else if (CL.role === 'online') body = '<section class="panel"><span class="actbanner">' + (CL.code ? 'Room ' + esc(CL.code.toUpperCase()) : 'Co-op') + '</span><h2>' + esc(CL.net.state || 'Connecting…') + '</h2><p class="muted">The free server can take up to a minute to wake up if nobody has played for a while.</p>' + (CL.err ? '<p class="waitnote">' + esc(CL.err) + '</p>' : '') + '<div class="row"><button type="button" class="btn" data-act="leave">Cancel</button></div></section>';
+    else if (CL.role === 'online') body = '<section class="panel"><span class="actbanner">' + (CL.code ? 'Room ' + esc(CL.code.toUpperCase()) : 'Co-op') + '</span><h2>' + esc(CL.net.state || 'Connecting…') + '</h2><p class="muted">The free server can take up to a minute to wake up if nobody has played for a while.</p>' + (CL.code ? '<div class="row"><button type="button" class="btn" data-act="copycode">Copy code</button></div><p class="netline" role="status" aria-live="polite">' + esc(CL.copied || '') + '</p>' : '') + (CL.err ? '<p class="waitnote">' + esc(CL.err) + '</p>' : '') + '<div class="row"><button type="button" class="btn" data-act="leave">Cancel</button></div></section>';
     else body = titleHTML();
   } else if (V.scr === 'lobby') body = lobbyHTML(V);
   else {
@@ -4138,7 +4173,7 @@ function connect() {
       actLock = 0;
       const slow = !m.fatal && /slow down/i.test(m.msg || '');
       if (slow) { netFlash('Slow down: too many actions too quickly. Wait a moment.'); return; }
-      CL.err = m.msg || 'Server error';
+      CL.err = friendlyErr(m.msg);
       if (m.fatal) { const msg = CL.err; leaveAll(); CL.err = msg; render(); } else render();
     }
   };
@@ -4151,6 +4186,16 @@ function connect() {
     dropSock(sock, ev && ev.code);
   };
   sock.onerror = () => {};
+}
+function friendlyErr(msg) {
+  msg = String(msg || '');
+  if (/No room with code/i.test(msg)) return msg + ' Check the code with your host.';
+  if (/already has two players/i.test(msg)) return 'That room is full. Ask your host to start a new room, or host your own.';
+  if (/somewhere else/i.test(msg)) return 'This game was opened in another tab or window, so this one disconnected.';
+  if (/server is full/i.test(msg)) return 'The server is busy right now. Please try again in a few minutes.';
+  if (/Missing player id/i.test(msg)) return 'Could not identify this browser. Reload the page and try again.';
+  if (/Room codes are 5/i.test(msg)) return 'Room codes are 5 letters or numbers. Check the code and try again.';
+  return msg || 'Something went wrong with the co-op connection. Please try again.';
 }
 function scheduleReconnect() {
   clearTimeout(wsTimer); wsTries++;
@@ -4998,7 +5043,7 @@ document.getElementById('app').addEventListener('submit', ev => {
   ev.preventDefault();
   const el = document.getElementById('joincode');
   const code = String(el ? el.value : '').trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
-  if (code.length !== 5) { CL.err = 'Room codes are 5 characters.'; return render(); }
+  if (code.length !== 5) { CL.err = 'Room codes are 5 letters or numbers.'; return render(); }
   goOnline({ t: 'join', code, tok: CL.tok });
 });
 document.getElementById('app').addEventListener('input', ev => { if (ev.target.id === 'joincode') CL.joinCode = ev.target.value; });

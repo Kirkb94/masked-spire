@@ -507,7 +507,7 @@ function intentOf(e, ahead) {
 }
 function enemyDmg(e, base, T) {
   let d = Math.round(base * 1.15 * DIFF * diffMult()) + e.str;
-  if (e.weak > 0) d = Math.floor(d * 0.75);
+  if (e.weak > 0) d -= e.weak;
   if (T && T.vuln > 0) d = Math.floor(d * 1.5);
   if (T && T.stance === 'fury') d = Math.floor(d * 1.25);
   return Math.max(0, d);
@@ -534,7 +534,7 @@ function hit(t, base, times) {
   for (let i = 0; i < times; i++) {
     if (!t || t.dead || t.down || c.over || a.down) break;
     let d = base + a.str + a.rage + (hasR(a.pi, 'whetstone') ? 1 : 0) + (a.rhythm || 0) * a.flow;
-    if (a.weak > 0) d = Math.floor(d * 0.75);
+    if (a.weak > 0) d -= a.weak;
     if (a.stance === 'fury') d = Math.floor(d * 1.5);
     if (a.stance === 'iron' && !a.ironplus) d = Math.floor(d * 0.75);
     if (t.vuln > 0) d = Math.floor(d * 1.5);
@@ -623,13 +623,14 @@ function playCard(pi, uid, tgt) {
   s.energy -= d.c; s.hand.splice(i, 1); s.atkTotal = 0; s.played++; P(pi).cp = (P(pi).cp || 0) + 1;
   log(heroName(pi) + ' plays ' + d.n + (t ? ' on ' + nameOf(t) : '') + '.');
   const b0 = s.block, hk = P(pi).hero;
-  if (d.t === 'attack') anim(s, hk === 'bulwark' ? 'slam' : hk === 'brute' ? 'smash' : 'lunge');
+  if (d.t === 'attack' && hk === 'elementalist') s.el = ({ emberlash: 'fire', cinderbolt: 'fire', scorch: 'fire', rimespiral: 'frost', icelance: 'frost', stormcrash: 'storm', tempest: 'storm' })[card.id] || 'stone';
+  if (d.t === 'attack') anim(s, hk === 'bulwark' ? 'slam' : hk === 'brute' ? 'smash' : hk === 'elementalist' ? 'cast' : 'lunge');
   const o = c.duel ? opp(s) : null;
   if (o) o.hurtNow = false;
   if (d.p) d.p(t);
   if (d.t !== 'attack') anim(s, s.block > b0 ? 'guard' : 'buff');
   if (c.over) return render();
-  if (d.t === 'attack') { if (P(pi).hero === 'elementalist') gain(1, true); if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
+  if (d.t === 'attack') { if (P(pi).hero === 'elementalist') { A = s; gain(1, true); } if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
   if (d.t === 'skill' && !c.duel) aliveEnemies().filter(x => x.key === 'ogre').forEach(og => { og.str += 2; float(tagOf(og), '+2 Strength', 'buff'); log('The Ogre enrages: +2 Strength.'); });
   if (d.t !== 'power') (d.x ? s.exhaust : s.discard).push(card);
   if (!c.duel && !aliveEnemies().length) { c.busy = true; render(); setTimeout(win, isReduce() ? 100 : 650); return; }
@@ -933,7 +934,7 @@ function describeIntent(e, it, T) {
     return { c: 'k-buf', v: '', x: it.l + ': ' + extra.join(', '), tot: 0 };
   }
   if (it.k === 'debuff') {
-    if (it.weak) extra.push('Weak (deal 25% less)');
+    if (it.weak) extra.push('Weak (deal 1 less damage per stack)');
     if (it.drain) extra.push('−1 Energy next turn');
     if (it.steal) extra.push('steals ' + it.steal + ' gold');
     if (it.erase) extra.push('erases a card from the draw pile');
@@ -991,7 +992,7 @@ function sideView(s) {
     pi: s.pi, hp: s.hp, mx: s.max, block: s.block, energy: s.energy, flow: s.flow, rage: s.rage,
     st: [s.weak, s.vuln, s.frail, s.hushNow, s.drain, s.thorns, s.composure, s.rhythm, s.keep, s.rampart, s.keepAll, s.bloodpact, s.ragegain],
     sn: s.stance, sw: s.switches, sx: [s.mantra, s.serenity, s.ironplus],
-    rdy: s.ready ? 1 : 0, dn: s.down ? 1 : 0, an: [s.animS, s.animK], fw: [s.fwS, s.fwN], hn: s.hand.length,
+    rdy: s.ready ? 1 : 0, dn: s.down ? 1 : 0, an: [s.animS, s.animK], el: s.el || '', fw: [s.fwS, s.fwN], hn: s.hand.length,
     kb: hero === 'bulwark' ? (s.keepAll ? s.block : Math.floor(s.block / 2)) : 0,
     sr: s.str || 0, wh: hasR(s.pi, 'whetstone') ? 1 : 0
   };
