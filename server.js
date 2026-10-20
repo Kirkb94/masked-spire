@@ -289,7 +289,7 @@ wss.on('connection', (ws, req) => {
         else return err('That room already has two players.', true);
       }
       detach(ws);
-      for (const other of room.sockets) if (other.pi === pi) { try { other.send(JSON.stringify({ t: 'err', msg: 'You opened this game somewhere else.', fatal: true })); } catch (e) {} room.sockets.delete(other); other.room = null; other.pi = null; }
+      for (const other of room.sockets) if (other.pi === pi) { try { other.send(JSON.stringify({ t: 'err', msg: 'You opened this game somewhere else.', fatal: true })); } catch (e) {} room.sockets.delete(other); other.room = null; other.pi = null; try { other.close(4000, 'replaced'); } catch (e) {} const dead = other; setTimeout(() => { try { dead.terminate(); } catch (e) {} }, 2000).unref(); }
       ws.room = room; ws.pi = pi; room.sockets.add(ws);
       setConn(room);
       ws.send(JSON.stringify({ t: 'joined', code: room.code, pi }));
@@ -336,7 +336,7 @@ wss.on('connection', (ws, req) => {
 });
 
 /* keep connections alive through Render's proxy, and drop dead ones */
-const HEARTBEAT_MS = 10000; // a socket that misses two sweeps is dropped, so ~10-20s to notice a silent disconnect
+const HEARTBEAT_MS = 5000; // a socket that misses two sweeps is dropped, so ~5-10s to notice a silent disconnect
 setInterval(() => {
   for (const ws of wss.clients) {
     if (!ws.isAlive) {

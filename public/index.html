@@ -263,6 +263,15 @@ html.rm .battle.shake1, html.rm .battle.shake2 { animation: none; }
 .trio .portrait { border-radius: 10px; }
 .actbanner { font-family: var(--display); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 @media (max-width: 860px) { .heropick { grid-template-columns: 1fr; } }
+.heropick { gap: 12px; }
+.hcard { gap: 6px; padding: 10px 12px; }
+.hcard .portrait { width: clamp(84px, 16vh, 140px); align-self: center; }
+.hcard h3 { font-size: 21px; }
+.hcard p, .hcard ul { font-size: 15px; line-height: 1.3; }
+.hcard ul { gap: 2px; }
+.hcard .hrelic { padding: 6px 10px; font-size: 14px; gap: 1px; }
+.hcard .hrelic b { font-size: 16px; }
+@media (max-width: 860px) { .hcard .portrait { width: 84px; } }
 
 
 /* Brute stances */
@@ -769,6 +778,155 @@ html.rm .mp { opacity: .45; } html.rm .confetti { display: none; }
   </defs>
 </svg>
 <div id="app"></div>
+<script>
+(function () {
+'use strict';
+var KEY = 'ms_tutorial_seen';
+var css = '.mstip{position:fixed;z-index:60;max-width:min(260px,86vw);background:var(--panel,#1c1626);color:#fff;border:1px solid var(--gold,#e0b84a);border-radius:8px;padding:8px 10px;font-size:15px;line-height:1.35;box-shadow:0 8px 24px #000A;pointer-events:none}.mstip[hidden]{display:none}.mstip b{display:block;color:var(--gold,#e0b84a);margin-bottom:2px}'
+ + '.mstut{position:fixed;inset:0;z-index:70;background:#000C;display:flex;align-items:center;justify-content:center;padding:14px}.mstut .card{background:var(--panel,#1c1626);border:1px solid var(--gold,#e0b84a);border-radius:12px;max-width:440px;width:100%;max-height:92vh;overflow:auto;padding:18px 20px;box-shadow:0 12px 40px #000;color:#fff}.mstut h2{margin:0 0 8px;color:var(--gold,#e0b84a);font-size:22px}.mstut p{margin:0 0 14px;font-size:17px;line-height:1.45}.mstut .row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.mstut .step{opacity:.7;font-size:14px}.mstut .btns{display:flex;gap:8px;flex-wrap:wrap}.mstut button{min-height:44px;min-width:44px}.mstut button:focus-visible{outline:3px solid var(--gold,#e0b84a);outline-offset:2px}';
+var sty = document.createElement('style'); sty.textContent = css; document.head.appendChild(sty);
+
+/* ----- tooltips ----- */
+var T = {
+  energy: ['Energy', 'Spent to play cards. It refills at the start of each of your turns.'],
+  block: ['Block', 'Absorbs incoming damage before your HP is touched. It normally wears off, so use it the turn the enemy attacks.'],
+  atk: ['Intent: Attack', 'This enemy plans to deal damage next turn.'],
+  def: ['Intent: Defend', 'This enemy plans to gain Block next turn.'],
+  buf: ['Intent: Buff', 'This enemy plans to strengthen itself next turn.'],
+  deb: ['Intent: Debuff', 'This enemy plans to weaken you next turn.'],
+  draw: ['Draw pile', 'Cards you will draw from. When empty, the discard pile is reshuffled into it.'],
+  discard: ['Discard pile', 'Cards you have played or discarded this combat.'],
+  exhaust: ['Exhaust pile', 'Exhausted cards are removed for the rest of this combat.']
+};
+var KW = [
+  ['weak', 'Weak', 'Deals reduced damage.'],
+  ['vulnerable', 'Vulnerable', 'Takes increased damage from attacks.'],
+  ['frail', 'Frail', 'Gains reduced Block from cards.'],
+  ['strength', 'Strength', 'Adds to the damage of each attack.'],
+  ['ritual', 'Ritual', 'Gains Strength at the start of every turn.'],
+  ['thorns', 'Thorns', 'Deals damage back to anything that attacks it.'],
+  ['artifact', 'Artifact', 'Blocks the next debuff applied.'],
+  ['intangible', 'Intangible', 'Every hit taken is reduced to 1 damage.'],
+  ['rooted', 'Rooted', 'Takes half damage.'],
+  ['hushed', 'Hushed', 'Powers cannot be played.'],
+  ['composure', 'Composure', 'A defensive buff that protects you.']
+];
+var tip = document.createElement('div'); tip.className = 'mstip'; tip.id = 'mstip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true; document.body.appendChild(tip);
+var anchor = null, hideT = 0, watch = 0;
+function tipFor(el) {
+  if (el.classList.contains('energy')) return T.energy;
+  if (el.classList.contains('shield')) return T.block;
+  if (el.classList.contains('intentbar')) {
+    if (el.classList.contains('k-atk')) return T.atk;
+    if (el.classList.contains('k-def')) return T.def;
+    if (el.classList.contains('k-buf')) return T.buf;
+    if (el.classList.contains('k-deb')) return T.deb;
+    return null;
+  }
+  var tx = (el.textContent || '').trim().toLowerCase();
+  if (el.classList.contains('badge')) {
+    for (var i = 0; i < KW.length; i++) if (tx.indexOf(KW[i][0]) === 0) return [KW[i][1], KW[i][2]];
+    return null;
+  }
+  if (el.tagName === 'SPAN') {
+    if (tx.indexOf('draw') === 0) return T.draw;
+    if (tx.indexOf('discard') === 0) return T.discard;
+    if (tx.indexOf('exhaust') === 0) return T.exhaust;
+  }
+  return null;
+}
+function find(n) {
+  if (!n || !n.closest) return null;
+  if (n.closest('button.enemy') === n) { var ib = n.querySelector('.intentbar'); if (ib) return ib; }
+  var el = n.closest('.badge, .intentbar, .energy, .shield, .piles span');
+  return el && tipFor(el) ? el : null;
+}
+function hide() { tip.hidden = true; anchor = null; clearTimeout(hideT); clearInterval(watch); }
+function show(el) {
+  var d = tipFor(el); if (!d) return;
+  if (el.hasAttribute('title')) el.removeAttribute('title');
+  tip.textContent = '';
+  var b = document.createElement('b'); b.textContent = d[0]; tip.appendChild(b); tip.appendChild(document.createTextNode(d[1]));
+  tip.hidden = false; anchor = el;
+  var r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  var x = Math.max(6, Math.min(window.innerWidth - w - 6, r.left + r.width / 2 - w / 2));
+  var y = r.bottom + 8; if (y + h > window.innerHeight - 6) y = Math.max(6, r.top - h - 8);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  el.setAttribute('aria-describedby', 'mstip');
+  clearInterval(watch); watch = setInterval(function () { if (!anchor || !anchor.isConnected) hide(); }, 400);
+}
+document.addEventListener('mouseover', function (e) { var el = find(e.target); if (el) show(el); else if (!tip.hidden) hide(); });
+document.addEventListener('mouseout', function (e) { if (!e.relatedTarget) hide(); });
+document.addEventListener('focusin', function (e) { var el = find(e.target); if (el) show(el); else hide(); });
+document.addEventListener('focusout', hide);
+document.addEventListener('pointerdown', function (e) {
+  if (e.pointerType !== 'touch') return;
+  var el = find(e.target); if (!el) { hide(); return; }
+  show(el); clearTimeout(hideT); hideT = setTimeout(hide, 3000);
+}, { passive: true });
+window.addEventListener('scroll', hide, true);
+window.addEventListener('resize', hide);
+
+/* ----- tutorial ----- */
+var STEPS = [
+  ['Welcome to Masked Spire', 'Climb the Spire with a party of three heroes, building your deck as you go. Play solo, or team up online with a partner; a co-op run ends in a duel after the final boss.'],
+  ['Playing cards', 'Tap a card in your hand to play it. Cards that need a target ask you to tap an enemy. Tap the card again to cancel. When you are done, press End turn.'],
+  ['Energy', 'The glowing counter by the End turn button is your Energy. Each card costs some, and it refills at the start of every turn. Unspent Energy is not saved.'],
+  ['Block and HP', 'Block soaks up damage before your HP does, and it usually fades at the start of your next turn. If your HP hits zero, you fall.'],
+  ['Enemy intents', 'The bar above each enemy shows what it will do next turn: attack, defend, buff or debuff. Plan your Block and damage around it.'],
+  ['Keywords and help', 'Hover, focus or tap Energy, Block, intents, piles and status badges (like Weak or Vulnerable) for a quick explanation. Reopen this guide any time from the Sound menu, under How to play.']
+];
+var ov = null, idx = 0, lastFocus = null;
+function seen() { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
+function isSeen() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return true; } }
+function render() {
+  var s = STEPS[idx], last = idx === STEPS.length - 1;
+  ov.textContent = '';
+  var card = document.createElement('div'); card.className = 'card';
+  var h = document.createElement('h2'); h.id = 'mstut-h'; h.textContent = s[0];
+  var p = document.createElement('p'); p.id = 'mstut-p'; p.textContent = s[1];
+  var row = document.createElement('div'); row.className = 'row';
+  var st = document.createElement('span'); st.className = 'step'; st.textContent = (idx + 1) + ' / ' + STEPS.length;
+  var btns = document.createElement('div'); btns.className = 'btns';
+  function mk(label, cls, fn) { var b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (cls ? ' ' + cls : ''); b.textContent = label; b.addEventListener('click', fn); btns.appendChild(b); return b; }
+  if (!last) mk('Skip', '', close);
+  if (idx > 0) mk('Back', '', function () { idx--; render(); });
+  var nb = mk(last ? 'Got it' : 'Next', 'primary', function () { if (last) close(); else { idx++; render(); } });
+  row.appendChild(st); row.appendChild(btns);
+  card.appendChild(h); card.appendChild(p); card.appendChild(row); ov.appendChild(card);
+  nb.focus();
+}
+function onKey(e) {
+  if (!ov) return;
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
+  if (e.key === 'Tab') {
+    var f = ov.querySelectorAll('button'); if (!f.length) return;
+    var first = f[0], lastB = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastB.focus(); }
+    else if (!e.shiftKey && document.activeElement === lastB) { e.preventDefault(); first.focus(); }
+    else if (!ov.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+  }
+}
+function open() {
+  if (ov) return;
+  hide();
+  lastFocus = document.activeElement; idx = 0;
+  ov = document.createElement('div'); ov.className = 'mstut'; ov.id = 'mstut';
+  ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'mstut-h'); ov.setAttribute('aria-describedby', 'mstut-p');
+  document.body.appendChild(ov);
+  document.addEventListener('keydown', onKey, true);
+  render();
+}
+function close() {
+  if (!ov) return;
+  document.removeEventListener('keydown', onKey, true);
+  ov.remove(); ov = null; seen();
+  try { if (lastFocus && lastFocus.isConnected && lastFocus.focus) lastFocus.focus(); } catch (e) {}
+}
+window.MSTutorial = { open: open, close: close };
+window.addEventListener('load', function () { if (!isSeen()) setTimeout(open, 700); });
+})();
+</script>
 <script src="/engine.js"></script>
 <script>
 (function () {
@@ -1769,7 +1927,7 @@ const SND = (function () {
       panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label><input type="checkbox" data-k="big"> Larger text</label><label><input type="checkbox" data-k="hc"> High contrast (colorblind-safe)</label><label><input type="checkbox" data-k="rm"> Reduce motion (overrides system setting)</label>';
       panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx' || k === 'mute') setPref(k, e.target.checked); else if (k === 'big' || k === 'hc') A11Y.set(k, e.target.checked); else if (k === 'rm') setReduceMotion(e.target.checked); });
       panel.addEventListener('input', e => { const k = e.target.getAttribute('data-k'); if (k === 'musicVol' || k === 'sfxVol') { setPref(k, Math.max(0, Math.min(1, Number(e.target.value) / 100))); if (k === 'sfxVol') ui('click'); } });
-      document.body.appendChild(panel);
+      panel.insertAdjacentHTML('beforeend', '<div class="sechead">Help</div><button type="button" class="btn" data-help="1">How to play</button>'); panel.addEventListener('click', e => { if (e.target.closest('[data-help]')) { panel.hidden = true; if (window.MSTutorial) window.MSTutorial.open(); } }); document.body.appendChild(panel);
     }
     panel.hidden = !panel.hidden; syncPanel(); unlock();
   }
