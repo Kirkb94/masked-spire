@@ -240,12 +240,13 @@ html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0
   .card { width: 138px; }
 }
 .hstats { display: flex; flex-direction: column; gap: 8px; }
-@media (prefers-reduced-motion: reduce) {
-  .card, .node.avail, .idle, .enemy.acting, .enemy.hit .art, .portrait.lunge, .portrait.hurt, .portrait.hurt::after { transition: none; animation: none; }
-  .float { animation-duration: .01s; }
-  .float.big { animation-duration: .01s; }
-  .battle.shake1, .battle.shake2 { animation: none; }
-}
+#app.scr-in { animation: scr-in .22s ease-out; }
+@keyframes scr-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #app.scr-in { animation: none; } }
+html.rm .card, html.rm .node.avail, html.rm .idle, html.rm .enemy.acting, html.rm .enemy.hit .art, html.rm .portrait.lunge, html.rm .portrait.hurt, html.rm .portrait.hurt::after { transition: none; animation: none; }
+html.rm .float { animation-duration: .01s; }
+html.rm .float.big { animation-duration: .01s; }
+html.rm .battle.shake1, html.rm .battle.shake2 { animation: none; }
 
 /* Hero resources and hero select */
 .rage { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; color: #FF9A7A; }
@@ -372,7 +373,7 @@ html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0
 .chip.partner.re .pdot { background: #f0a030; animation: pdotpulse 1s ease-in-out infinite; }
 .chip.partner.off .pdot { background: #d9534f; }
 @keyframes pdotpulse { 50% { opacity: .3; } }
-@media (prefers-reduced-motion: reduce) { .chip.partner.re .pdot { animation: none; } }
+html.rm .chip.partner.re .pdot { animation: none; }
 .chip.code { font-family: var(--display); letter-spacing: .12em; }
 .bigcode { font-family: var(--display); letter-spacing: .2em; color: var(--gold); font-size: 1.3em; margin-left: 8px; }
 .codein { font-family: var(--display); font-size: 22px; letter-spacing: .2em; text-transform: uppercase; width: 150px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-height: 48px; }
@@ -568,9 +569,7 @@ html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0
 .rg.dn .rgw { animation: rg-down .8s ease-out both; }
 @keyframes rg-down { to { transform: translateY(14px) scale(1.02, .9); opacity: .4; filter: grayscale(1) brightness(.8); } }
 .duelfoe .rg { transform: scaleX(-1); }
-@media (prefers-reduced-motion: reduce) {
-  .rg *, .rg { animation: none !important; }
-}
+html.rm .rg *, html.rm .rg { animation: none !important; }
 
 .rg .crack { opacity: 0; }
 .rg.p2 .crack { opacity: 1; }
@@ -583,7 +582,7 @@ html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0
 .rg .pt-aura, .rg .sfx-calm .halo { animation: none !important; }
 .rg.lite .pt-armF, .rg.lite .pt-armB, .rg.lite .pt-wep, .rg.lite .pt-tail, .rg.lite .pt-jaw { animation: none; }
 /* Rotated tablets and short panes: never pin the control dock over the battlefield, and let the stage use the width */
-@media (max-height: 720px) { .dock { position: static; margin: 0; padding: 0; background: none; box-shadow: none; } }
+@media (max-height: 720px) and (orientation: landscape) { .dock { position: static; margin: 0; padding: 0; background: none; box-shadow: none; } }
 @media (orientation: landscape) and (min-width: 641px) and (max-width: 1100px) {
   .stage { grid-template-columns: minmax(150px, 210px) minmax(0, 1fr); gap: 12px; padding: 12px; }
   .stage.duel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -596,6 +595,23 @@ html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0
   .controls .endwrap { grid-column: auto; display: block; }
 }
 @media (max-width: 860px) and (orientation: portrait) { .enemies { gap: 12px; } .hand { justify-content: flex-start; } }
+/* Portrait tablets: keep energy / End Turn pinned like on phones */
+@media (min-width: 641px) and (max-width: 860px) and (orientation: portrait) {
+  .dock { position: sticky; bottom: 0; z-index: 30; padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(180deg, #121016E6, #121016 30%); box-shadow: 0 -10px 24px #000A; display: flex; flex-direction: column; gap: 6px; }
+}
+/* Very narrow phones */
+@media (max-width: 360px) {
+  body { padding-left: 6px; padding-right: 6px; }
+  .topbar { gap: 4px 8px; font-size: 14px; }
+  .topbar .btn { padding: 6px 8px; font-size: 14px; }
+  .controls { gap: 6px; padding: 6px; }
+  .energy { width: 42px; height: 42px; font-size: 17px; }
+  .controls .endwrap .btn { padding: 8px 10px; font-size: 15px; }
+  .incoming .big { font-size: 14px; }
+  .hand .card { width: 96px; }
+  .panel { padding: 14px; }
+  .title h1 { font-size: 38px; }
+}
 /* Touch polish: no double-tap zoom (pinch-zoom stays available), no sticky hover, 44px targets, snap-scrolling hand */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 body, button, .btn, .card, .node, .hand { touch-action: manipulation; }
@@ -741,10 +757,8 @@ html.hc .hpbar > i { background: #E8743B; }
 @keyframes rg-cheer { 0%, 100% { transform: rotate(calc(var(--f) * 12deg)); } 40% { transform: rotate(calc(var(--f) * 150deg)); } }
 @keyframes rg-cheerh { 40% { transform: translateY(-1px) rotate(calc(var(--f) * -6deg)); } }
 @media (max-width: 640px) { .vstage { grid-template-columns: 1fr; justify-items: center; } .vheroes .portrait { width: min(96px, 26vw); } }
-@media (prefers-reduced-motion: reduce) {
-  .mp, .mgear, .mfloat, .ch-spin, .ch-bob, .me-hot, .maptok .portrait, .rg.cheer .rgw, .rg.cheer .pt-armF, .rg.cheer .pt-wep, .rg.cheer .pt-head, .chestbtn:not(.open) .ch-all, .vhint, .confetti i { animation: none; }
-  .mp { opacity: .45; } .confetti { display: none; }
-}
+html.rm .mp, html.rm .mgear, html.rm .mfloat, html.rm .ch-spin, html.rm .ch-bob, html.rm .me-hot, html.rm .maptok .portrait, html.rm .rg.cheer .rgw, html.rm .rg.cheer .pt-armF, html.rm .rg.cheer .pt-wep, html.rm .rg.cheer .pt-head, html.rm .chestbtn:not(.open) .ch-all, html.rm .vhint, html.rm .confetti i { animation: none; }
+html.rm .mp { opacity: .45; } html.rm .confetti { display: none; }
 </style>
 </head>
 <body>
@@ -764,10 +778,24 @@ const SAVE_VERSION = 2; /* bump whenever the solo run state shape changes */
 let BUILD_ID = 'dev'; /* the server replaces this line with the real build when it serves the page */
 let saveGV = null; /* engine state version, cached */
 const TOKKEY = 'masked-spire-token';
-const REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const RMKEY = 'masked-spire-reduce-motion'; /* saved 'on' / 'off'; when absent, follow the OS preference */
+let REDUCE = false;
+(function () {
+  let saved = null;
+  try { saved = localStorage.getItem(RMKEY); } catch (e) {}
+  if (saved === 'on') REDUCE = true;
+  else if (saved === 'off') REDUCE = false;
+  else REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  document.documentElement.classList.toggle('rm', REDUCE);
+})();
+function setReduceMotion(v) {
+  REDUCE = !!v;
+  try { localStorage.setItem(RMKEY, REDUCE ? 'on' : 'off'); } catch (e) {}
+  document.documentElement.classList.toggle('rm', REDUCE);
+}
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 const ROMAN = ['I', 'II', 'III'];
-const E = createEngine({ reduce: REDUCE, onChange: () => onEngineChange() });
+const E = createEngine({ get reduce() { return REDUCE; }, onChange: () => onEngineChange() });
 const { CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES } = E;
 
 /* ---------- Art ---------- */
@@ -1701,7 +1729,11 @@ const SND = (function () {
     enemyturn(V, t) { V.tone({ t, f: 110, d: 0.04, r: 0.6, v: 0.1, parts: INH, type: 'triangle' }); },
     toll(V, t) { V.tone({ t, f: 98, d: 0.05, a: 0.004, r: 3.2, v: 0.28, parts: BELL }); },
     phase(V, t) { V.noise({ t, d: 1, a: 0.05, type: 'bp', f: 200, f2: 6000, q: 0.6, v: 0.2, r: 0.4 }); thump(V, t, 0.4, 55); V.tone({ t, f: 60, f2: 25, d: 1, a: 0.05, r: 0.4, v: 0.25, type: 'sawtooth', lp: 300 }); },
-    bad(V, t) { V.tone({ t, f: 180, f2: 120, d: 0.2, a: 0.01, r: 0.1, v: 0.08, type: 'square', lp: 700 }); }
+    bad(V, t) { V.tone({ t, f: 180, f2: 120, d: 0.2, a: 0.01, r: 0.1, v: 0.08, type: 'square', lp: 700 }); },
+    hover(V, t) { V.tone({ t, f: 880, d: 0.01, a: 0.003, r: 0.04, v: 0.025, type: 'triangle' }); },
+    draw(V, t) { V.noise({ t, d: 0.06, a: 0.005, type: 'bp', f: 1400, f2: 3200, q: 1, v: 0.08, r: 0.05 }); },
+    endturn(V, t) { V.tone({ t, f: 392, d: 0.05, r: 0.35, v: 0.08, parts: BELL }); V.tone({ t: t + 0.07, f: 262, d: 0.05, r: 0.5, v: 0.08, parts: BELL }); thump(V, t, 0.15, 100); },
+    transition(V, t) { V.noise({ t, d: 0.22, a: 0.08, type: 'bp', f: 300, f2: 1800, q: 0.8, v: 0.05, r: 0.12 }); }
   };
   function ui(name, delay) { if (!ok() || !UI[name]) return; UI[name](sV, ac.currentTime + 0.01 + (delay || 0)); }
 
@@ -1713,7 +1745,8 @@ const SND = (function () {
     if (sfxBus) sfxBus.gain.setTargetAtTime(sfxBase(), t, 0.05);
   }
   /* hit / block sound hooks: placeholders reuse existing hero sounds; overwrite HOOKS.hit / HOOKS.block to use real files later */
-  const HOOKS = { hit: (h, delay) => hero(h, 'hit', delay), block: (h, delay) => hero(h, 'guard', delay) };
+  const HOOKS = { hit: (h, delay) => hero(h, 'hit', delay), block: (h, delay) => hero(h, 'guard', delay), hover: () => ui('hover'), click: () => ui('click'), card: () => ui('card'), draw: delay => ui('draw', delay), endturn: () => ui('endturn'), transition: () => ui('transition') };
+  function fire(name, a, b) { try { if (HOOKS[name]) HOOKS[name](a, b); } catch (e) {} }
   function hit(h, delay) { try { HOOKS.hit(h, delay); } catch (e) {} }
   function block(h, delay) { try { HOOKS.block(h, delay); } catch (e) {} }
   function setPref(k, v) { prefs[k] = v; savePrefs(); if (k === 'musicVol' || k === 'sfxVol' || k === 'mute') { if (k !== 'mute') unlock(); applyVol(); } if (k === 'music') { if (!v) stopMusic(); else { unlock(); sync(); } } syncPanel(); }
@@ -1728,12 +1761,13 @@ const SND = (function () {
     panel.querySelector('[data-k="mute"]').checked = prefs.mute;
     panel.querySelector('[data-k="big"]').checked = A11Y.prefs.big;
     panel.querySelector('[data-k="hc"]').checked = A11Y.prefs.hc;
+    panel.querySelector('[data-k="rm"]').checked = REDUCE;
   }
   function togglePanel() {
     if (!panel) {
       panel = document.createElement('div'); panel.id = 'sndpanel'; panel.className = 'sndpanel'; panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Sound and display settings');
-      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label><input type="checkbox" data-k="big"> Larger text</label><label><input type="checkbox" data-k="hc"> High contrast (colorblind-safe)</label>';
-      panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx' || k === 'mute') setPref(k, e.target.checked); else if (k === 'big' || k === 'hc') A11Y.set(k, e.target.checked); });
+      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label><input type="checkbox" data-k="big"> Larger text</label><label><input type="checkbox" data-k="hc"> High contrast (colorblind-safe)</label><label><input type="checkbox" data-k="rm"> Reduce motion (overrides system setting)</label>';
+      panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx' || k === 'mute') setPref(k, e.target.checked); else if (k === 'big' || k === 'hc') A11Y.set(k, e.target.checked); else if (k === 'rm') setReduceMotion(e.target.checked); });
       panel.addEventListener('input', e => { const k = e.target.getAttribute('data-k'); if (k === 'musicVol' || k === 'sfxVol') { setPref(k, Math.max(0, Math.min(1, Number(e.target.value) / 100))); if (k === 'sfxVol') ui('click'); } });
       document.body.appendChild(panel);
     }
@@ -1744,7 +1778,7 @@ const SND = (function () {
     ['pointerdown', 'keydown', 'touchend'].forEach(ev => document.addEventListener(ev, first, { passive: true }));
     document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume().then(sync).catch(() => {}); });
   }
-  return { prefs, scene, stinger, hero, enemy, ui, hit, block, HOOKS, togglePanel, unlock, SPK, _t: { voices, TRACKS, STING, playSting, BPM, MODE, HERO, ARCH, EVOICE, UI }, get ctx() { return ac; }, get playing() { return playing; } };
+  return { prefs, scene, stinger, hero, enemy, ui, fire, hit, block, HOOKS, togglePanel, unlock, SPK, _t: { voices, TRACKS, STING, playSting, BPM, MODE, HERO, ARCH, EVOICE, UI }, get ctx() { return ac; }, get playing() { return playing; } };
 })();
 
 /* ---------- Scenery, map art, chest and victory (client only) ---------- */
@@ -2008,8 +2042,12 @@ function sndSync(V, prev) {
     else if (scr === 'defeat') SND.stinger('defeat');
     else if (scr === 'treasure') SND.ui('thud');
   }
-  if (!V.cb || scr !== 'combat') return;
+  if (!V.cb || scr !== 'combat') { CL.sndHand = null; return; }
   const c = V.cb, me = V.P[V.me].h;
+  const hu = c.hand.map(x => x[0]);
+  const fresh = CL.sndHand ? hu.filter(u => CL.sndHand.indexOf(u) < 0) : (was && was !== 'combat' ? hu : []);
+  fresh.slice(0, 6).forEach((u, i) => SND.fire('draw', 0.05 * i));
+  CL.sndHand = hu;
   if (CL.sndT !== undefined && c.t !== CL.sndT && !c.duel) SND.ui('turn');
   CL.sndT = c.t;
   c.en.forEach(e => {
@@ -2336,7 +2374,7 @@ function endHTML(V, won) {
   const me = V.P[V.me];
   return '<section class="panel"><h2>' + (won ? 'The Spire falls silent' : 'Your mask shatters') + '</h2>' +
     (won ? '<div class="vstage solo tier-gold" style="--ce:0s">' + heroCheer(V) + confettiHTML(true) + '</div>' : '') +
-    '<p>' + (won ? esc(HEROES[me.h].n) + ' conquered all three acts of the Masked Spire.' : (V.n > 1 ? 'Your party fell' : 'You fell') + ' in Act ' + ROMAN[V.act - 1] + ', floor ' + V.floor + '.') + ' Enemies defeated: ' + me.k + '. Deck size: ' + V.deck.length + '.</p>' +
+    '<p>' + (won ? esc(HEROES[me.h].n) + ' conquered all three acts of the Masked Spire.' : (V.n > 1 ? 'Your party fell' : 'You fell') + ' in Act ' + ROMAN[V.act - 1] + ', floor ' + V.floor + '.') + ' Enemies defeated: ' + me.k + '. Deck size: ' + V.deck.length + '.</p><p class="muted">Difficulty: ' + esc((E.DIFFS[V.df] || E.DIFFS[1]).n) + '</p>' +
     '<div class="row"><button type="button" class="btn primary" data-act="leave">Back to title</button></div></section>';
 }
 function titleHTML() {
@@ -2369,7 +2407,7 @@ function heroPickCards(act, chosen) {
   }).join('') + '</div>';
 }
 function pickHTML() {
-  return '<section class="panel"><h2>Choose your hero</h2>' + heroPickCards('solohero', null) + '<div class="row"><button type="button" class="btn" data-act="leave">Back</button></div></section>';
+  return '<section class="panel"><h2>Choose your hero</h2>' + diffPickHTML(prefDiff(), 'setdiff', true) + heroPickCards('solohero', null) + '<div class="row"><button type="button" class="btn" data-act="leave">Back</button></div></section>';
 }
 function netLine() {
   const n = CL.net;
@@ -2394,6 +2432,7 @@ function lobbyHTML(V) {
     '<div class="row"><button type="button" class="btn" data-act="copycode">Copy code</button><button type="button" class="btn" data-act="copylink">Copy invite link</button>' + (navigator.share ? '<button type="button" class="btn" data-act="sharelink">Share…</button>' : '') + '</div>' +
     '<p class="netline" role="status" aria-live="polite">' + esc(CL.copied || '') + '</p>' +
     '<ul class="lobbyl">' + slot(0) + slot(1) + '</ul>' +
+    diffPickHTML(V.df == null ? 1 : V.df, 'hostdiff', host) +
     heroPickCards('hero', V.P[me].h) +
     '<div class="row">' + (host ? '<button type="button" class="btn primary" data-act="start"' + (ready ? '' : ' disabled') + '>' + (p2 ? (ready ? 'Start the climb' : 'Waiting for both heroes…') : 'Waiting for partner…') + '</button>' : '<span class="muted">' + (ready ? 'Waiting for the host to start…' : 'Waiting for both heroes…') + '</span>') +
     '<button type="button" class="btn" data-act="leave">Leave</button></div>' + netLine() + '</section>';
@@ -2462,6 +2501,12 @@ function paint(V) {
   }
   if (!CL.seen) { CL.lastFx = maxFx; CL.seen = true; }
   const prev = CL.lastFx;
+  const sk = V ? V.scr : (CL.role || 'title');
+  if (CL.scrKey !== undefined && CL.scrKey !== sk) {
+    if (!REDUCE) { app.classList.remove('scr-in'); void app.offsetWidth; app.classList.add('scr-in'); setTimeout(() => app.classList.remove('scr-in'), 260); }
+    if (['reward', 'actclear', 'victory', 'defeat', 'duelend'].indexOf(sk) < 0) SND.fire('transition');
+  }
+  CL.scrKey = sk;
   let body = '';
   if (!V) {
     if (CL.role === 'pick') body = pickHTML();
@@ -2529,7 +2574,21 @@ function dropSock(sock, code) {
   if (CL.role === 'online') { CL.net.state = 'Connection lost. Reconnecting…'; render(); scheduleReconnect(); }
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && CL.role === 'online' && ws && ws.readyState === 1 && !hbPongBy) hbLast = 0; });
-document.addEventListener('visibilitychange', () => { if (CL.role === 'online') wsSend({ t: 'away', v: !!document.hidden }); });
+document.addEventListener('visibilitychange', () => { if (CL.role === 'online') { wsSend({ t: 'away', v: !!document.hidden }); if (!document.hidden) requestSync(); } });
+let lastSyncAt = 0, lastViewAt = 0, rejoinTried = false;
+function requestSync() {
+  if (CL.role !== 'online' || !wsConnected() || CL.pending) return;
+  const now = Date.now();
+  if (now - lastSyncAt < 2000) return;
+  lastSyncAt = now;
+  if (CL.code) wsSend({ t: 'sync' });
+}
+const DIFFKEY = 'masked-spire-diff';
+function prefDiff() { let d = NaN; try { d = parseInt(localStorage.getItem(DIFFKEY), 10); } catch (e) {} return d >= 0 && d < E.DIFFS.length ? d : 1; }
+function setPrefDiff(d) { try { localStorage.setItem(DIFFKEY, String(d)); } catch (e) {} }
+function diffPickHTML(cur, act, on) {
+  return '<div class="row" role="group" aria-label="Difficulty"><span class="muted">Difficulty</span>' + E.DIFFS.map((d, i) => '<button type="button" class="btn' + (i === cur ? ' primary' : '') + '" data-act="' + act + '" data-arg="' + i + '" aria-pressed="' + (i === cur ? 'true' : 'false') + '"' + (on ? '' : ' disabled') + '>' + esc(d.n) + '</button>').join('') + '</div>';
+}
 function soloView() { return E.G ? E.buildView(0) : null; }
 function render() {
   if (CL.role === 'online') return paint(CL.V);
@@ -2552,11 +2611,34 @@ function saveSolo() {
 }
 function wsURL() { return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'; }
 function wsSend(o) { if (ws && ws.readyState === 1) { ws.send(JSON.stringify(o)); return true; } return false; }
-let actLock = 0, nextRetryAt = 0, netNote = '', netNoteUntil = 0, srvRestart = 0;
+let actLock = 0, nextRetryAt = 0, netNote = '', netNoteUntil = 0, srvRestart = 0, coldSince = 0;
+function updateColdScreen() {
+  let ov = document.getElementById('coldscreen');
+  if (!ov) {
+    const st = document.createElement('style');
+    st.textContent = '#coldscreen{position:fixed;inset:0;z-index:10000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;background:rgba(10,8,16,.94);color:#fff;font:500 16px system-ui,sans-serif}#coldscreen h2{margin:0;font-size:22px}#coldscreen p{margin:0;max-width:420px;opacity:.85;line-height:1.4}#coldscreen .cs-spin{width:44px;height:44px;border-radius:50%;border:5px solid rgba(255,255,255,.2);border-top-color:#ffd54a;animation:cs-rot 1s linear infinite}#coldscreen .cs-row{display:flex;gap:10px;margin-top:6px}#coldscreen button{font:inherit;padding:10px 18px;min-height:44px;border-radius:8px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer}#coldscreen button:focus-visible{outline:3px solid #ffd54a;outline-offset:2px}@keyframes cs-rot{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){#coldscreen .cs-spin{animation:none}}';
+    document.head.appendChild(st);
+    ov = document.createElement('div');
+    ov.id = 'coldscreen'; ov.setAttribute('role', 'status'); ov.setAttribute('aria-live', 'polite');
+    ov.innerHTML = '<div class="cs-spin" aria-hidden="true"></div><h2>Waking the game server…</h2><p id="coldtext"></p><p>Free hosting sleeps when idle, so the first connection can take up to a minute. Hang tight, we will connect automatically.</p><div class="cs-row"><button type="button" id="coldretry">Try now</button><button type="button" id="coldcancel">Cancel</button></div>';
+    document.body.appendChild(ov);
+    document.getElementById('coldretry').addEventListener('click', () => { if (CL.role === 'online' && !wsConnected() && !(ws && ws.readyState === 0)) { wsTries = 0; connect(); } });
+    document.getElementById('coldcancel').addEventListener('click', () => { coldSince = 0; leaveAll(); render(); });
+  }
+  if (CL.role !== 'online' || wsConnected()) coldSince = 0;
+  const show = !!(coldSince && Date.now() - coldSince > 4000);
+  if (show) {
+    const t = document.getElementById('coldtext');
+    const msg = 'Waiting for the server… ' + Math.round((Date.now() - coldSince) / 1000) + 's elapsed (attempt ' + (wsTries + 1) + ')';
+    if (t.textContent !== msg) t.textContent = msg;
+  }
+  ov.style.display = show ? 'flex' : 'none';
+}
 const SERVER_ACTS = ['hero', 'start', 'node', 'card', 'enemy', 'end', 'reward', 'bossreward', 'done', 'restheal', 'buy', 'remove'];
 function wsConnected() { return !!(ws && ws.readyState === 1); }
 function netFlash(msg) { netNote = msg; netNoteUntil = Date.now() + 2500; updateNetBar(); }
 function updateNetBar() {
+  updateColdScreen();
   let bar = document.getElementById('netbar');
   if (!bar) {
     const st = document.createElement('style');
@@ -2585,16 +2667,18 @@ function updateNetBar() {
   bar.style.display = msg ? 'flex' : 'none';
 }
 setInterval(updateNetBar, 500);
-window.addEventListener('online', () => { if (CL.role === 'online' && !wsConnected() && !(ws && ws.readyState === 0)) { wsTries = 0; connect(); } });
+window.addEventListener('online', () => { if (CL.role === 'online' && !wsConnected() && !(ws && ws.readyState === 0)) { wsTries = 0; connect(); } else requestSync(); });
 function connect() {
   clearTimeout(wsTimer);
+  if (!coldSince) coldSince = Date.now();
   CL.net.state = wsTries ? 'Reconnecting to the game server…' : 'Connecting to the game server…';
   render();
   let sock;
   try { sock = new WebSocket(wsURL()); } catch (e) { scheduleReconnect(); return; }
   ws = sock;
   sock.onopen = () => {
-    wsTries = 0; actLock = 0; srvRestart = 0; CL.net.state = 'Connected'; CL.err = '';
+    wsTries = 0; actLock = 0; srvRestart = 0; coldSince = 0; CL.net.state = 'Connected'; CL.err = '';
+    updateColdScreen();
     hbStart(sock);
     if (CL.pending) wsSend(CL.pending); else if (CL.code) wsSend({ t: 'join', code: CL.code, tok: CL.tok, build: BUILD_ID });
     if (document.hidden) wsSend({ t: 'away', v: true });
@@ -2605,10 +2689,13 @@ function connect() {
     hbPongBy = 0;
     if (m.t === 'pong') return;
     if (m.t === 'presence') { if (PRES_LABEL[m.st]) { CL.pres = m.st; render(); } }
+    else if (m.t === 'nosession') {
+      if (CL.code && !rejoinTried) { rejoinTried = true; wsSend({ t: 'join', code: CL.code, tok: CL.tok, build: BUILD_ID }); }
+    }
     else if (m.t === 'restart') { srvRestart = Date.now(); updateNetBar(); }
     else if (m.t === 'joined') { CL.pres = ''; CL.code = m.code; CL.pending = null; try { sessionStorage.setItem(CODEKEY, m.code); } catch (e) {} render(); }
     else if (m.t === 'view') {
-      actLock = 0;
+      actLock = 0; lastViewAt = Date.now(); rejoinTried = false;
       CL.V = m.v;
       if (CL.sel != null && (!m.v.cb || !m.v.cb.hand.some(h => h[0] === CL.sel))) CL.sel = null;
       render();
@@ -2684,7 +2771,12 @@ function send(a, x, y) {
   if (CL.role === 'online') {
     if (!wsConnected()) { netFlash('Offline: action not sent.'); return false; }
     if (Date.now() < actLock) return false;
-    if (wsSend({ t: 'act', a, x: x == null ? null : x, y: y == null ? null : y })) { actLock = Date.now() + 1200; return true; }
+    if (wsSend({ t: 'act', a, x: x == null ? null : x, y: y == null ? null : y })) {
+      actLock = Date.now() + 1200;
+      const sentAt = Date.now();
+      setTimeout(() => { if (lastViewAt < sentAt) { lastSyncAt = 0; requestSync(); } }, 4000);
+      return true;
+    }
     return false;
   }
   E.doAction(0, a, x, y);
@@ -2749,8 +2841,8 @@ document.getElementById('app').addEventListener('click', ev => {
   const V = curView();
   switch (act) {
     case 'solo': CL.role = 'pick'; E.G = null; render(); break;
-    case 'solohero': { const G = E.baseG('solo'); G.P = [E.newPlayer(arg, CL.tok)]; E.G = G; CL.role = 'solo'; CL.seen = false; render(); saveSolo(); break; }
-    case 'host': CL.err = ''; goOnline({ t: 'create', tok: CL.tok }); break;
+    case 'solohero': { const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(arg, CL.tok)]; E.G = G; CL.role = 'solo'; CL.seen = false; render(); saveSolo(); break; }
+    case 'host': CL.err = ''; goOnline({ t: 'create', tok: CL.tok, diff: prefDiff() }); break;
     case 'continue': {
       const s = loadSave();
       if (!s) { render(); break; }
@@ -2766,6 +2858,8 @@ document.getElementById('app').addEventListener('click', ev => {
       else lobbyCopy(inviteURL(), 'Invite link copied.');
       break;
     case 'snd': SND.togglePanel(); break;
+    case 'setdiff': setPrefDiff(Number(arg)); render(); break;
+    case 'hostdiff': setPrefDiff(Number(arg)); send('diff', Number(arg)); break;
     case 'leave': leaveAll(); break;
     case 'hero': send('hero', arg); break;
     case 'start': send('start'); break;
@@ -2806,6 +2900,30 @@ document.getElementById('app').addEventListener('click', ev => {
     default: break;
   }
 });
+/* Sound hook layer: delegated hover / click / end-turn sounds for any [data-act] control */
+(function () {
+  const root = document.getElementById('app');
+  const live = t => { const b = t && t.closest ? t.closest('[data-act]') : null; return b && !b.disabled && b.getAttribute('aria-disabled') !== 'true' ? b : null; };
+  let lastHover = 0;
+  root.addEventListener('pointerover', ev => {
+    if (ev.pointerType !== 'mouse') return;
+    const b = live(ev.target);
+    if (!b || b === live(ev.relatedTarget)) return;
+    const now = performance.now();
+    if (now - lastHover < 70) return;
+    lastHover = now;
+    SND.fire('hover');
+  });
+  root.addEventListener('click', ev => {
+    const b = live(ev.target);
+    if (!b) return;
+    const act = b.dataset.act;
+    if (act === 'end') SND.fire('endturn');
+    else if (act === 'card' && b.classList.contains('dim')) SND.ui('bad');
+    else if (act === 'card' || act === 'enemy') SND.fire('card');
+    else SND.fire('click');
+  }, true);
+})();
 /* Damage preview: fills the .pv placeholders in place (no repaint, so hover can't loop). */
 function showPreview(V) {
   const app = document.getElementById('app');

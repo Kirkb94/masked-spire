@@ -5,12 +5,12 @@
 'use strict';
 function createEngine(hooks) {
 hooks = hooks || {};
-const REDUCE = !!hooks.reduce;
+const isReduce = () => !!hooks.reduce;
 
 const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
 const pick = a => a[Math.floor(Math.random() * a.length)];
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-const wait = ms => new Promise(r => setTimeout(r, REDUCE ? Math.min(ms, 120) : ms));
+const wait = ms => new Promise(r => setTimeout(r, isReduce() ? Math.min(ms, 120) : ms));
 let uidN = 1;
 const mk = id => ({ u: uidN++, id });
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -295,8 +295,8 @@ function available() {
 }
 
 /* ---------- Run setup ---------- */
-function baseG(mode) {
-  return { v: 3, mode, code: null, screen: mode === 'coop' ? 'lobby' : 'map', act: 1, floor: 0, map: genMap(), pos: null, P: [], combat: null, fx: [], fxSeq: 0, duelWinner: null, started: mode !== 'coop' };
+function baseG(mode, diff) {
+  return { v: 3, mode, code: null, screen: mode === 'coop' ? 'lobby' : 'map', act: 1, floor: 0, map: genMap(), pos: null, P: [], combat: null, fx: [], fxSeq: 0, duelWinner: null, started: mode !== 'coop', diff: normDiff(diff) };
 }
 function newPlayer(hero, tok) {
   const p = { hero: null, tok: tok || null, hp: 0, maxHp: 0, gold: 99, deck: [], relics: [], kills: 0, done: false, vote: null, ack: 0, conn: true, reward: null, shop: null, treasure: null, actclear: null };
@@ -362,10 +362,13 @@ function advanceIfDone() {
 
 /* ---------- Combat ---------- */
 const DIFF = 1.5; // extra difficulty on top of the base 1.15: enemy HP and damage
+const DIFFS = [{ k: 'easy', n: 'Easy', m: 0.8 }, { k: 'normal', n: 'Normal', m: 1 }, { k: 'hard', n: 'Hard', m: 1.2 }]; // G.diff indexes this; Normal = unchanged balance
+function normDiff(d) { d = d == null || d === '' ? NaN : Number(d); return Number.isInteger(d) && d >= 0 && d < DIFFS.length ? d : 1; }
+function diffMult() { return DIFFS[normDiff(G && G.diff)].m; }
 function log(s) { const c = G.combat; if (!c) return; c.log.unshift(s); if (c.log.length > 18) c.log.length = 18; }
 function makeEnemy(key, idx, dup, hpOverride, raw) {
   const d = EN[key];
-  const mult = raw ? 1 : 1.15 * DIFF * (G.P.length > 1 ? 1.6 : 1);
+  const mult = raw ? 1 : 1.15 * DIFF * diffMult() * (G.P.length > 1 ? 1.6 : 1);
   const hp = Math.round((hpOverride || rnd(d.hp[0], d.hp[1])) * mult);
   return { idx, key, n: d.names ? d.names[dup % d.names.length] : d.n, variant: dup, hp, max: hp, block: 0, str: 0, weak: 0, vuln: 0, thorns: 0, artifact: d.artifact || 0,
     rooted: false, intangible: false, reflect: false, parry: false, ritual: 0, pi: dup % d.pat.length, dead: false, stolen: {}, acting: false, p2: false, split: false, fragile: 1, tg: 0, hitS: 0, deadS: 0 };
@@ -475,7 +478,7 @@ function intentOf(e, ahead) {
   return p[i];
 }
 function enemyDmg(e, base, T) {
-  let d = Math.round(base * 1.15 * DIFF) + e.str;
+  let d = Math.round(base * 1.15 * DIFF * diffMult()) + e.str;
   if (e.weak > 0) d = Math.floor(d * 0.75);
   if (T && T.vuln > 0) d = Math.floor(d * 1.5);
   if (T && T.stance === 'fury') d = Math.floor(d * 1.25);
@@ -600,7 +603,7 @@ function playCard(pi, uid, tgt) {
   if (d.t === 'attack') { if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
   if (d.t === 'skill' && !c.duel) aliveEnemies().filter(x => x.key === 'ogre').forEach(og => { og.str += 2; float(tagOf(og), '+2 Strength', 'buff'); log('The Ogre enrages: +2 Strength.'); });
   if (d.t !== 'power') (d.x ? s.exhaust : s.discard).push(card);
-  if (!c.duel && !aliveEnemies().length) { c.busy = true; render(); setTimeout(win, REDUCE ? 100 : 650); return; }
+  if (!c.duel && !aliveEnemies().length) { c.busy = true; render(); setTimeout(win, isReduce() ? 100 : 650); return; }
   render();
 }
 function endTurnAction(pi) {
@@ -827,6 +830,9 @@ function doAction(pi, a, x, y) {
     case 'hero':
       if (scr === 'lobby' && HEROES[x]) { p.hero = x; render(); }
       break;
+    case 'diff':
+      if (scr === 'lobby' && pi === 0 && x != null) { G.diff = normDiff(x); render(); }
+      break;
     case 'start':
       if (scr === 'lobby' && pi === 0 && G.P.length === 2 && G.P.every(q => q.hero) && G.P[1].conn) {
         G.P.forEach(q => equipHero(q, q.hero)); G.started = true; G.screen = 'map'; resetDone(); render();
@@ -965,7 +971,7 @@ function buildView(me) {
   const V = {
     me, n: G.P.length, mode: G.mode, code: G.code, scr: G.screen, act: G.act, floor: G.floor, tok: p ? p.tok : null, ack: p ? p.ack : 0,
     P: G.P.map(q => ({ h: q.hero, hp: q.hp, mx: q.maxHp, g: q.gold, rl: q.relics, dn: q.done ? 1 : 0, vt: q.vote, on: q.conn ? 1 : 0, k: q.kills })),
-    deck: p ? p.deck.map(x => [x.u, x.id]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0
+    deck: p ? p.deck.map(x => [x.u, x.id]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff)
   };
   const c = G.combat;
   if (G.screen === 'map') {
@@ -1017,7 +1023,7 @@ return {
   get G() { return G; }, set G(v) { G = v; },
   get uidN() { return uidN; }, set uidN(v) { uidN = v; },
   doAction, buildView, previewCard, newPlayer, baseG, equipHero, startCombat, startDuel, win,
-  CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES, PRICE
+  DIFFS, CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES, PRICE
 };
 }
 if (typeof module !== 'undefined' && module.exports) module.exports = { createEngine };

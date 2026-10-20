@@ -67,6 +67,35 @@ function takeToken(b, rate, burst) {
   return false;
 }
 
+/* Schema check for incoming websocket messages. Returns an error string, or '' if the message is fine. */
+function isScalarArg(v) {
+  return v === undefined || v === null || (typeof v === 'number' && Number.isFinite(v)) || (typeof v === 'string' && v.length <= 64);
+}
+function checkMsg(m) {
+  if (!m || typeof m !== 'object' || Array.isArray(m)) return 'Malformed message: expected a JSON object.';
+  if (typeof m.t !== 'string' || m.t.length > 16) return 'Malformed message: missing type.';
+  switch (m.t) {
+    case 'ping': case 'leave': return '';
+    case 'create':
+      if (typeof m.tok !== 'string' || m.tok.length > 64) return 'Malformed message: bad player id.';
+      if (m.build !== undefined && (typeof m.build !== 'string' || m.build.length > 64)) return 'Malformed message: bad build.';
+      return '';
+    case 'join':
+      if (typeof m.tok !== 'string' || m.tok.length > 64) return 'Malformed message: bad player id.';
+      if (typeof m.code !== 'string' || m.code.length > 16) return 'Malformed message: bad room code.';
+      if (m.build !== undefined && (typeof m.build !== 'string' || m.build.length > 64)) return 'Malformed message: bad build.';
+      return '';
+    case 'act':
+      if (typeof m.a !== 'string' || m.a.length < 1 || m.a.length > 20) return 'Malformed message: bad action.';
+      if (!isScalarArg(m.x) || !isScalarArg(m.y)) return 'Malformed message: bad action arguments.';
+      return '';
+    case 'away':
+      if (typeof m.v !== 'boolean') return 'Malformed message: bad away flag.';
+      return '';
+    default: return 'Unknown message type.';
+  }
+}
+
 /* ---------- Static files ---------- */
 const SEC_HEADERS = {
   'x-content-type-options': 'nosniff',
@@ -86,6 +115,11 @@ const server = http.createServer((req, res) => {
     pathname = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   } catch (e) { send(res, 400, { 'content-type': 'text/plain' }, 'Bad request'); return; }
   if (pathname.indexOf('\0') !== -1) { send(res, 400, { 'content-type': 'text/plain' }, 'Bad request'); return; }
+  if (pathname === '/health') {
+    const body = JSON.stringify({ ok: !shuttingDown, build: BUILD, uptime: Math.round(process.uptime()), rooms: rooms.size, maxRooms: MAX_ROOMS, connections: totalConns });
+    send(res, shuttingDown ? 503 : 200, { 'content-type': 'application/json', 'cache-control': 'no-store' }, head ? undefined : body);
+    return;
+  }
   if (pathname === '/healthz') { send(res, 200, { 'content-type': 'text/plain' }, head ? undefined : 'ok'); return; }
   if (pathname === '/version') { send(res, 200, { 'content-type': 'application/json', 'cache-control': 'no-store' }, head ? undefined : JSON.stringify({ build: BUILD })); return; }
   const p = pathname === '/' ? '/index.html' : pathname;
@@ -107,11 +141,11 @@ function makeCode() {
   const al = 'abcdefghjkmnpqrstuvwxyz23456789';
   for (;;) { let s = ''; for (let i = 0; i < 5; i++) s += al[Math.floor(Math.random() * al.length)]; if (!rooms.has(s)) return s; }
 }
-function createRoom(tok) {
+function createRoom(tok, diff) {
   const code = makeCode();
   const room = { code, sockets: new Set(), last: Date.now(), pending: false, away: [false, false], dropAt: [0, 0], timers: [null, null] };
   room.E = createEngine({ onChange: () => scheduleBroadcast(room) });
-  const G = room.E.baseG('coop');
+  const G = room.E.baseG('coop', diff);
   G.code = code;
   G.P = [room.E.newPlayer(null, tok)];
   room.E.G = G;
@@ -213,11 +247,20 @@ wss.on('connection', (ws, req) => {
     if (++strikes >= MAX_STRIKES) { try { ws.terminate(); } catch (e) {} return; }
     if (now - lastWarn > 5000) { lastWarn = now; err('Slow down, you are sending too many requests.'); }
   };
-  ws.on('message', raw => {
+  let lastBad = 0;
+  const bad = msg => {
+    const now = Date.now();
+    if (now - strikeStart > STRIKE_WINDOW_MS) { strikeStart = now; strikes = 0; }
+    if (++strikes >= MAX_STRIKES) { try { ws.terminate(); } catch (e) {} return; }
+    if (now - lastBad > 1000) { lastBad = now; err(msg); }
+  };
+  ws.on('message', (raw, isBinary) => {
     if (!takeToken(allBucket, MSG_RATE, MSG_BURST)) return limited();
+    if (isBinary === true) return bad('Binary messages are not supported.');
     let m;
-    try { m = JSON.parse(String(raw)); } catch (e) { return; }
-    if (!m || typeof m.t !== 'string') return;
+    try { m = JSON.parse(String(raw)); } catch (e) { return bad('Malformed message: not valid JSON.'); }
+    const why = checkMsg(m);
+    if (why) return bad(why);
     ws.isAlive = true;
     if (m.t === 'ping') { try { ws.send('{"t":"pong"}'); } catch (e) {} return; }
     if ((m.t === 'create' || m.t === 'join') && !takeToken(joinBucket, JOIN_RATE, JOIN_BURST)) return limited();
@@ -227,7 +270,7 @@ wss.on('connection', (ws, req) => {
       if (buildMismatch(m)) return err(RELOAD_MSG, true);
       if (rooms.size >= MAX_ROOMS) return err('The server is full right now. Try again later.', true);
       detach(ws);
-      const room = createRoom(tok);
+      const room = createRoom(tok, m.diff);
       ws.room = room; ws.pi = 0; room.sockets.add(ws);
       setConn(room);
       ws.send(JSON.stringify({ t: 'joined', code: room.code, pi: 0 }));
@@ -263,6 +306,17 @@ wss.on('connection', (ws, req) => {
       const y = typeof m.y === 'number' || typeof m.y === 'string' ? (typeof m.y === 'string' ? m.y.slice(0, 20) : m.y) : null;
       try { room.E.doAction(ws.pi, a, x, y); } catch (e) { console.error('action failed', room.code, a, e); }
       scheduleBroadcast(room);
+    } else if (m.t === 'sync') {
+      const now = Date.now();
+      if (ws.lastSync && now - ws.lastSync < 1000) return;
+      ws.lastSync = now;
+      const room = ws.room;
+      if (!room || ws.pi == null || !room.E.G || !room.E.G.P[ws.pi]) { try { ws.send('{"t":"nosession"}'); } catch (e) {} return; }
+      try {
+        ws.send(JSON.stringify({ t: 'joined', code: room.code, pi: ws.pi }));
+        ws.send(JSON.stringify({ t: 'view', v: room.E.buildView(ws.pi) }));
+      } catch (e) {}
+      sendPartnerPresence(ws, room);
     } else if (m.t === 'away') {
       const room = ws.room;
       if (!room || ws.pi == null) return;
