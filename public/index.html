@@ -96,6 +96,13 @@ button { font: inherit; color: inherit; }
 .hpbar > i { display: block; height: 100%; background: linear-gradient(#F0606E, #B8303E); }
 .shield { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px 2px 6px; border-radius: 999px; background: var(--def-bg); color: var(--def-fg); border: 1px solid #3A6A9A; font-weight: 700; font-size: 17px; }
 .shield svg { width: 18px; height: 18px; }
+.hpbar > u { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(#FFD9A0, #E8A050); z-index: 0; pointer-events: none; }
+.hpbar > i { position: relative; z-index: 1; }
+.shield.pop { animation: shpop .45s ease-out; }
+@keyframes shpop { 0% { transform: scale(.6); } 55% { transform: scale(1.25); box-shadow: 0 0 10px #6FB8F0; } 100% { transform: scale(1); } }
+html.rm .hpbar > i, html.rm .hpbar > u { transition: none !important; }
+html.rm .hpbar > u { display: none; }
+html.rm .shield.pop { animation: none; }
 .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; color: var(--teal); }
 .flow i { width: 13px; height: 13px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 8px var(--teal); }
 .badges { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -394,6 +401,16 @@ html.rm .battle.shake1, html.rm .battle.shake2 { animation: none; }
 .waitnote.ok { color: #8FF0B0; }
 .netwarn { padding: 10px 14px; border-radius: 10px; background: #4A2A10; border: 1px solid #8A5A20; color: #FFD9A0; font-weight: 700; }
 .chip.partner { background: #24323A; }
+.lbanner { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; font-weight: 600; border: 1px solid #3A5A4A; background: #1E3128; }
+.lbanner.wait { border-color: #5A5A3A; background: #2E2E1E; }
+.lbanner.bad { border-color: #8A3A2A; background: #4A2A10; }
+.lbanner .lbic { font-weight: 800; }
+.turnchip { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px auto; padding: 6px 14px; border-radius: 999px; background: #24323A; border: 1px solid #4A6A7A; font-weight: 600; width: fit-content; max-width: 100%; }
+.turnchip.you { background: #2E2A12; border-color: #E0C14A; }
+.turnchip .tdot { width: .6em; height: .6em; border-radius: 50%; background: #9AB; }
+.turnchip.you .tdot { background: #E0C14A; }
+.turnchip.wt .tdot { animation: pdotpulse 1s ease-in-out infinite; }
+html.rm .turnchip.wt .tdot { animation: none; }
 .chip.partner.off { background: #4A2A10; }
 .chip.partner.away { background: #3A3A22; }
 .chip.partner.re { background: #4A3A10; }
@@ -815,6 +832,14 @@ html.cb .intentbar.k-deb { background-image: repeating-linear-gradient(45deg, rg
 @media (max-width: 640px) { .vstage { grid-template-columns: 1fr; justify-items: center; } .vheroes .portrait { width: min(96px, 26vw); } }
 html.rm .mp, html.rm .mgear, html.rm .mfloat, html.rm .ch-spin, html.rm .ch-bob, html.rm .me-hot, html.rm .maptok .portrait, html.rm .rg.cheer .rgw, html.rm .rg.cheer .pt-armF, html.rm .rg.cheer .pt-wep, html.rm .rg.cheer .pt-head, html.rm .chestbtn:not(.open) .ch-all, html.rm .vhint, html.rm .confetti i { animation: none; }
 html.rm .mp { opacity: .45; } html.rm .confetti { display: none; }
+/* end-screen effects: full-screen confetti (victory) + vignette (defeat) */
+.endfx { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+.endfx.conf i { position: absolute; top: -16px; width: 9px; height: 15px; background: var(--c); opacity: 0; animation: efc var(--dr) ease-in calc(var(--dl) - var(--ce, 0s)) both; }
+.endfx.vig { background: radial-gradient(ellipse at center, transparent 35%, rgba(120, 10, 25, .5) 72%, rgba(0, 0, 0, .88) 100%); opacity: 0; animation: efv 2.4s ease-out calc(.2s - var(--ce, 0s)) both; }
+@keyframes efc { 0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0); } 100% { opacity: 0; transform: translate3d(var(--sw), 110vh, 0) rotate(var(--rx)); } }
+@keyframes efv { from { opacity: 0; } to { opacity: 1; } }
+html.rm .endfx.conf { display: none; }
+html.rm .endfx.vig { animation: none; opacity: .85; }
 /* ---------- Landscape-only touch layout (phones and tablets) ---------- */
 #rotate { display: none; position: fixed; inset: 0; z-index: 1000; background: var(--bg); color: var(--ink); flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 24px; }
 #rotate svg { width: 96px; height: 96px; animation: rot-tilt 2.4s ease-in-out infinite; }
@@ -822,7 +847,8 @@ html.rm .mp { opacity: .45; } html.rm .confetti { display: none; }
 @keyframes rot-tilt { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
 html.rm #rotate svg { animation: none; }
 @media (prefers-reduced-motion: reduce) { #rotate svg { animation: none; } }
-@media (pointer: coarse) and (orientation: portrait) { #rotate { display: flex; } }
+@media (pointer: coarse) and (orientation: portrait) { html:not(.allow-portrait) #rotate { display: flex; } }
+#rotate .btn { min-height: 48px; padding: 10px 18px; margin-top: 6px; }
 @media (pointer: coarse) and (orientation: landscape) {
   :root { --u: min(1vh, 1.4vw); }
   body { padding-block: 6px; padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); }
@@ -908,7 +934,17 @@ html.rm #rotate svg { animation: none; }
     <filter id="soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="8"></feGaussianBlur></filter>
   </defs>
 </svg>
-<div id="rotate" role="alert"><svg viewBox='0 0 64 64' aria-hidden='true'><rect x='20' y='6' width='24' height='46' rx='4' fill='none' stroke='currentColor' stroke-width='3'/><circle cx='32' cy='45' r='2' fill='currentColor'/></svg><h2>Rotate your device</h2><p>Masked Spire is played in landscape. Turn your phone or tablet sideways to continue.</p></div>
+<div id="rotate" role="alert"><svg viewBox='0 0 64 64' aria-hidden='true'><rect x='20' y='6' width='24' height='46' rx='4' fill='none' stroke='currentColor' stroke-width='3'/><circle cx='32' cy='45' r='2' fill='currentColor'/></svg><h2>Rotate your device</h2><p>Masked Spire is played in landscape. Turn your phone or tablet sideways to continue.</p><button type="button" class="btn" id="rotateSkip">Play in portrait anyway</button></div>
+<script>
+(function () {
+  var root = document.documentElement, b = document.getElementById('rotateSkip');
+  try { if (sessionStorage.getItem('ms-portrait') === '1') root.classList.add('allow-portrait'); } catch (e) {}
+  if (b) b.addEventListener('click', function () {
+    root.classList.add('allow-portrait');
+    try { sessionStorage.setItem('ms-portrait', '1'); } catch (e) {}
+  });
+})();
+</script>
 <div id="app"></div>
 <script>
 (function () {
@@ -2101,6 +2137,7 @@ const SND = (function () {
     bad(V, t) { V.tone({ t, f: 180, f2: 120, d: 0.2, a: 0.01, r: 0.1, v: 0.08, type: 'square', lp: 700 }); },
     hover(V, t) { V.tone({ t, f: 880, d: 0.01, a: 0.003, r: 0.04, v: 0.025, type: 'triangle' }); },
     draw(V, t) { V.noise({ t, d: 0.06, a: 0.005, type: 'bp', f: 1400, f2: 3200, q: 1, v: 0.08, r: 0.05 }); },
+    heal(V, t) { V.tone({ t, f: 523, d: 0.04, r: 0.35, v: 0.06, parts: BELL }); V.tone({ t: t + 0.09, f: 784, d: 0.04, r: 0.5, v: 0.06, parts: BELL }); },
     endturn(V, t) { V.tone({ t, f: 392, d: 0.05, r: 0.35, v: 0.08, parts: BELL }); V.tone({ t: t + 0.07, f: 262, d: 0.05, r: 0.5, v: 0.08, parts: BELL }); thump(V, t, 0.15, 100); },
     transition(V, t) { V.noise({ t, d: 0.22, a: 0.08, type: 'bp', f: 300, f2: 1800, q: 0.8, v: 0.05, r: 0.12 }); }
   };
@@ -2445,7 +2482,9 @@ function sndSync(V, prev) {
   });
   let n = 0;
   (V.fx || []).forEach(f => {
-    if (f.s <= prev || !f.x || f.t[0] !== 'e') return;
+    if (f.s <= prev || !f.x) return;
+    if (f.k === 'heal' && f.t[0] === 'p') { SND.ui('heal', 0.05 * n); n++; return; }
+    if (f.t[0] !== 'e') return;
     if (f.x[0] === '−') { SND.hit(CL.sndHero || me, 0.08 + 0.09 * n); SND.enemy(((c.en.find(e => 'e' + e.idx === f.t) || {}).key) || 'moth', 'hit', 0.1 + 0.09 * n); n++; }
     else if (f.x === 'Blocked') { SND.block(CL.sndHero || me, 0.06 + 0.09 * n); n++; }
   });
@@ -2499,6 +2538,48 @@ function topbar(V) {
     '<span class="relics">' + me.rl.map(r => '<span class="chip" title="' + esc(RELICS[r].d) + '">' + esc(RELICS[r].n) + '</span>').join('') + '</span>' +
     '<span class="spacer"></span>' + (V.code ? '<span class="chip code" title="Room code">Room ' + esc(V.code.toUpperCase()) + '</span>' : '') +
     '<button type="button" class="btn snd" data-act="snd" aria-label="Sound settings">' + SND.SPK + ' Sound</button><button type="button" class="btn" data-act="deck">Deck (' + V.deck.length + ')</button></header>';
+}
+function hpBar(key, hp, mx, blk) {
+  return '<span class="hpbar' + (blk ? ' blocked' : '') + '" data-bk="' + key + '" data-hp="' + hp + '" data-mx="' + mx + '" data-blk="' + (blk || 0) + '"><u></u><i style="width:' + Math.max(0, hp / mx * 100) + '%"></i></span>';
+}
+const BAR_DRAIN = 380, BAR_DELAY = 450, BAR_TRAIL = 400;
+function barFx(V) {
+  if (!CL.bars) CL.bars = {};
+  if (!V || V.scr !== 'combat') { CL.bars = {}; return; }
+  const now = Date.now(), seen = {};
+  const setW = (el, w, tr) => { el.style.transition = tr; el.style.width = w + '%'; };
+  document.querySelectorAll('#app .hpbar[data-bk]').forEach(bar => {
+    const k = bar.dataset.bk, hp = +bar.dataset.hp, mx = +bar.dataset.mx, blk = +bar.dataset.blk;
+    const np = mx > 0 ? Math.max(0, Math.min(100, hp / mx * 100)) : 0;
+    const fill = bar.querySelector('i'), trail = bar.querySelector('u');
+    const st = CL.bars[k];
+    seen[k] = 1;
+    const next = { p: np, mx: mx, blk: blk, tr: np, at: 0, until: 0 };
+    CL.bars[k] = next;
+    if (REDUCE || !st || st.mx !== mx || !fill || !trail) return;
+    if (blk > st.blk) {
+      const chip = bar.parentNode && bar.parentNode.querySelector('.shield');
+      if (chip) chip.classList.add('pop');
+    }
+    if (np < st.p - 0.01) {
+      const startTr = st.until > now ? Math.max(st.tr, st.p) : st.p;
+      setW(fill, st.p, 'none'); setW(trail, startTr, 'none');
+      void bar.offsetWidth;
+      setW(fill, np, 'width ' + BAR_DRAIN + 'ms ease-out');
+      setW(trail, np, 'width ' + BAR_TRAIL + 'ms ease-in ' + BAR_DELAY + 'ms');
+      next.tr = startTr; next.at = now + BAR_DELAY; next.until = next.at + BAR_TRAIL;
+    } else if (np > st.p + 0.01) {
+      setW(fill, st.p, 'none'); setW(trail, np, 'none');
+      void bar.offsetWidth;
+      setW(fill, np, 'width ' + BAR_DRAIN + 'ms ease-out');
+    } else if (st.until > now) {
+      setW(trail, st.tr, 'none');
+      void bar.offsetWidth;
+      setW(trail, np, 'width ' + BAR_TRAIL + 'ms ease-in ' + Math.max(0, st.at - now) + 'ms');
+      next.tr = st.tr; next.at = st.at; next.until = st.until;
+    }
+  });
+  Object.keys(CL.bars).forEach(k => { if (!seen[k]) delete CL.bars[k]; });
 }
 function bigShield(n, pop, id) {
   return '<span class="bigshield' + (n ? '' : ' empty') + (n && pop ? ' pop' : '') + '"' + (id ? ' id="' + id + '"' : '') + ' aria-hidden="true">' +
@@ -2579,7 +2660,7 @@ function enemyHTML(V, e, prev) {
     '<span class="intentbar ' + it.c + '">' + icon + (it.v !== '' ? '<span class="ival">' + it.v + '</span>' : '') + '<span class="itext">' + esc(it.x) + '</span></span>' +
     '<span class="pwrap">' + tgtLabel + '<span class="art">' + enemyArt(e, est, ecls) + '</span>' + bigShield(e.block, popE) + '</span>' +
     '<span class="einfo"><span class="ename">' + esc(e.n) + '</span>' +
-    '<span class="hpline">' + (e.block ? '<span class="shield">' + ICON.shield + e.block + '</span>' : '') + '<span class="hpbar' + (e.block ? ' blocked' : '') + '"><i style="width:' + Math.max(0, e.hp / e.max * 100) + '%"></i></span>' + e.hp + '/' + e.max + '</span>' +
+    '<span class="hpline">' + (e.block ? '<span class="shield">' + ICON.shield + e.block + '</span>' : '') + hpBar('e' + e.idx, e.hp, e.max, e.block) + e.hp + '/' + e.max + '</span>' +
     (badges.length ? '<span class="badges">' + badges.join('') + '</span>' : '') +
     '<span class="pv" data-pv="' + e.idx + '"></span>' +
     '<span class="then">Then: ' + esc(e.nx) + '</span>' +
@@ -2635,7 +2716,7 @@ function heroBoxHTML(V, s, prev, mini) {
   }
   return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, animCls, true, hst, rcls) + bigShield(s.block, popH, 'shield-p' + pi) + '</div>' +
     '<div class="hstats"><span class="hname">' + esc(vName(V, pi)) + (V.n > 1 ? (you ? ' <span class="muted">(you)</span>' : '') : '') + ' ' + tag + '</span>' +
-    '<div class="hpline">' + (s.block ? '<span class="shield">' + ICON.shield + s.block + '</span>' : '') + '<span class="hpbar' + (s.block ? ' blocked' : '') + '"><i style="width:' + Math.max(0, s.hp / s.mx * 100) + '%"></i></span>' + s.hp + '/' + s.mx + '</div>' +
+    '<div class="hpline">' + (s.block ? '<span class="shield">' + ICON.shield + s.block + '</span>' : '') + hpBar('p' + pi, s.hp, s.mx, s.block) + s.hp + '/' + s.mx + '</div>' +
     '<div class="row">' + resourceHTML(hero, s) + (!you ? '<span class="muted">' + s.hn + ' cards · ' + s.energy + ' energy</span>' : '') + '</div>' +
     (pb.length ? '<div class="badges">' + pb.join('') + '</div>' : '') + '</div></div>';
 }
@@ -2672,9 +2753,10 @@ function combatHTML(V, prev) {
   return '<section class="battle" aria-label="Battle">' +
     '<div class="stage' + (duel ? ' duel' : '') + '" style="background:' + sceneryBG(V.act, cb.k === 'boss', !!duel) + ' center bottom / cover no-repeat, radial-gradient(ellipse at 50% 100%, ' + (duel ? '#3A1420' : actStage) + ' 0%, #15121A 70%)">' + left +
     '<div class="enemies">' + right + '</div></div>' +
+    turnChip(V, cb) +
     '<div class="lastlog" aria-live="polite">' + esc(cb.logs[0] || '') + '</div>' +
     '<div class="dock"><div class="controls"><div class="energy" title="Energy">' + s.energy + '<small>energy</small></div>' +
-    '<div class="incoming">' + inc + '<div class="piles"><span data-pile="draw">Draw ' + cb.piles[0] + '</span><span data-pile="discard">Discard ' + cb.piles[1] + '</span><span>Exhaust ' + cb.piles[2] + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
+    '<div class="incoming">' + inc + '<div class="piles"><span data-pile="draw" data-act="pile" data-arg="draw" role="button" tabindex="0" aria-haspopup="dialog">Draw ' + cb.piles[0] + '</span><span data-pile="discard" data-act="pile" data-arg="discard" role="button" tabindex="0" aria-haspopup="dialog">Discard ' + cb.piles[1] + '</span><span data-pile="exhaust" data-act="pile" data-arg="exhaust" role="button" tabindex="0" aria-haspopup="dialog">Exhaust ' + cb.piles[2] + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
     '<div class="endwrap"><button type="button" class="btn kbhelp" data-act="keys" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">?</button><button type="button" class="btn primary" data-act="end"' + (canEnd ? '' : ' disabled') + '>' + endLabel + '</button></div></div>' +
     '<div class="hint" aria-live="polite">' + (selCard ? 'Choose a target for ' + esc(CARDS[selCard[1]].n) + ' (tap the card again to cancel)' : '') + '</div>' +
     '<div class="hand" aria-label="Your hand">' + (hand || '<span class="muted">' + (cb.busy ? 'Resolving…' : waiting ? 'Waiting for your partner to end their turn…' : 'Your hand is empty.') + '</span>') + '</div></div>' +
@@ -2742,7 +2824,19 @@ function duelEndHTML(V) {
     '<p class="muted">Enemies defeated: you ' + V.P[V.me].k + ', rival ' + V.P[1 - V.me].k + '.</p>' +
     '<div class="row"><button type="button" class="btn primary" data-act="leave">Back to title</button></div></section>';
 }
-function endHTML(V, won) {
+let ENDFX = null; /* { key, t } start time of the current end-screen effect, so re-renders don't replay it */
+function endFxHTML(V, won) {
+  const key = V.scr + ':' + (V.code || '') + ':' + V.act + ':' + V.floor;
+  if (!ENDFX || ENDFX.key !== key) ENDFX = { key, t: performance.now() };
+  const ce = Math.min(9, (performance.now() - ENDFX.t) / 1000);
+  if (!won) return '<div class="endfx vig" style="--ce:' + f1(ce) + 's" aria-hidden="true"></div>';
+  const R = sceneRng(7), cols = ['#E8BE52', '#5FE6E2', '#E04A5E', '#B49AFF', '#F6EEE2'];
+  let s = '';
+  for (let k = 0; k < 70; k++) s += '<i style="left:' + f1(R() * 100) + '%;--c:' + cols[k % 5] + ';--dl:' + f1(R() * 1.4) + 's;--dr:' + f1(2.4 + R() * 1.8) + 's;--rx:' + Math.round(R() * 900 - 450) + 'deg;--sw:' + Math.round(R() * 120 - 60) + 'px"></i>';
+  return '<div class="endfx conf" style="--ce:' + f1(ce) + 's" aria-hidden="true">' + s + '</div>';
+}
+function endHTML(V, won) { return endHTMLBase(V, won) + endFxHTML(V, won); }
+function endHTMLBase(V, won) {
   const html = endHTML0(V, won);
   const per = ROWS + 1;
   const floors = won ? 3 * per : Math.max(0, (V.act - 1) * per + V.floor - 1);
@@ -2816,6 +2910,30 @@ function netLine() {
   if (n.peers) bits.push(n.peers + (n.peers === 1 ? ' page' : ' pages') + ' in the room');
   return '<p class="netline">' + esc(bits.join(' · ')) + '</p>' + (n.err ? '<p class="waitnote">' + esc(n.err) + '</p>' : '');
 }
+function lobbyBanner(V) {
+  const live = CL.net.state === 'Connected' && wsConnected();
+  const ps = V.n > 1 ? partnerState(V) : null;
+  let cls = '', ic = '\u2713', txt;
+  if (!live) { cls = ' bad'; ic = '!'; txt = (CL.net.state || 'Reconnecting…') + ' Your room is kept on the server.'; }
+  else if (!ps) { cls = ' wait'; ic = '\u2026'; txt = 'Connected. Waiting for your partner to join with the room code.'; }
+  else if (ps === 'online') txt = 'Connected. Your partner is in the room.';
+  else if (ps === 'away') { cls = ' wait'; ic = '\u2026'; txt = 'Connected. Your partner is away (tab in the background).'; }
+  else { cls = ' bad'; ic = '!'; txt = 'Connected. Your partner disconnected; waiting for them to rejoin with code ' + (V.code || '').toUpperCase() + '.'; }
+  return '<div class="lbanner' + cls + '" role="status" aria-live="polite"><span class="lbic" aria-hidden="true">' + ic + '</span><span>' + esc(txt) + '</span></div>';
+}
+function turnChip(V, cb) {
+  if (V.n < 2 || cb.duel || cb.busy) return '';
+  const me = V.me, s = cb.S[me], o = cb.S[1 - me];
+  if (!s || !o || s.dn || o.dn) return '';
+  const ps = partnerState(V), who = esc(vName(V, 1 - me));
+  let cls = '', txt;
+  if (ps === 'reconnecting' || ps === 'offline') txt = who + ' is disconnected.' + (s.rdy ? ' Waiting for them to return.' : '');
+  else if (s.rdy && !o.rdy) { cls = ' wt'; txt = 'Waiting for ' + who + ' to end their turn…'; }
+  else if (!s.rdy && o.rdy) { cls = ' you'; txt = who + ' is ready. Waiting on you.'; }
+  else if (!s.rdy && !o.rdy) txt = who + ' is playing their turn too.';
+  else return '';
+  return '<div class="turnchip' + cls + '" role="status" aria-live="polite"><span class="tdot" aria-hidden="true"></span><span>' + txt + '</span></div>';
+}
 function lobbyHTML(V) {
   const me = V.me, host = me === 0;
   const p2 = V.n > 1 ? V.P[1] : null;
@@ -2826,6 +2944,7 @@ function lobbyHTML(V) {
     return '<li><b>' + (pi === me ? 'You' : 'Partner') + '</b> · ' + (q.h ? esc(HEROES[q.h].n) : '<span class="muted">choosing…</span>') + (q.on ? '' : ' <span class="waitnote">(disconnected)</span>') + '</li>';
   };
   return '<section class="panel"><div class="row"><div style="display:flex;flex-direction:column;gap:4px"><span class="actbanner">Co-op lobby</span><h2>Room code <span class="bigcode">' + esc((V.code || '').toUpperCase()) + '</span></h2></div></div>' +
+    lobbyBanner(V) +
     '<p class="muted" style="margin:0">' + (host ? 'Send your partner this site’s link and the code. They choose “Join with code” on the title screen.' : 'You joined the host’s room. Pick your hero; the host starts the run.') + ' You can both play the same hero.</p>' +
     '<div class="row"><button type="button" class="btn" data-act="copycode">Copy code</button><button type="button" class="btn" data-act="copylink">Copy invite link</button>' + (navigator.share ? '<button type="button" class="btn" data-act="sharelink">Share…</button>' : '') + '</div>' +
     '<p class="netline" role="status" aria-live="polite">' + esc(CL.copied || '') + '</p>' +
@@ -2931,6 +3050,39 @@ function handFx(V, pv) {
     n++;
   });
 }
+function partnerFx(V) {
+  if (!V || V.scr !== 'combat' || !V.cb) { CL.lastPl = undefined; return; }
+  const pl = V.cb.pl;
+  if (!pl) { CL.lastPl = 0; return; }
+  const last = CL.lastPl;
+  CL.lastPl = pl[0];
+  if (last === undefined || pl[0] <= last) return;
+  if (REDUCE || V.n < 2 || pl[1] === V.me || !CARDS[pl[2]]) return;
+  const src = document.querySelector('[data-float="p' + pl[1] + '"]');
+  const dst = document.querySelector('[data-float="' + pl[3] + '"]');
+  if (!src || !dst || !src.animate) return;
+  const hc = document.querySelector('.hand .card');
+  const hr = hc ? hc.getBoundingClientRect() : null;
+  const w = hr && hr.width ? hr.width : 120, h = hr && hr.height ? hr.height : 168;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = cardHTML(pl[2], 'x', 'x');
+  const g = tmp.firstChild;
+  if (!g) return;
+  g.removeAttribute('data-act'); g.removeAttribute('data-arg'); g.removeAttribute('id');
+  g.setAttribute('aria-hidden', 'true'); g.tabIndex = -1; g.classList.add('flyghost');
+  const sr = src.getBoundingClientRect(), dr = dst.getBoundingClientRect();
+  g.style.left = (sr.left + sr.width / 2 - w / 2) + 'px'; g.style.top = (sr.top + sr.height / 2 - h / 2) + 'px';
+  g.style.width = w + 'px'; g.style.height = h + 'px';
+  document.body.appendChild(g);
+  const dx = dr.left + dr.width / 2 - (sr.left + sr.width / 2), dy = dr.top + dr.height / 2 - (sr.top + sr.height / 2);
+  const an = g.animate([
+    { transform: 'translate(0, 0) scale(.55)', opacity: 0 },
+    { opacity: 1, offset: .2 },
+    { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(.35)', opacity: 0.2 }
+  ], { duration: 480, easing: 'ease-in', fill: 'forwards' });
+  an.onfinish = () => g.remove();
+  setTimeout(() => g.remove(), 900);
+}
 function paint(V) {
   const app = document.getElementById('app');
   let maxFx = V && V.fx && V.fx.length ? V.fx[V.fx.length - 1].s : 0;
@@ -2943,7 +3095,7 @@ function paint(V) {
   const sk = V ? V.scr : (CL.role || 'title');
   if (CL.scrKey !== undefined && CL.scrKey !== sk) {
     if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
-    if (['reward', 'actclear', 'victory', 'defeat', 'duelend'].indexOf(sk) < 0) SND.fire('transition');
+    if (!REDUCE && ['reward', 'actclear', 'victory', 'defeat', 'duelend'].indexOf(sk) < 0) SND.fire('transition');
   }
   CL.scrKey = sk;
   let body = '';
@@ -2957,6 +3109,7 @@ function paint(V) {
     const o = V.n > 1 ? V.P[1 - V.me] : null;
     if (CL.role === 'online' && CL.net.state !== 'Connected') body += '<div class="netwarn">' + esc(CL.net.state || 'Reconnecting…') + ' Your game keeps running on the server.</div>';
     if (o && (partnerState(V) === 'reconnecting' || partnerState(V) === 'offline')) body += '<div class="netwarn">Your partner is disconnected. The game keeps running on the server; they can reload the page or rejoin with code ' + esc((V.code || '').toUpperCase()) + '.</div>';
+    if (V.scr !== 'victory' && V.scr !== 'defeat') ENDFX = null;
     if (V.scr === 'map') body += mapHTML(V);
     else if (V.scr === 'combat') body += combatHTML(V, prev);
     else if (V.scr === 'reward') body += rewardHTML(V);
@@ -2998,8 +3151,10 @@ function paint(V) {
     });
   }
   if (focusId === 'joincode') { const el = document.getElementById('joincode'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
+  try { barFx(V); } catch (e) {}
   if (V) flushFx(V, prev);
   try { handFx(V, CL.pvV); } catch (e) {}
+  try { partnerFx(V); } catch (e) {}
   try { sndSync(V, prev); } catch (e) {}
   if (V && V.scr === 'map') { try { mapAfterPaint(); } catch (e) {} }
   CL.lastFx = Math.max(prev, maxFx);
@@ -3420,10 +3575,65 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'shopremove': CL.overlay = { mode: 'remove', from: 'shop' }; paint(V); break;
     case 'buy': send('buy', Number(arg)); break;
     case 'deck': CL.overlay = { mode: 'view' }; paint(V); break;
+    case 'pile': pileView(arg, b); break;
     case 'close': CL.overlay = null; paint(V); break;
     case 'remove': { const from = CL.overlay && CL.overlay.from; CL.overlay = null; send('remove', Number(arg), from); if (CL.role === 'online') paint(V); break; }
     default: break;
   }
+});
+/* Draw / discard / exhaust pile viewer */
+(function () {
+  const st = document.createElement('style');
+  st.textContent = `.piles span[data-act='pile']{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}.piles span[data-act='pile']:focus-visible{outline:3px solid #ffd54a;outline-offset:2px;border-radius:4px}.pcg{position:relative}.pcn{position:absolute;top:-6px;right:-6px;z-index:2;background:#ffd54a;color:#15121A;font-weight:700;border-radius:10px;padding:0 7px;font-size:14px}`;
+  document.head.appendChild(st);
+})();
+const PILE_NAMES = { draw: 'Draw pile', discard: 'Discard pile', exhaust: 'Exhaust pile' };
+function pileView(which, opener) {
+  if (document.getElementById('pilev')) return;
+  const V = curView();
+  const idx = { draw: 0, discard: 1, exhaust: 2 }[which];
+  if (idx == null || !V || !V.cb || !V.cb.pc) return;
+  const ids = (V.cb.pc[idx] || []).filter(id => CARDS[id]);
+  const groups = new Map();
+  ids.forEach(id => groups.set(id, (groups.get(id) || 0) + 1));
+  const list = [...groups.entries()].sort((a, b) => CARDS[a[0]].n.localeCompare(CARDS[b[0]].n) || (a[0] < b[0] ? -1 : 1));
+  const back = document.createElement('div');
+  back.id = 'pilev'; back.className = 'overlay';
+  back.setAttribute('role', 'dialog'); back.setAttribute('aria-modal', 'true'); back.setAttribute('aria-labelledby', 'pilev-h');
+  back.innerHTML = `<section class='panel'><div class='row'><h2 id='pilev-h'>${PILE_NAMES[which]} (${ids.length})</h2><span class='spacer'></span><button type='button' class='btn primary' data-pv='close'>Close</button></div>` +
+    `<p class='muted'>${which === 'draw' ? 'Sorted by name. Draw order is hidden.' : 'Sorted by name.'}</p>` +
+    `<div class='cards'>` + (list.length ? list.map(([id, n]) => `<div class='pcg'>` + (n > 1 ? `<span class='pcn'>×${n}</span>` : '') + cardHTML(id, 'noop', '') + `</div>`).join('') : `<p class='muted'>This pile is empty.</p>`) + `</div></section>`;
+  let watch = null;
+  const close = () => {
+    clearInterval(watch);
+    document.removeEventListener('keydown', onKey, true);
+    back.remove();
+    const el = document.querySelector(`.piles [data-pile='${which}']`) || (opener && opener.isConnected ? opener : null);
+    try { if (el) el.focus({ preventScroll: true }); } catch (e) {}
+  };
+  const onKey = ev => {
+    if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); close(); return; }
+    if (ev.key === 'Tab') {
+      const f = [...back.querySelectorAll('button:not([disabled])')];
+      if (!f.length) return;
+      ev.preventDefault();
+      const i = f.indexOf(document.activeElement);
+      if (i < 0) f[ev.shiftKey ? f.length - 1 : 0].focus();
+      else f[(i + (ev.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+    }
+  };
+  back.addEventListener('click', ev => { if (ev.target === back || (ev.target.closest && ev.target.closest('[data-pv]'))) close(); });
+  document.addEventListener('keydown', onKey, true);
+  document.body.appendChild(back);
+  watch = setInterval(() => { if (!document.querySelector('.battle')) close(); }, 500);
+  const first = back.querySelector('[data-pv]'); if (first) first.focus();
+}
+document.getElementById('app').addEventListener('keydown', ev => {
+  if (ev.key !== 'Enter' && ev.key !== ' ') return;
+  const b = ev.target.closest && ev.target.closest(`.piles [data-act='pile']`);
+  if (!b) return;
+  ev.preventDefault();
+  pileView(b.dataset.arg, b);
 });
 /* Combat keyboard shortcuts */
 let kbT = null; /* idx of the keyboard-highlighted enemy while a card is selected */
@@ -3472,7 +3682,7 @@ document.addEventListener('keydown', ev => {
   if (ev.defaultPrevented || ev.repeat || ev.ctrlKey || ev.metaKey || ev.altKey) return;
   const t = ev.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
-  if (document.getElementById('endconf') || document.getElementById('mstut') || document.getElementById('kbhelp')) return;
+  if (document.getElementById('endconf') || document.getElementById('mstut') || document.getElementById('kbhelp') || document.getElementById('pilev')) return;
   const V = curView();
   if (!V || !V.cb || CL.overlay || !document.querySelector('.battle')) return;
   const k = ev.key;

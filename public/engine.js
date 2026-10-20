@@ -592,6 +592,7 @@ function playCard(pi, uid, tgt) {
     else if (fs.length === 1) t = fs[0];
     if (!t || t.dead || t.down) return;
   }
+  { const aE = aliveEnemies(); const pt = t ? tagOf(t) : d.t === 'attack' ? (c.duel ? 'p' + (1 - pi) : (aE[0] ? tagOf(aE[0]) : 'p' + pi)) : 'p' + pi; G.fxSeq = (G.fxSeq || 0) + 1; c.pl = [G.fxSeq, pi, card.id, pt]; }
   s.energy -= d.c; s.hand.splice(i, 1); s.atkTotal = 0; s.played++; P(pi).cp = (P(pi).cp || 0) + 1;
   log(heroName(pi) + ' plays ' + d.n + (t ? ' on ' + nameOf(t) : '') + '.');
   const b0 = s.block, hk = P(pi).hero;
@@ -996,7 +997,7 @@ function buildView(me) {
     const guard = s.block + (P(me).hero === 'duelist' ? 2 * s.flow : 0) + 3 * s.rampart + (s.stance === 'iron' ? 4 + s.ironplus : 0);
     V.cb = {
       k: c.kind, t: c.turn, busy: c.busy ? 1 : 0, logs: c.log.slice(0, 5), duel: c.duel ? { a: c.duel.active, r: c.duel.round } : null, toll: c.finalToll ? 1 : 0,
-      en, S: c.S.map(sideView), hand: s.hand.map(x => [x.u, x.id]), piles: [s.draw.length, s.discard.length, s.exhaust.length], played: s.played,
+      en, S: c.S.map(sideView), hand: s.hand.map(x => [x.u, x.id]), piles: [s.draw.length, s.discard.length, s.exhaust.length], pc: [s.draw, s.discard, s.exhaust].map(a => a.map(x => x.id).sort()), played: s.played, pl: c.pl || null,
       inc: { tot: inc, guard, extra: guard > s.block ? 1 : 0 }
     };
   }
@@ -1012,6 +1013,7 @@ const bytes = o => ENC.encode(JSON.stringify(o)).length;
 const LIMIT = 3850;
 function fitView(V) {
   if (bytes(V) > LIMIT && V.cb) V.cb.logs = V.cb.logs.slice(0, 1);
+  if (bytes(V) > LIMIT && V.cb) V.cb.pl = null;
   if (bytes(V) > LIMIT) V.fx = V.fx.slice(-6);
   if (bytes(V) > LIMIT) { V.deck = []; V.deckCut = 1; }
   if (bytes(V) > LIMIT && V.cb) V.cb.en.forEach(e => { if (e.it) e.it.x = e.it.x.slice(0, 40); });
