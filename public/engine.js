@@ -134,16 +134,16 @@ const CARDS = {
   /* Elementalist */
   estrike:   { n: 'Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage.', p: e => hit(e, 6) },
   eguard:    { n: 'Ward', c: 1, t: 'skill', d: 'Gain 5 Block.', p: () => gain(5) },
-  emberlash: { n: 'Ember Lash', c: 1, t: 'attack', tg: 1, d: 'Deal 4 damage. Apply 1 Vulnerable.', p: e => { hit(e, 4); debuffEnemy(e, 'vuln', 1); } },
-  rimespiral:{ n: 'Rime Spiral', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage. Apply 1 Weak.', p: e => { hit(e, 5); debuffEnemy(e, 'weak', 1); } },
-  cinderbolt:{ n: 'Cinder Bolt', c: 0, t: 'attack', tg: 1, d: 'Deal 4 damage.', p: e => hit(e, 4) },
-  scorch:    { n: 'Scorch', c: 1, t: 'attack', tg: 1, d: 'Deal 9 damage.', p: e => hit(e, 9) },
+  emberlash: { n: 'Ember Lash', c: 1, t: 'attack', tg: 1, d: 'Deal 4 damage. Apply 3 Burn.', p: e => { hit(e, 4); debuffEnemy(e, 'burn', 3); } },
+  rimespiral:{ n: 'Rime Spiral', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage. Apply 3 Chill.', p: e => { hit(e, 5); debuffEnemy(e, 'chill', 3); } },
+  cinderbolt:{ n: 'Cinder Bolt', c: 0, t: 'attack', tg: 1, d: 'Deal 4 damage. Apply 2 Burn.', p: e => { hit(e, 4); debuffEnemy(e, 'burn', 2); } },
+  scorch:    { n: 'Scorch', c: 1, t: 'attack', tg: 1, d: 'Deal 9 damage. Apply 3 Burn.', p: e => { hit(e, 9); debuffEnemy(e, 'burn', 3); } },
   frostward: { n: 'Frost Ward', c: 1, t: 'skill', d: 'Gain 8 Block.', p: () => gain(8) },
   gust:      { n: 'Gust Step', c: 1, t: 'skill', d: 'Gain 5 Block. Draw 1 card.', p: () => { gain(5); draw(1); } },
-  icelance:  { n: 'Ice Lance', c: 1, t: 'attack', tg: 1, d: 'Deal 7 damage. Apply 1 Weak.', p: e => { hit(e, 7); debuffEnemy(e, 'weak', 1); } },
-  stormcrash:{ n: 'Stormstone Crash', c: 2, t: 'attack', d: 'Deal 11 damage to ALL enemies.', p: () => foes().forEach(e => hit(e, 11)) },
-  rimeshroud:{ n: 'Rime Shroud', c: 1, t: 'skill', d: 'Gain 8 Block. Apply 1 Weak to ALL enemies.', p: () => { foes().forEach(e => debuffEnemy(e, 'weak', 1)); gain(8); } },
-  tempest:   { n: 'Tempest', c: 2, t: 'attack', d: 'Deal 6 damage to ALL enemies twice.', p: () => foes().forEach(e => hit(e, 6, 2)) },
+  icelance:  { n: 'Ice Lance', c: 1, t: 'attack', tg: 1, d: 'Deal 7 damage. Apply 3 Chill.', p: e => { hit(e, 7); debuffEnemy(e, 'chill', 3); } },
+  stormcrash:{ n: 'Stormstone Crash', c: 2, t: 'attack', d: 'Apply 2 Shock to ALL enemies, then deal 11 damage to ALL enemies.', p: () => foes().forEach(e => { debuffEnemy(e, 'shock', 2); hit(e, 11); }) },
+  rimeshroud:{ n: 'Rime Shroud', c: 1, t: 'skill', d: 'Gain 8 Block. Apply 2 Chill to ALL enemies.', p: () => { foes().forEach(e => { debuffEnemy(e, 'chill', 2); }); gain(8); } },
+  tempest:   { n: 'Tempest', c: 2, t: 'attack', d: 'Apply 2 Shock to ALL enemies, then deal 6 damage to ALL enemies twice.', p: () => foes().forEach(e => { debuffEnemy(e, 'shock', 2); hit(e, 6, 2); }) },
   stonemask: { n: 'Stonebound Mask', c: 1, t: 'power', d: 'At the end of your turn, gain 3 Block.', p: () => { SF().rampart++; } },
 
   /* Status and curses */
@@ -207,7 +207,7 @@ const HEROES = {
     passive: 'Quadrant Mask: each Attack you play gives 1 Block (not reduced by Frail).',
     starter: ['estrike', 'estrike', 'estrike', 'estrike', 'eguard', 'eguard', 'eguard', 'eguard', 'emberlash', 'rimespiral'],
     pool: ['cinderbolt', 'scorch', 'frostward', 'gust', 'icelance', 'stormcrash', 'rimeshroud', 'tempest', 'stonemask'],
-    style: 'Fire, frost, storm and stone. Chain cheap Attacks so the mask turns every swing into Block, and spread Weak and Vulnerable across the room.'
+    style: 'Fire, frost, storm and stone. Chain cheap Attacks so the mask turns every swing into Block. Fire burns, frost chills (weaker enemy attacks), storm shocks (bonus damage), stone guards.'
   }
 };
 
@@ -398,7 +398,7 @@ function makeEnemy(key, idx, dup, hpOverride, raw) {
   const d = EN[key];
   const mult = raw ? 1 : 1.15 * DIFF * diffMult() * (G.P.length > 1 ? 1.6 : 1);
   const hp = Math.round((hpOverride || rnd(d.hp[0], d.hp[1])) * mult);
-  return { idx, key, n: d.names ? d.names[dup % d.names.length] : d.n, variant: dup, hp, max: hp, block: 0, str: 0, weak: 0, vuln: 0, thorns: 0, artifact: d.artifact || 0,
+  return { idx, key, n: d.names ? d.names[dup % d.names.length] : d.n, variant: dup, hp, max: hp, block: 0, str: 0, weak: 0, vuln: 0, burn: 0, chill: 0, shock: 0, thorns: 0, artifact: d.artifact || 0,
     rooted: false, intangible: false, reflect: false, parry: false, ritual: 0, pi: dup % d.pat.length, dead: false, stolen: {}, acting: false, p2: false, split: false, fragile: 1, tg: 0, hitS: 0, deadS: 0 };
 }
 function newSide(pi) {
@@ -496,6 +496,7 @@ function debuffEnemy(e, kind, n) {
   if (!e || e.dead || e.down) return;
   if (e.artifact > 0) { e.artifact--; float(tagOf(e), 'Negated', 'miss'); return; }
   e[kind] = (e[kind] || 0) + n;
+  if (kind === 'burn' && A) e.burnBy = A.pi;
 }
 function patOf(e) { const d = EN[e.key]; return e.p2 && d.p2 ? d.p2 : d.pat; }
 function intentOf(e, ahead) {
@@ -508,6 +509,7 @@ function intentOf(e, ahead) {
 function enemyDmg(e, base, T) {
   let d = Math.round(base * 1.15 * DIFF * diffMult()) + e.str;
   if (e.weak > 0) d -= e.weak;
+  if (e.chill > 0) d = Math.floor(d * 0.75);
   if (T && T.vuln > 0) d = Math.floor(d * 1.5);
   if (T && T.stance === 'fury') d = Math.floor(d * 1.25);
   return Math.max(0, d);
@@ -538,6 +540,7 @@ function hit(t, base, times) {
     if (a.stance === 'fury') d = Math.floor(d * 1.5);
     if (a.stance === 'iron' && !a.ironplus) d = Math.floor(d * 0.75);
     if (t.vuln > 0) d = Math.floor(d * 1.5);
+    if (!t.isP && t.shock > 0) { d += 3; t.shock--; }
     if (t.isP && t.stance === 'fury') d = Math.floor(d * 1.25);
     if (t.rooted) d = Math.floor(d / 2);
     d = Math.max(0, Math.floor(d * (t.fragile || 1)));
@@ -684,6 +687,13 @@ async function enemyPhase() {
   const actors = aliveEnemies().slice();
   for (const e of actors) {
     if (e.dead) continue;
+    if (e.burn > 0) {
+      const bd = e.burn; e.hp -= bd; e.burn--;
+      e.hitS = float(tagOf(e), '−' + bd + ' Burn', '');
+      log(e.n + ' burns for ' + bd + '.');
+      if (e.hp <= 0) kill(e, e.burnBy != null ? e.burnBy : null); else checkPhase(e);
+      if (e.dead) continue;
+    }
     e.block = 0; e.rooted = false; e.intangible = false; e.reflect = false; e.parry = false;
     if (e.ritual) { e.str += e.ritual; float(tagOf(e), '+' + e.ritual + ' Strength', 'buff'); }
     const acts = e.key === 'cog' && e.p2 ? 2 : 1;
@@ -704,6 +714,7 @@ async function enemyPhase() {
       if (G.combat !== c) return;
     }
     if (e.weak > 0) e.weak--;
+    if (e.chill > 0) e.chill--;
     if (e.vuln > 0) e.vuln--;
   }
   if (G.combat !== c) return;
@@ -1018,7 +1029,7 @@ function buildView(me) {
       if (it && e.key === 'cog' && e.p2) { it.x += ' · then ' + intentOf(e, 1).l; it.tot = enemyTotal(e); }
       const nx = intentOf(e, e.key === 'cog' && e.p2 ? 2 : 1);
       return { idx: e.idx, key: e.key, n: e.n, variant: e.variant, hp: e.hp, max: e.max, block: e.block, split: e.split ? 1 : 0, p2: e.p2 ? 1 : 0, dead: e.dead ? 1 : 0,
-        st: [e.str, e.ritual, e.weak, e.vuln, e.thorns, e.artifact, e.rooted ? 1 : 0, e.intangible ? 1 : 0, e.reflect ? 1 : 0, e.parry ? 1 : 0, Object.values(e.stolen).reduce((a, b) => a + b, 0)],
+        st: [e.str, e.ritual, e.weak, e.vuln, e.thorns, e.artifact, e.rooted ? 1 : 0, e.intangible ? 1 : 0, e.reflect ? 1 : 0, e.parry ? 1 : 0, Object.values(e.stolen).reduce((a, b) => a + b, 0), e.burn || 0, e.chill || 0, e.shock || 0],
         it, tg: e.tg, nx: nx.hidden ? '???' : nx.l, hs: e.hitS, ds: e.deadS, ac: e.actS || 0 };
     });
     let inc = 0;

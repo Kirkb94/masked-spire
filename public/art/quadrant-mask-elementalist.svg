@@ -44,6 +44,7 @@
     <path d="M336 118 L342 92 L348 118 L342 124 Z" fill="#6fbf73"/>
     <path d="M354 128 L360 108 L366 128 L360 134 Z" fill="#4fd1ff"/>
   </g>
+  <g display="none">
   <circle cx="222" cy="182" r="55" fill="#ff6b2c" opacity="0.35" filter="url(#soft)"/>
   <circle cx="232" cy="198" r="10" fill="#e9e4f0"/>
   <path d="M222 205 Q196 186 208 158 Q212 172 220 168 Q214 148 230 132 Q230 156 242 160 Q250 150 248 140 Q262 168 244 200 Q236 210 222 205 Z" fill="url(#fire)" filter="url(#glow)"/>
@@ -58,6 +59,7 @@
     <path d="M425 340 L408 368 L420 336 Z" fill="url(#ice)"/>
   </g>
   <g stroke="#e8fbff" stroke-width="1.5" opacity="0.8"><path d="M470 300 L478 308 M478 300 L470 308"/><path d="M410 300 L416 306 M416 300 L410 306"/></g>
+  </g>
   <path d="M250 470 L272 458 L288 470 L278 488 L256 486 Z" fill="url(#stone)"/>
   <path d="M392 476 L414 466 L426 482 L408 494 L390 488 Z" fill="url(#stone)"/>
   <path d="M222 430 L236 424 L244 436 L232 444 Z" fill="url(#stone)"/>

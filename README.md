@@ -19,6 +19,14 @@ Co-op matches live in the server's memory. A player who reloads or loses connect
 
 Free Render services go to sleep after about 15 minutes without visitors. The first visit afterwards takes up to a minute while it wakes, and any co-op games that were in progress are lost when it sleeps or redeploys. A paid instance stays awake.
 
+## Design docs and spreadsheet
+
+`docs/MECHANICS.md` explains the rules. Run `npm run sheets` to rebuild the design spreadsheet from the engine data (`docs/spreadsheet/masked-spire.xml` for Excel/Google Sheets, plus one CSV per sheet).
+
+## Design docs and spreadsheet
+
+`docs/MECHANICS.md` explains the rules. Run `npm run sheets` to rebuild the design spreadsheet from the engine data (`docs/spreadsheet/masked-spire.xml` for Excel/Google Sheets, plus one CSV per sheet).
+
 ## Run locally
 
 ```

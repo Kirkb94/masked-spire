@@ -702,6 +702,13 @@ html.rm .chip.partner.re .pdot { animation: none; }
 @media (prefers-reduced-motion: reduce) { .rg.s-cast .rgw, .elorb.cast, .elorb.cast::after { animation: none; } .elorb.cast::after { display: none; } }
 html.rm .rg.s-cast .rgw, html.rm .elorb.cast, html.rm .elorb.cast::after { animation: none; }
 html.rm .elorb.cast::after { display: none; }
+/* Elementalist hand items: left hand holds the last element, right hand holds frost (fire when frost is current). Default = fire left, frost right. */
+.portrait .hel { display: none; }
+.portrait:not([class*="hold-"]) .hl-fire, .portrait:not([class*="hold-"]) .hr-frost,
+.portrait.hold-fire .hl-fire, .portrait.hold-fire .hr-frost,
+.portrait.hold-frost .hl-frost, .portrait.hold-frost .hr-fire,
+.portrait.hold-storm .hl-storm, .portrait.hold-storm .hr-frost,
+.portrait.hold-stone .hl-stone, .portrait.hold-stone .hr-frost { display: inline; }
 .rg.s-slam .rgw { animation: rg-slam .9s var(--e) var(--as, 0s) both; }
 .rg.s-slam .pt-armF, .rg.s-slam .pt-wep { animation: var(--i), rg-s-arm .9s var(--e) var(--as, 0s) both; }
 .rg.s-slam .pt-head { animation: var(--i), rg-a-head .9s var(--e) var(--as, 0s) both; }
@@ -1918,7 +1925,19 @@ const HERO_ART = {
     '<path d="M100 98 L108 88 L106 102Z M102 108 L114 108 L104 112Z" fill="#8FE3FF"/><circle cx="101" cy="104" r="4" fill="#E8FBFF"/></g></g>'
 };
 /* Elementalist portrait: the concept-art SVG as a static image; motion comes from the rig / CSS (cast pulse, element orb). */
-HERO_ART.elementalist = '<rect width="120" height="144" fill="#231A44"/>@@<image href="art/quadrant-mask-elementalist.svg" x="0" y="0" width="120" height="144" preserveAspectRatio="xMidYMid slice"/></g>';
+/* Hand items are drawn here (not in the SVG file) so CSS can swap them via .portrait.hold-<element>. Coordinates are in the SVG file's space; fire is anchored on the left hand (232,198), frost on the right hand (434,328). */
+const ELH_FIRE = '<circle cx="222" cy="182" r="55" fill="#ff6b2c" opacity=".35" filter="url(#soft)"/><path d="M222 205 Q196 186 208 158 Q212 172 220 168 Q214 148 230 132 Q230 156 242 160 Q250 150 248 140 Q262 168 244 200 Q236 210 222 205 Z" fill="#ff9a3c" filter="url(#glow)"/><circle cx="226" cy="182" r="12" fill="#fff3c4" filter="url(#glow)"/><g fill="#ffb347" filter="url(#glow)"><circle cx="196" cy="150" r="3"/><circle cx="256" cy="130" r="2.5"/><circle cx="188" cy="200" r="2"/></g>';
+const ELH_FROST = '<circle cx="440" cy="332" r="45" fill="#4fd1ff" opacity=".35" filter="url(#soft)"/><g fill="#9fe6ff" filter="url(#glow)"><path d="M444 318 L462 290 L456 322 Z"/><path d="M450 334 L486 330 L452 344 Z"/><path d="M440 344 L452 380 L432 348 Z"/><path d="M425 340 L408 368 L420 336 Z"/></g><g stroke="#e8fbff" stroke-width="1.5" opacity=".8"><path d="M470 300 L478 308 M478 300 L470 308"/><path d="M410 300 L416 306 M416 300 L410 306"/></g>';
+const ELH_STORM = '<circle cx="232" cy="182" r="50" fill="#ffe45c" opacity=".3" filter="url(#soft)"/><path d="M248 132 L214 184 L233 184 L220 218 L258 164 L238 164 Z" fill="#ffe45c" filter="url(#glow)"/><path d="M244 146 L226 178 L238 178 L231 196 L248 168 L238 168 Z" fill="#fffbe0"/><g fill="#fff3a0" filter="url(#glow)"><circle cx="200" cy="156" r="3"/><circle cx="262" cy="186" r="2.5"/><circle cx="196" cy="198" r="2"/></g>';
+const ELH_STONE = '<circle cx="232" cy="182" r="48" fill="#6fbf73" opacity=".22" filter="url(#soft)"/><path d="M210 176 L234 152 L258 170 L250 198 L220 202 Z" fill="#7a6652" stroke="#2e2620" stroke-width="3" stroke-linejoin="round"/><path d="M234 152 L240 176 L250 198 M222 180 L240 176 L258 170" fill="none" stroke="#a08a70" stroke-width="2"/><g fill="#5a4a3a" stroke="#2e2620" stroke-width="1.5"><path d="M196 150 L206 144 L210 154 L200 158 Z"/><path d="M262 140 L271 146 L264 154 Z"/></g><g stroke="#6fbf73" stroke-width="2" fill="none" filter="url(#glow)"><path d="M222 166 L230 172 L238 164"/></g>';
+const ELH_HANDS = '<circle cx="232" cy="198" r="10" fill="#e9e4f0"/><circle cx="434" cy="328" r="10" fill="#e9e4f0"/>' +
+  '<g class="hel hl-fire">' + ELH_FIRE + '</g>' +
+  '<g class="hel hl-frost" transform="translate(-202 -130)">' + ELH_FROST + '</g>' +
+  '<g class="hel hl-storm">' + ELH_STORM + '</g>' +
+  '<g class="hel hl-stone">' + ELH_STONE + '</g>' +
+  '<g class="hel hr-frost">' + ELH_FROST + '</g>' +
+  '<g class="hel hr-fire" transform="translate(202 130)">' + ELH_FIRE + '</g>';
+HERO_ART.elementalist = '<rect width="120" height="144" fill="#231A44"/>@@<image href="art/quadrant-mask-elementalist.svg" x="0" y="0" width="120" height="144" preserveAspectRatio="xMidYMid slice"/><svg class="elhands" x="0" y="0" width="120" height="144" viewBox="151 90 358 430" preserveAspectRatio="xMidYMid slice">' + ELH_HANDS + '</svg></g>';
 function heroFx(key) {
   let h = '<g class="sfx sfx-slam"><ellipse cx="96" cy="132" rx="26" ry="8" fill="none" stroke="#FFE08A" stroke-width="3"/></g>';
   if (key === 'duelist') {
@@ -3097,6 +3116,9 @@ function enemyHTML(V, e, prev) {
   if (st[8]) badges.push('<span class="badge good">Reflecting ½ damage</span>');
   if (st[9]) badges.push('<span class="badge good">En Garde: parries 1 hit</span>');
   if (st[10]) badges.push('<span class="badge good">Holding ' + st[10] + ' gold</span>');
+  if (st[11]) badges.push('<span class="badge bad">Burn ' + st[11] + '</span>');
+  if (st[12]) badges.push('<span class="badge bad">Chill ' + st[12] + '</span>');
+  if (st[13]) badges.push('<span class="badge bad">Shock ' + st[13] + '</span>');
   if (e.key === 'bell' && cb.toll) badges.push('<span class="badge bad">Final Toll</span>');
   if (e.key === 'cog' && e.p2) badges.push('<span class="badge bad">Shattered: acts twice, takes +25%</span>');
   if (e.key === 'spire' && e.p2) badges.push('<span class="badge bad">Unmasked</span>');
@@ -3182,7 +3204,7 @@ function heroBoxHTML(V, s, prev, mini) {
     else if (V.cb.duel) tag = V.cb.duel.a === pi ? '<span class="ptag turn">' + (you ? 'Your turn' : 'Their turn') + '</span>' : '';
     else if (s.rdy) tag = '<span class="ptag ready">Ready</span>';
   }
-  return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, animCls, true, hst, rcls) + (hero === 'elementalist' && s.el ? '<span class="elorb el-' + s.el + (hst && hst.k === 'cast' ? ' cast' : '') + '" style="' + (hst && hst.k === 'cast' ? '--as:' + hst.as + 'ms' : '') + '" title="Last element: ' + s.el + '"></span>' : '') + bigShield(s.block, popH, 'shield-p' + pi) + '</div>' +
+  return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, (animCls || '') + (hero === 'elementalist' && s.el ? ' hold-' + s.el : ''), true, hst, rcls) + (hero === 'elementalist' && s.el ? '<span class="elorb el-' + s.el + (hst && hst.k === 'cast' ? ' cast' : '') + '" style="' + (hst && hst.k === 'cast' ? '--as:' + hst.as + 'ms' : '') + '" title="Last element: ' + s.el + '"></span>' : '') + bigShield(s.block, popH, 'shield-p' + pi) + '</div>' +
     '<div class="hstats"><span class="hname">' + esc(vName(V, pi)) + (V.n > 1 ? (you ? ' <span class="muted">(you)</span>' : '') : '') + ' ' + tag + '</span>' +
     '<div class="hpline">' + (s.block ? '<span class="shield">' + ICON.shield + s.block + '</span>' : '') + hpBar('p' + pi, s.hp, s.mx, s.block) + s.hp + '/' + s.mx + '</div>' +
     '<div class="row">' + resourceHTML(hero, s) + (!you ? '<span class="muted">' + s.hn + ' cards · ' + s.energy + ' energy</span>' : '') + '</div>' +
@@ -4214,9 +4236,13 @@ function goOnline(first) {
 function flyCard(el, targetKey) {
   if (REDUCE || !el || !el.animate) return null;
   const t = document.querySelector('[data-float="' + targetKey + '"]');
-  if (!t) return null;
-  const r = el.getBoundingClientRect(), tr = t.getBoundingClientRect();
+  const r = el.getBoundingClientRect();
   if (!r.width) return null;
+  let tr = t ? t.getBoundingClientRect() : null;
+  if (!tr || (!tr.width && !tr.height)) {
+    const vw = window.innerWidth || document.documentElement.clientWidth, vh = window.innerHeight || document.documentElement.clientHeight;
+    tr = { left: vw / 2, top: vh / 2, width: 0, height: 0 };
+  }
   const g = el.cloneNode(true);
   g.removeAttribute('data-act'); g.removeAttribute('data-arg'); g.removeAttribute('id');
   g.setAttribute('aria-hidden', 'true'); g.tabIndex = -1; g.classList.remove('sel');
