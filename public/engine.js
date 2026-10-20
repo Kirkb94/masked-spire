@@ -664,7 +664,7 @@ async function enemyPhase() {
       let T = c.S[e.tg];
       if (!T || T.down) { const al = aliveSides(); if (!al.length) break; T = pick(al); e.tg = T.pi; }
       e.acting = true; e.actS = fx(tagOf(e), '', 'miss'); render();
-      await wait(220);
+      await wait(420);
       if (G.combat !== c) return;
       c.S.forEach(s => { s.hurtNow = false; });
       enemyAct(e, T);

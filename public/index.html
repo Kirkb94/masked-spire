@@ -90,6 +90,15 @@ html.rm #cardzoom, html.rm #cardzoom.on { transition: none; }
 .card.rar-u .rlabel { color: #9CCBFF; } .card.rar-r .rlabel { color: var(--gold); }
 .card .price { margin-top: auto; font-family: var(--display); color: var(--gold); font-weight: 700; font-size: 18px; }
 .t-attack { --c: var(--blood); } .t-skill { --c: var(--skill); } .t-power { --c: var(--power); } .t-status { --c: var(--status); }
+/* Card types without relying on color: border style (cb + hc) and glyph (cb) */
+html.cb .card.t-attack, html.hc .card.t-attack { border-style: solid; }
+html.cb .card.t-skill, html.hc .card.t-skill { border-style: dashed; }
+html.cb .card.t-power, html.hc .card.t-power { border-style: dotted; }
+html.cb .card.t-status, html.hc .card.t-status { border-style: double; border-width: 5px; }
+html.cb .card.t-attack .ctype::before { content: '\2694\00a0'; }
+html.cb .card.t-skill .ctype::before { content: '\25A3\00a0'; }
+html.cb .card.t-power .ctype::before { content: '\2605\00a0'; }
+html.cb .card.t-status .ctype::before { content: '\2716\00a0'; }
 .cards { display: flex; flex-wrap: wrap; gap: 20px; padding: 14px 6px; }
 
 /* Battle stage */
@@ -135,6 +144,20 @@ html.rm .shield.pop { animation: none; }
 .enemy.target { cursor: pointer; border-color: var(--teal); box-shadow: 0 0 0 3px var(--teal); }
 .enemy.target:hover { transform: translateY(-4px); }
 .enemy.acting { z-index: 2; }
+.enemy.tele { --tc: #E8743B; animation: tele-flash .42s ease-out var(--ts, 0s) backwards; }
+.enemy.tele-def { --tc: #56B4E9; } .enemy.tele-buf { --tc: #F0E442; } .enemy.tele-deb { --tc: #CC79A7; }
+.enemy.tele .intentbar { animation: tele-bar .42s ease-out var(--ts, 0s) backwards; }
+.enemy.tele .intentbar svg { animation: tele-icon .42s ease-out var(--ts, 0s) backwards; }
+.intentbar svg { animation: intent-pulse 1.8s ease-in-out var(--pd, 0s) infinite; }
+.intentbar.k-atk svg { animation-name: intent-pulse-atk; animation-duration: 1.2s; }
+.enemy.dying .intentbar svg { animation: none; }
+@keyframes intent-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes intent-pulse-atk { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.22); } }
+@keyframes tele-flash { 0% { box-shadow: 0 0 0 0 var(--tc); } 30% { box-shadow: 0 0 0 4px var(--tc), 0 0 22px 6px var(--tc); } 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); } }
+@keyframes tele-bar { 0% { filter: brightness(1); } 30% { filter: brightness(1.8); } 100% { filter: brightness(1); } }
+@keyframes tele-icon { 0% { transform: scale(1); } 35% { transform: scale(1.6); } 100% { transform: scale(1); } }
+html.rm .enemy.tele, html.rm .enemy.tele .intentbar, html.rm .enemy.tele .intentbar svg, html.rm .intentbar svg { animation: none; }
+html.rm .enemy.tele { outline: 3px solid var(--tc); outline-offset: 2px; }
 .enemy.dying { animation: die 1s ease-in var(--as, 0s) forwards; pointer-events: none; }
 .intentbar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px 10px 0 0; font-weight: 700; }
 .intentbar svg { width: 26px; height: 26px; flex: 0 0 auto; }
@@ -163,6 +186,9 @@ html.rm .shield.pop { animation: none; }
 .float.buff { color: var(--gold); font-size: 22px; }
 .float.miss { color: var(--muted); font-size: 22px; }
 .float.big { animation-name: floatbig; animation-duration: 1.2s; color: #FF4A4A; }
+.float.crit { color: #FFD34A; text-shadow: 0 2px 0 #000, 0 0 12px #FF4A4A, 0 0 22px #FF4A4A; letter-spacing: 1px; }
+.float.crit::after { content: '!'; }
+html.hc .float.crit { color: #FFF; }
 @keyframes floatbig { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.5); } 12% { opacity: 1; transform: translate(-50%, 0) scale(1.45); } 28% { transform: translate(-50%, -6px) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -70px) scale(1); } }
 .blockflash { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; background: radial-gradient(circle, rgba(140,200,255,.55), rgba(80,150,255,.15) 70%); box-shadow: inset 0 0 22px 4px rgba(150,210,255,.9); animation: blockflash .55s ease-out forwards; }
 @keyframes blockflash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
@@ -193,7 +219,24 @@ html.rm .hitshake { animation: none; }
 .hand { display: flex; gap: 16px; overflow-x: auto; padding: 22px 16px 12px; justify-content: safe center; }
 .log { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; font-size: 15px; color: var(--muted); }
 .log summary { cursor: pointer; font-family: var(--display); color: var(--ink); font-size: 17px; }
-.log ol { margin: 8px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 3px; }
+.log ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.log summary .lgn { font-family: inherit; font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 0 7px; margin-left: 6px; }
+.log .logbody { margin-top: 8px; max-height: min(48vh, 420px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.lg { display: flex; align-items: flex-start; gap: 8px; padding: 5px 8px; border-left: 3px solid var(--line); border-radius: 4px; background: rgba(255,255,255,.03); line-height: 1.3; color: var(--ink); }
+.lg .lgi { flex: 0 0 1.4em; text-align: center; }
+.lg .lgt { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.lg.new { background: rgba(255,255,255,.08); }
+.lg-hit { border-left-color: #E5574F; } .lg-hit .lgi { color: #E5574F; }
+.lg-block { border-left-color: #5FA8E8; } .lg-block .lgi { color: #5FA8E8; }
+.lg-card { border-left-color: #C9B26B; } .lg-card .lgi { color: #C9B26B; }
+.lg-death { border-left-color: #9A5BD6; } .lg-death .lgi { color: #9A5BD6; }
+.lg-boss { border-left-color: #FF9A3C; background: rgba(255,154,60,.08); } .lg-boss .lgi { color: #FF9A3C; }
+.lg-buff { border-left-color: #62C77A; } .lg-buff .lgi { color: #62C77A; }
+.lg-debuff { border-left-color: #C86BC0; } .lg-debuff .lgi { color: #C86BC0; }
+.lg-gold { border-left-color: #E8C547; } .lg-gold .lgi { color: #E8C547; }
+.lg-spawn { border-left-color: #E58F5F; } .lg-spawn .lgi { color: #E58F5F; }
+.lg-stance { border-left-color: #4FC3B5; } .lg-stance .lgi { color: #4FC3B5; }
+.lastlog .lgi { margin-right: 6px; }
 
 .idle { animation: bob 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
 .idle.sway { animation-name: sway; animation-duration: 4s; transform-origin: 50% 0%; }
@@ -227,6 +270,23 @@ html.rm .piles span.shuf { animation: none; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 7px #E8BE5233; } }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; font-size: 16px; color: var(--muted); }
 .legend span { display: flex; align-items: center; gap: 6px; }
+.maphud { display: flex; flex-direction: column; gap: 6px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+.maphud .mh-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.maphud .mh-bar { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
+.maphud .mh-bar i { height: 7px; border-radius: 3px; background: var(--line); }
+.maphud .mh-bar i.on { background: var(--gold); }
+.maphud .mh-bar i.nx { background: var(--teal); }
+.maphud .mh-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.maphud .mh-lbl { color: var(--faint); min-width: 38px; }
+.maphud .mh-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border: 1px solid var(--line); border-radius: 999px; }
+.maphud .mh-chip svg { width: 18px; height: 18px; }
+.maphud .mh-row.then .mh-chip { opacity: .75; }
+@media (max-width: 600px) {
+  .maphud { padding: 6px 8px; font-size: 12px; gap: 4px; }
+  .maphud .mh-chip svg { width: 16px; height: 16px; }
+  .maphud .mh-row.then .mh-chip { padding-right: 4px; }
+  .maphud .mh-row.then .mh-chip b { display: none; }
+}
 .legend svg { width: 20px; height: 20px; }
 
 /* Panels */
@@ -306,6 +366,19 @@ html.rm .battle.shake1, html.rm .battle.shake2 { animation: none; }
 .hcard h3 { font-size: 24px; }
 .hcard ul { margin: 0; padding-left: 18px; font-size: 16px; display: grid; gap: 4px; }
 .hcard .btn { margin-top: auto; }
+.hcard { position: relative; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.hcard:hover { transform: translateY(-2px); }
+.hcard.chosen { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(232, 190, 82, .35); }
+.hcard.theirs { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal); }
+.hcard.chosen.theirs { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold), 0 0 0 5px var(--teal); }
+.hcard .hbadge { position: absolute; top: 8px; right: 8px; z-index: 1; }
+.hcard .portrait { animation: hc-bob 3.4s ease-in-out infinite; }
+.hcard:nth-child(2) .portrait { animation-delay: -1.1s; }
+.hcard:nth-child(3) .portrait { animation-delay: -2.2s; }
+.hcard.chosen .portrait { animation-duration: 2.2s; }
+@keyframes hc-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+html.rm .hcard .portrait, html.rm .hcard { animation: none; transition: none; }
+html.rm .hcard:hover { transform: none; }
 .hrelic { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 8px; font-size: 16px; }
 .hrelic b { font-family: var(--display); font-size: 18px; color: var(--ink); }
 .trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
@@ -399,6 +472,9 @@ html.rm .battle.shake1, html.rm .battle.shake2 { animation: none; }
   .hand .card:hover { transform: none; }
   .hand .card.sel { transform: translateY(-10px); }
   .log { font-size: 14px; }
+  .log summary { padding: 6px 0; }
+  .log .logbody { max-height: 55vh; }
+  .lg { padding: 8px 10px; font-size: 15px; }
 }
 
 /* Co-op */
@@ -868,6 +944,29 @@ html.rm .endfx.vig { animation: none; opacity: .85; }
 #rotate p { margin: 0; color: var(--muted); max-width: 32ch; }
 @keyframes rot-tilt { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
 html.rm #rotate svg { animation: none; }
+/* rest / shop / treasure scene banners */
+.scenehd { margin: 0 0 12px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .12); background: #0B0A12; line-height: 0; }
+.scenehd svg { width: 100%; height: auto; max-height: 170px; display: block; }
+@media (max-height: 520px) { .scenehd svg { max-height: 22vh; } }
+.scenehd .fl, .scenehd .sc-lant, .scenehd .sc-mask, .scenehd .sc-glow, .scenehd .sc-ember, .scenehd .sc-tw, .scenehd .sc-mote { transform-box: fill-box; }
+.scenehd .fl { transform-origin: 50% 100%; animation: sc-flick .45s ease-in-out infinite alternate; }
+.scenehd .fl.b { animation-duration: .6s; animation-delay: -.2s; }
+.scenehd .fl.c { animation-duration: .35s; animation-delay: -.1s; }
+.scenehd .sc-glow { transform-origin: 50% 50%; animation: sc-glow 1.6s ease-in-out infinite alternate; }
+.scenehd .sc-ember { animation: sc-rise 2.6s ease-out infinite; opacity: 0; }
+.scenehd .sc-lant { transform-origin: 50% 0; animation: sc-sway 3s ease-in-out infinite alternate; }
+.scenehd .sc-mask { transform-origin: 50% 100%; animation: sc-bob 2.4s ease-in-out infinite; }
+.scenehd .sc-tw { animation: sc-tw 1.8s ease-in-out infinite; }
+.scenehd .sc-mote { animation: sc-mote 5s ease-in-out infinite; opacity: 0; }
+@keyframes sc-flick { from { transform: scale(1, .86) skewX(-3deg); } to { transform: scale(.92, 1.08) skewX(3deg); } }
+@keyframes sc-glow { from { opacity: .65; transform: scale(.94); } to { opacity: 1; transform: scale(1.05); } }
+@keyframes sc-rise { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: .95; } 100% { opacity: 0; transform: translate(var(--dx, 6px), -48px); } }
+@keyframes sc-sway { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@keyframes sc-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px) rotate(2deg); } }
+@keyframes sc-tw { 0%, 100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.1); } }
+@keyframes sc-mote { 0% { opacity: 0; transform: translateY(6px); } 30% { opacity: .8; } 100% { opacity: 0; transform: translateY(-26px); } }
+html.rm .scenehd *, html.rm .scenehd { animation: none !important; }
+html.rm .scenehd .sc-ember, html.rm .scenehd .sc-mote { opacity: .5; }
 @media (prefers-reduced-motion: reduce) { #rotate svg { animation: none; } }
 @media (pointer: coarse) and (orientation: portrait) { html:not(.allow-portrait) #rotate { display: flex; } }
 #rotate .btn { min-height: 48px; padding: 10px 18px; margin-top: 6px; }
@@ -919,7 +1018,7 @@ html.rm #rotate svg { animation: none; }
   .hand .card .cost { width: 30px; height: 30px; font-size: 17px; top: -11px; left: -11px; }
   .log { padding: 4px 12px; font-size: 13px; }
   .log summary { font-size: 15px; }
-  .log[open] { max-height: 30vh; overflow: auto; }
+  .log[open] .logbody { max-height: 42vh; }
   /* Map: map left, header + legend right, whole map visible */
   .mapcard { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: repeat(7, min-content) 1fr; column-gap: calc(var(--u) * 2); row-gap: 8px; align-content: start; align-items: start; padding: 10px 14px; }
   .mapcard > * { grid-column: 2; }
@@ -975,7 +1074,7 @@ html.rm #rotate svg { animation: none; }
 var prev = null, t = null;
 window.msAnnounceLogs = function (V) {
   var logs = V && V.scr === 'combat' && V.cb && Array.isArray(V.cb.logs) ? V.cb.logs : null;
-  if (!logs) { prev = null; return; }
+  if (!logs) { prev = null; if (window.msLogReset) window.msLogReset(); return; }
   var cur = logs.slice();
   if (prev === null) { prev = cur; return; }
   var k = 0;
@@ -1870,7 +1969,10 @@ const SND = (function () {
   const brass = (V, t, notes, d, v, lp) => notes.forEach(n => { V.tone({ t, f: mf(n), d, a: 0.05, r: 0.25, v, type: 'sawtooth', lp: lp || 1500, lp2: (lp || 1500) * 2.4, q: 1.2 }); V.tone({ t, f: mf(n), d, a: 0.05, r: 0.25, v: v * 0.6, type: 'sawtooth', det: 8, lp: lp || 1500, lp2: (lp || 1500) * 2.4 }); });
 
   /* ----- music tracks: step(c) is called once per 16th note ----- */
-  const BPM = { menu: [70, 70, 70], a1: [54, 78, 92], a2: [76, 100, 116], a3: [48, 66, 80], duel: [84, 104, 124] };
+  const BPM = { menu: [70, 70, 70], a1: [54, 78, 92], a2: [76, 100, 116], a3: [48, 66, 80], duel: [84, 104, 124], rest: [58, 58, 58], shop: [92, 92, 92] };
+  const RE_CH = [[38, 45, 50, 57], [34, 46, 50, 53], [41, 48, 53, 57], [36, 48, 52, 55]];
+  const SH_CH = [[45, 52, 57, 60], [41, 48, 53, 57], [43, 50, 55, 59], [40, 47, 52, 56]];
+  const SH_PENT = [69, 72, 74, 76, 79, 81];
   const DU_CH = [[40, 47, 52, 59], [41, 48, 53, 60], [38, 45, 50, 57], [43, 50, 55, 62]];
   const MODE = { calm: 0, fight: 1, boss: 2 };
   const MENU_CH = [[50, 57, 62, 65], [46, 53, 58, 62], [43, 55, 58, 62], [45, 57, 61, 64]];
@@ -1930,6 +2032,24 @@ const SND = (function () {
       if (st === 0 && bar % 2 === 0) brass(V, t, [ch[1], ch[2]], sd * 6, 0.03, 1100);
       if (mi && st % 4 === 0 && hs(i, 21) > 0.4) brass(V, t, [ch[Math.floor(hs(i, 22) * 4)] + 24], sd * 3, 0.02, 1400);
       if (mi === 2 && [3, 7, 11, 15].includes(st)) thump(V, t, 0.1, 65);
+    },
+    rest(c) {
+      const { V, t, i, sd } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = RE_CH[ci];
+      if (i % 32 === 0) { pad(V, t, ch, sd * 32, 0.026, 700, 'triangle'); V.tone({ t, f: mf(ch[0] - 12), d: sd * 32, a: 2, r: 2, v: 0.08, type: 'sine' }); }
+      if (st % 4 === 0) pluck(V, t, ch[(st / 4 + bar) % 4] + 12, 0.05);
+      if (st === 8 && hs(bar, 31) > 0.5) pluck(V, t, ch[(bar + 2) % 4] + 24, 0.03);
+      if (hs(i, 30) > 0.82) V.noise({ t, d: 0.012, type: 'hp', f: 3000 + hs(i, 32) * 3000, v: 0.03, r: 0.02 });
+      if (st === 0 && bar % 4 === 0) V.noise({ t, d: sd * 14, a: sd * 6, r: sd * 6, type: 'bp', f: 400, f2: 800, q: 0.8, v: 0.012 });
+      if (st === 0 && hs(bar, 33) > 0.6) bell(V, t, 86 + Math.floor(hs(bar, 34) * 3) * 2, 0.03, 2.5);
+    },
+    shop(c) {
+      const { V, t, i, sd } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = SH_CH[ci];
+      if (i % 32 === 0) pad(V, t, ch, sd * 32, 0.018, 900, 'triangle');
+      if ([0, 6, 10].includes(st)) V.tone({ t, f: mf(ch[0] - 12), d: sd * 2, a: 0.01, r: 0.15, v: 0.08, type: 'triangle', lp: 500 });
+      if (st % 2 === 0) pluck(V, t, ch[(st / 2 + bar) % 4] + 12, 0.04);
+      if (st % 4 === 2 && hs(i, 40) > 0.45) pluck(V, t, SH_PENT[Math.floor(hs(i, 41) * 6)], 0.05);
+      if ((st === 4 || st === 12) && hs(i, 42) > 0.3) metal(V, t, 0.035, 1800 + hs(i, 43) * 600);
+      if (st === 0 && hs(bar, 44) > 0.65) bell(V, t, 93, 0.025, 1.5);
     },
     a3(c) {
       const { V, t, i, sd, mi } = c, bar = Math.floor(i / 16), st = i % 16, ci = Math.floor(bar / 2) % 4, ch = A3_CH[ci];
@@ -2101,6 +2221,8 @@ const SND = (function () {
   /* ----- live engine ----- */
   let ac = null, master = null, musicBus = null, sfxBus = null, sV = null, curBus = null;
   const XFADE = { inDelay: 0.3, inTau: 0.9, outTau: 0.6, sameInDelay: 0.05, sameInTau: 0.35, sameOutTau: 0.35, killMs: 5000 };
+  /* per-track loudness trim (1 = unchanged); applied under the user's music volume */
+  const TRIM = { rest: 0.85, shop: 0.85 };
   let want = { key: 'menu', mode: 'calm' }, playing = null, timer = null, nextT = 0, stepI = 0, duckUntil = 0;
   const hasAC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
   function ensure() {
@@ -2132,7 +2254,7 @@ const SND = (function () {
     const keepStep = same ? Math.ceil(stepI / 32) * 32 : 0;
     stopMusic(same ? XFADE.sameOutTau : XFADE.outTau);
     if (!ac || !prefs.music || ac.state !== 'running') return;
-    const bus = ac.createGain(); bus.gain.setValueAtTime(0, ac.currentTime); bus.gain.setTargetAtTime(1, ac.currentTime + (same ? XFADE.sameInDelay : XFADE.inDelay), same ? XFADE.sameInTau : XFADE.inTau); bus.connect(musicBus);
+    const bus = ac.createGain(); bus.gain.setValueAtTime(0, ac.currentTime); bus.gain.setTargetAtTime(TRIM[key] || 1, ac.currentTime + (same ? XFADE.sameInDelay : XFADE.inDelay), same ? XFADE.sameInTau : XFADE.inTau); bus.connect(musicBus);
     curBus = bus; playing = { key, mode }; const V = voices(ac, bus), mi = MODE[mode] || 0, tr = TRACKS[key], sd = 60 / BPM[key][mi] / 4;
     stepI = keepStep; nextT = ac.currentTime + 0.12;
     const pump = () => {
@@ -2142,6 +2264,7 @@ const SND = (function () {
     pump(); timer = setInterval(pump, 150);
   }
   function sync() {
+    syncAmb();
     if (!ac || ac.state !== 'running') return;
     if (!prefs.music || want.key === 'none' || !TRACKS[want.key]) { if (playing) stopMusic(); return; }
     if (!playing || playing.key !== want.key || playing.mode !== want.mode) startMusic(want.key, want.mode);
@@ -2192,6 +2315,38 @@ const SND = (function () {
   };
   function ui(name, delay) { if (!ok() || !UI[name]) return; UI[name](sV, ac.currentTime + 0.01 + (delay || 0)); }
 
+  /* ----- ambient loops for rest / shop / treasure (routed through the effects bus) ----- */
+  let amb = null, ambWant = null, ambBuf = null;
+  const AMB = {
+    fire: { level: 0.15, ft: 'lowpass', ff: 380, fq: 0.7, ms: 110, tick(V, t) { const r = Math.random(); if (r < 0.45) V.noise({ t, d: 0.015 + Math.random() * 0.03, type: 'hp', f: 2500 + Math.random() * 3000, v: 0.05 + Math.random() * 0.07, r: 0.03 }); if (r < 0.08) V.noise({ t, d: 0.05, type: 'bp', f: 900, q: 2, v: 0.1, r: 0.08 }); } },
+    market: { level: 0.2, ft: 'bandpass', ff: 420, fq: 0.8, ms: 900, tick(V, t) { if (Math.random() < 0.35) { const f = 2200 + Math.random() * 1400; V.tone({ t, f, d: 0.01, a: 0.002, r: 0.25, v: 0.035, parts: BELL }); if (Math.random() < 0.4) V.tone({ t: t + 0.09, f: f * 1.5, d: 0.01, a: 0.002, r: 0.2, v: 0.025, parts: BELL }); } } },
+    vault: { level: 0.5, ft: 'lowpass', ff: 160, fq: 0.7, ms: 1100, tick(V, t) { if (Math.random() < 0.4) V.tone({ t, f: 1568 + Math.random() * 1200, d: 0.05, r: 1.2, v: 0.025, parts: BELL }); } }
+  };
+  function stopAmb() {
+    if (!amb || !ac) { amb = null; return; }
+    const a = amb; amb = null; clearInterval(a.timer);
+    try { a.g.gain.cancelScheduledValues(ac.currentTime); a.g.gain.setTargetAtTime(0, ac.currentTime, 0.3); a.ev.gain.setTargetAtTime(0, ac.currentTime, 0.2); } catch (e) {}
+    setTimeout(() => { try { a.src.stop(); } catch (e) {} try { a.g.disconnect(); a.ev.disconnect(); } catch (e) {} }, 1500);
+  }
+  function syncAmb() {
+    if (!ac || !sfxBus || ac.state !== 'running' || !prefs.sfx || prefs.mute || !ambWant || !AMB[ambWant]) { stopAmb(); return; }
+    if (amb && amb.name === ambWant) return;
+    stopAmb();
+    try {
+      const AM = AMB[ambWant], t = ac.currentTime;
+      if (!ambBuf) { ambBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); const d = ambBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+      const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.setTargetAtTime(AM.level, t + 0.1, 0.8); g.connect(sfxBus);
+      const ev = ac.createGain(); ev.gain.value = 1; ev.connect(sfxBus);
+      const src = ac.createBufferSource(); src.buffer = ambBuf; src.loop = true;
+      const f = ac.createBiquadFilter(); f.type = AM.ft; f.frequency.value = AM.ff; f.Q.value = AM.fq;
+      src.connect(f); f.connect(g); src.start();
+      const V = voices(ac, ev);
+      const timer = setInterval(() => { if (!ac || amb === null) return; try { AM.tick(V, ac.currentTime + 0.02); } catch (e) {} }, AM.ms);
+      amb = { name: ambWant, src, g, ev, timer };
+    } catch (e) { amb = null; }
+  }
+  function ambient(name) { ambWant = name || null; syncAmb(); }
+
   /* ----- settings panel ----- */
   function applyVol() {
     if (!ac) return; const t = ac.currentTime;
@@ -2204,7 +2359,7 @@ const SND = (function () {
   function fire(name, a, b) { try { if (HOOKS[name]) HOOKS[name](a, b); } catch (e) {} }
   function hit(h, delay) { try { HOOKS.hit(h, delay); } catch (e) {} }
   function block(h, delay) { try { HOOKS.block(h, delay); } catch (e) {} }
-  function setPref(k, v) { prefs[k] = v; savePrefs(); if (k === 'musicVol' || k === 'sfxVol' || k === 'mute') { if (k !== 'mute') unlock(); applyVol(); } if (k === 'music') { if (!v) stopMusic(); else { unlock(); sync(); } } syncPanel(); }
+  function setPref(k, v) { prefs[k] = v; savePrefs(); if (k === 'musicVol' || k === 'sfxVol' || k === 'mute') { if (k !== 'mute') unlock(); applyVol(); } if (k === 'music') { if (!v) stopMusic(); else { unlock(); sync(); } } if (k === 'sfx' || k === 'mute') syncAmb(); syncPanel(); }
   let panel = null;
   const SPK = '<svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8 L7 8 L12 4 L12 16 L7 12 L3 12Z"/><path d="M15 7 Q17.5 10 15 13"/></svg>';
   function syncPanel() {
@@ -2236,7 +2391,7 @@ const SND = (function () {
     ['pointerdown', 'keydown', 'touchend'].forEach(ev => document.addEventListener(ev, first, { passive: true }));
     document.addEventListener('visibilitychange', () => { if (ac && !document.hidden && ac.state !== 'running') ac.resume().then(sync).catch(() => {}); });
   }
-  return { prefs, scene, stinger, hero, enemy, ui, fire, hit, block, HOOKS, togglePanel, unlock, SPK, _t: { voices, TRACKS, STING, playSting, BPM, MODE, HERO, ARCH, EVOICE, UI }, get ctx() { return ac; }, get playing() { return playing; } };
+  return { prefs, scene, ambient, stinger, hero, enemy, ui, fire, hit, block, HOOKS, togglePanel, unlock, SPK, _t: { voices, TRACKS, STING, playSting, BPM, MODE, HERO, ARCH, EVOICE, UI }, get ctx() { return ac; }, get playing() { return playing; } };
 })();
 
 /* ---------- Scenery, map art, chest and victory (client only) ---------- */
@@ -2394,6 +2549,31 @@ function mapEdge(x1, y1, x2, y2, seed) {
   const sg = sceneRng(seed * 7 + 1), o = (sg() - .5) * 24;
   return 'M' + x1 + ' ' + y1 + ' C ' + f1(x1 + o) + ' ' + f1(y1 + (y2 - y1) * .35) + ', ' + f1(x2 - o) + ' ' + f1(y1 + (y2 - y1) * .65) + ', ' + x2 + ' ' + y2;
 }
+/* progress HUD: floor, run progress, next node types */
+function mapHud(V) {
+  const T = ROWS + 1, cl = Math.max(0, Math.min(T, V.floor || 0)), rows = V.map;
+  const run = Math.round(((V.act - 1) * T + cl) / (3 * T) * 100);
+  const typeOf = k => { const p = k.split('-'), r = +p[0]; return r >= ROWS ? 'boss' : rows[r][+p[1]][0]; };
+  const chips = keys => {
+    const cnt = {}, order = [];
+    keys.forEach(k => { const t = typeOf(k); if (!cnt[t]) { cnt[t] = 0; order.push(t); } cnt[t]++; });
+    if (!order.length) return '<span class="muted">—</span>';
+    return order.map(t => '<span class="mh-chip">' + (t === 'boss' ? MAPICON['boss' + V.act] : MAPICON[t]) + '<b style="font-weight:600">' + (t === 'boss' ? 'Boss' : NODE_LABEL[t]) + (cnt[t] > 1 ? ' ×' + cnt[t] : '') + '</b></span>').join('');
+  };
+  const av = V.av || [], then = [];
+  av.forEach(k => {
+    const p = k.split('-'), r = +p[0], l = +p[1];
+    if (r >= ROWS) return;
+    const nr = r + 1;
+    rows[r][l][1].forEach(n => { const kk = nr >= ROWS ? ROWS + '-0' : nr + '-' + n; if (!then.includes(kk)) then.push(kk); });
+  });
+  let bar = '';
+  for (let i = 0; i < T; i++) bar += '<i class="' + (i < cl ? 'on' : i === cl ? 'nx' : '') + '"></i>';
+  return '<div class="maphud" aria-label="Run progress"><div class="mh-top"><b>Floor ' + Math.min(T, cl + 1) + '/' + T + '</b><span class="muted">Act ' + ROMAN[V.act - 1] + ' · ' + run + '% of run</span></div>' +
+    '<div class="mh-bar" role="progressbar" aria-label="Floors cleared this act" aria-valuemin="0" aria-valuemax="' + T + '" aria-valuenow="' + cl + '">' + bar + '</div>' +
+    '<div class="mh-row"><span class="mh-lbl">Next</span>' + chips(av) + '</div>' +
+    (then.length ? '<div class="mh-row then"><span class="mh-lbl">Then</span>' + chips(then) + '</div>' : '') + '</div>';
+}
 function mapHTML(V) {
   const H = (ROWS + 1) * 74 + 106;
   const y = r => H - 104 - r * 74;
@@ -2446,7 +2626,7 @@ function mapHTML(V) {
   const fogH = Math.max(0, Math.min(100, (y(fogRow) + 20) / H * 100));
   const coopNote = V.n > 1 ? '<p class="muted" style="margin:0">Both players pick the same node to move on. ' + (myVote && oVote !== myVote ? 'Waiting for your partner…' : oVote && oVote !== myVote ? 'Your partner chose a node: tap it to agree.' : '') + '</p>' : '';
   const ph = '-' + f1((Date.now() / 1000) % 24) + 's';
-  return '<section class="mapcard act' + V.act + '" aria-label="Act ' + ROMAN[V.act - 1] + ' map"><div class="row"><div style="display:flex;flex-direction:column;gap:2px"><span class="actbanner">Act ' + ROMAN[V.act - 1] + ' of III</span><h2>' + esc(Act.n) + '</h2></div><span class="muted">Climb from the bottom. Glowing nodes are your next choices. Boss: ' + esc(EN[Act.boss].n) + '.</span></div>' + coopNote +
+  return '<section class="mapcard act' + V.act + '" aria-label="Act ' + ROMAN[V.act - 1] + ' map"><div class="row"><div style="display:flex;flex-direction:column;gap:2px"><span class="actbanner">Act ' + ROMAN[V.act - 1] + ' of III</span><h2>' + esc(Act.n) + '</h2></div><span class="muted">Climb from the bottom. Glowing nodes are your next choices. Boss: ' + esc(EN[Act.boss].n) + '.</span></div>' + coopNote + mapHud(V) +
     '<div class="mapwrap" style="aspect-ratio:400 / ' + H + ';--ph:' + ph + '">' +
     '<svg class="mapart" viewBox="0 0 400 ' + H + '" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' + actScene(V.act, H) + '</svg>' +
     '<div class="mapfx" aria-hidden="true">' + mapParticles(V.act) + '</div>' +
@@ -2524,14 +2704,17 @@ function chestSfx(relic) {
 function sndSync(V, prev) {
   const scr = V ? V.scr : 'title';
   const was = CL.sndScr; CL.sndScr = scr;
-  if (!V || scr === 'lobby') { SND.scene('menu'); return; }
+  if (!V || scr === 'lobby') { SND.scene('menu'); SND.ambient(null); return; }
   const ak = 'a' + Math.min(3, Math.max(1, V.act || 1));
   let key = ak, mode = 'calm';
   if (scr === 'combat' && V.cb) { mode = V.cb.duel || V.cb.k === 'boss' ? 'boss' : 'fight'; if (V.cb.duel) key = 'duel'; }
   else if (scr === 'duelintro' || scr === 'duelend') key = 'duel';
+  else if (scr === 'rest') key = 'rest';
+  else if (scr === 'shop') key = 'shop';
   else if (scr === 'victory') key = 'menu';
   else if (scr === 'defeat') key = 'none';
   SND.scene(key, mode);
+  SND.ambient(scr === 'rest' ? 'fire' : scr === 'shop' ? 'market' : scr === 'treasure' ? 'vault' : null);
   if (was && was !== scr) {
     if (scr === 'reward') SND.stinger('win');
     else if (scr === 'actclear' || scr === 'duelend') SND.stinger('clear');
@@ -2596,7 +2779,7 @@ function cardHTML(id, act, arg, opts) {
   const cls = 'card t-' + d.t + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '');
   return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + (opts.rv != null ? ' style="--i:' + opts.rv + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
     '<span class="cost">' + (d.c < 0 ? '–' : d.c) + '</span>' + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + '</span><span class="cname">' + esc(d.n) + '</span>' +
-    '<span class="cdesc">' + esc(d.d) + live + '</span>' + (opts.price != null ? '<span class="price">' + opts.price + ' gold</span>' : '') + '</button>';
+    '<span class="cdesc">' + esc(d.d) + live + '</span>' + (opts.price != null ? '<span class="price">' + opts.price + ' gold</span>' : '') + (opts.kb ? '<span class="kbn" aria-hidden="true">' + opts.kb + '</span>' : '') + '</button>';
 }
 function vName(V, pi) {
   const h = V.P[pi].h; const base = h ? HEROES[h].n.replace('The ', '') : 'Player ' + (pi + 1);
@@ -2740,12 +2923,17 @@ function enemyHTML(V, e, prev) {
     const dms = Math.min(Date.now() - CL.an[key].t, 5000);
     est = { k: 'die', as: -dms }; dyAs = ' style="--as:-' + dms + 'ms"';
   } else est = rgState(key, ek);
+  let tele = '';
+  if (!e.dead && est && (est.k === 'atk' || est.k === 'def' || est.k === 'buf' || est.k === 'deb') && -est.as < 440) {
+    tele = ' tele tele-' + est.k;
+    dyAs = ' style="--ts:' + est.as + 'ms"';
+  }
   let ecls = '';
   if (e.key === 'bell' && cb.toll) ecls += ' toll';
   if (e.p2) ecls += ' p2 p2-' + e.key;
-  const cls = 'enemy' + (BOSS_SIZE[e.key] ? ' boss' : '') + (targeting ? ' target' : '') + (it.tot && !e.dead && toMe ? ' threat' : '') + (e.dead ? ' dying' : '');
+  const cls = 'enemy' + (BOSS_SIZE[e.key] ? ' boss' : '') + (targeting ? ' target' : '') + (it.tot && !e.dead && toMe ? ' threat' : '') + (e.dead ? ' dying' : '') + tele;
   return '<button type="button" class="' + cls + '"' + dyAs + ' data-act="enemy" data-arg="' + e.idx + '" data-float="e' + e.idx + '" aria-label="' + esc(e.n + ', ' + e.hp + ' of ' + e.max + ' HP. Next: ' + it.x) + '">' +
-    '<span class="intentbar ' + it.c + '">' + icon + (it.v !== '' ? '<span class="ival">' + it.v + '</span>' : '') + '<span class="itext">' + esc(it.x) + '</span></span>' +
+    '<span class="intentbar ' + it.c + '" style="--pd:-' + (Date.now() % 1800) + 'ms">' + icon + (it.v !== '' ? '<span class="ival">' + it.v + '</span>' : '') + '<span class="itext">' + esc(it.x) + '</span></span>' +
     '<span class="pwrap">' + tgtLabel + '<span class="art">' + enemyArt(e, est, ecls) + '</span>' + bigShield(e.block, popE) + '</span>' +
     '<span class="einfo"><span class="ename">' + esc(e.n) + '</span>' +
     '<span class="hpline">' + (e.block ? '<span class="shield">' + ICON.shield + e.block + '</span>' : '') + hpBar('e' + e.idx, e.hp, e.max, e.block) + e.hp + '/' + e.max + '</span>' +
@@ -2808,7 +2996,45 @@ function heroBoxHTML(V, s, prev, mini) {
     '<div class="row">' + resourceHTML(hero, s) + (!you ? '<span class="muted">' + s.hn + ' cards · ' + s.energy + ' energy</span>' : '') + '</div>' +
     (pb.length ? '<div class="badges">' + pb.join('') + '</div>' : '') + '</div></div>';
 }
+var LOGH = [], LOGOPEN = false;
+window.msLogReset = function () { LOGH = []; };
+function logMerge(cur) {
+  let k = 0;
+  for (; k < cur.length; k++) {
+    const ov = Math.min(LOGH.length, cur.length - k);
+    let ok = true;
+    for (let i = 0; i < ov; i++) { if (cur[k + i] !== LOGH[i]) { ok = false; break; } }
+    if (ok) break;
+  }
+  if (k > 0) LOGH = cur.slice(0, k).concat(LOGH).slice(0, 80);
+}
+function logKind(t) {
+  if (/Final Toll|shatter|casts off|Sudden death|looms|Only one mask/.test(t)) return ['boss', '\u26A0'];
+  if (/is defeated|falls!/.test(t)) return ['death', '\u2620'];
+  if (/ plays /.test(t)) return ['card', '\uD83C\uDCCF'];
+  if (/appear|joins the fight|splits/.test(t)) return ['spawn', '\u2726'];
+  if (/ for \d+\.|Thorns|reflects/.test(t)) return ['hit', '\u2694'];
+  if (/Block|parries/.test(t)) return ['block', '\uD83D\uDEE1'];
+  if (/gold|flees/.test(t)) return ['gold', '\uD83E\uDE99'];
+  if (/enrages|gains|howls|Strength/.test(t)) return ['buff', '\u25B2'];
+  if (/Dazed|shuffled|erases|Shackled|Glowdust|burn/.test(t)) return ['debuff', '\u2623'];
+  if (/ enters /.test(t)) return ['stance', '\u25C8'];
+  return ['info', '\u2022'];
+}
+function logPanelHTML() {
+  const items = LOGH.slice().reverse();
+  const lis = items.map((l, i) => { const k = logKind(l); return '<li class="lg lg-' + k[0] + (i === items.length - 1 ? ' new' : '') + '"><span class="lgi" aria-hidden="true">' + k[1] + '</span><span class="lgt">' + esc(l) + '</span></li>'; }).join('');
+  return '<details class="log"' + (LOGOPEN ? ' open' : '') + '><summary>Battle log <span class="lgn">' + items.length + '</span></summary><div class="logbody" role="region" aria-label="Battle log history" tabindex="0"><ol>' + lis + '</ol></div></details>';
+}
+document.addEventListener('toggle', function (e) {
+  const d = e.target;
+  if (!d || !d.classList || !d.classList.contains('log')) return;
+  LOGOPEN = d.open;
+  const b = d.querySelector('.logbody');
+  if (d.open && b) b.scrollTop = b.scrollHeight;
+}, true);
 function combatHTML(V, prev) {
+  try { logMerge(V.cb.logs || []); } catch (e) {}
   const cb = V.cb, me = V.me, s = cb.S[me];
   const duel = cb.duel;
   const myTurn = duel ? duel.a === me : !s.rdy;
@@ -2833,7 +3059,7 @@ function combatHTML(V, prev) {
       : '<div class="big safe">' + ICON.check + 'No attacks at you next turn</div>';
   }
   const ls = liveSide(V);
-  const hand = cb.hand.map(([u, id], i) => cardHTML(id, 'card', u, { u: u, sel: CL.sel === u, dim: CARDS[id].c > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
+  const hand = cb.hand.map(([u, id], i) => cardHTML(id, 'card', u, { u: u, kb: i < 10 ? String((i + 1) % 10) : '', sel: CL.sel === u, dim: CARDS[id].c > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
   const endLabel = duel ? (myTurn ? 'End turn' : 'Rival’s turn') : waiting ? 'Waiting for partner…' : 'End turn';
   const canEnd = !cb.busy && !s.dn && myTurn;
   const selCard = CL.sel != null ? cb.hand.find(h => h[0] === CL.sel) : null;
@@ -2842,13 +3068,13 @@ function combatHTML(V, prev) {
     '<div class="stage' + (duel ? ' duel' : '') + '" style="background:' + sceneryBG(V.act, cb.k === 'boss', !!duel) + ' center bottom / cover no-repeat, radial-gradient(ellipse at 50% 100%, ' + (duel ? '#3A1420' : actStage) + ' 0%, #15121A 70%)">' + cfxHTML(V.act, !!duel) + left +
     '<div class="enemies">' + right + '</div></div>' +
     turnChip(V, cb) +
-    '<div class="lastlog">' + esc(cb.logs[0] || '') + '</div>' +
+    '<div class="lastlog' + (cb.logs[0] ? ' lg-' + logKind(cb.logs[0])[0] : '') + '">' + (cb.logs[0] ? '<span class="lgi" aria-hidden="true">' + logKind(cb.logs[0])[1] + '</span>' : '') + esc(cb.logs[0] || '') + '</div>' +
     '<div class="dock"><div class="controls"><div class="energy" title="Energy">' + s.energy + '<small>energy</small></div>' +
     '<div class="incoming">' + inc + '<div class="piles"><span data-pile="draw" data-act="pile" data-arg="draw" role="button" tabindex="0" aria-haspopup="dialog">Draw ' + cb.piles[0] + '</span><span data-pile="discard" data-act="pile" data-arg="discard" role="button" tabindex="0" aria-haspopup="dialog">Discard ' + cb.piles[1] + '</span><span data-pile="exhaust" data-act="pile" data-arg="exhaust" role="button" tabindex="0" aria-haspopup="dialog">Exhaust ' + cb.piles[2] + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
-    '<div class="endwrap"><button type="button" class="btn kbhelp" data-act="keys" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">?</button><button type="button" class="btn primary" data-act="end"' + (canEnd ? '' : ' disabled') + '>' + endLabel + '</button></div></div>' +
-    '<div class="hint" aria-live="polite">' + (selCard ? 'Choose a target for ' + esc(CARDS[selCard[1]].n) + ' (tap the card again to cancel)' : '') + '</div>' +
+    '<div class="endwrap"><button type="button" class="btn kbhelp" data-act="keys" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">?</button><button type="button" class="btn primary" data-act="end"' + (canEnd ? '' : ' disabled') + '>' + endLabel + ' <kbd class="kbn-e" aria-hidden="true">E</kbd></button></div></div>' +
+    '<div class="hint" aria-live="polite">' + (selCard ? 'Choose a target for ' + esc(CARDS[selCard[1]].n) + ' (←/→ to pick, Enter to confirm, Esc or tap the card again to cancel)' : '') + '</div>' +
     '<div class="hand" aria-label="Your hand">' + (hand || '<span class="muted">' + (cb.busy ? 'Resolving…' : waiting ? 'Waiting for your partner to end their turn…' : 'Your hand is empty.') + '</span>') + '</div></div>' +
-    '<details class="log"><summary>Battle log</summary><ol>' + cb.logs.map(l => '<li>' + esc(l) + '</li>').join('') + '</ol></details></section>';
+    logPanelHTML() + '</section>';
 }
 function waitNote(V) {
   if (V.n < 2) return '';
@@ -2877,16 +3103,52 @@ function actclearHTML(V) {
   return '<section class="panel victory"><span class="actbanner">Act ' + ROMAN[a.act - 1] + ' cleared</span><h2>' + esc(EN[ACTS[a.act - 1].boss].n) + ' is defeated</h2>' + st.html +
     (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's">' + details + '</div>' : '<p class="muted center">The boss’s hoard awaits. Open the chest.</p>') + '</section>';
 }
+/* animated scene banners (CSS animation is disabled under html.rm) */
+function sceneBanner(kind) {
+  const head = '<div class="scenehd scn-' + kind + '" aria-hidden="true"><svg viewBox="0 0 300 110" preserveAspectRatio="xMidYMid slice" focusable="false">';
+  let s = '';
+  if (kind === 'rest') {
+    s = '<defs><radialGradient id="scg-f"><stop offset="0" stop-color="#FF9A3C" stop-opacity=".8"/><stop offset="1" stop-color="#FF9A3C" stop-opacity="0"/></radialGradient></defs>' +
+      '<rect width="300" height="110" fill="#0B0A12"/>' +
+      [[24, 14], [70, 28], [118, 10], [196, 20], [250, 12], [278, 34]].map((p, i) => '<circle class="sc-tw" cx="' + p[0] + '" cy="' + p[1] + '" r="1.2" fill="#DDE8FF" style="animation-delay:-' + (i * 0.4) + 's"/>').join('') +
+      '<path d="' + pineP(34, 100, 44, 78) + '" fill="#0F1A18"/><path d="' + pineP(266, 100, 50, 88) + '" fill="#0F1A18"/><path d="' + pineP(232, 100, 34, 56) + '" fill="#13201D"/>' +
+      '<circle class="sc-glow" cx="150" cy="84" r="64" fill="url(#scg-f)"/>' +
+      '<ellipse cx="150" cy="101" rx="140" ry="11" fill="#17121A"/>' +
+      '<g stroke-linecap="round"><path d="M122 98 L176 88" stroke="#120C10" stroke-width="9"/><path d="M122 98 L176 88" stroke="#5A3A22" stroke-width="6"/><path d="M124 88 L178 98" stroke="#120C10" stroke-width="9"/><path d="M124 88 L178 98" stroke="#6B4528" stroke-width="6"/></g>' +
+      '<g transform="translate(150 94)"><path class="fl" d="M0 0 C-17 -8 -15 -28 0 -50 C15 -28 17 -8 0 0Z" fill="#E8561E"/></g>' +
+      '<g transform="translate(142 94)"><path class="fl b" d="M0 0 C-11 -6 -9 -20 0 -34 C9 -20 11 -6 0 0Z" fill="#FF8A2B"/></g>' +
+      '<g transform="translate(159 94)"><path class="fl c" d="M0 0 C-10 -5 -8 -18 0 -30 C8 -18 10 -5 0 0Z" fill="#FFB43D"/></g>' +
+      '<g transform="translate(150 94)"><path class="fl c" d="M0 0 C-7 -4 -6 -12 0 -22 C6 -12 7 -4 0 0Z" fill="#FFE9A8"/></g>' +
+      [[140, 1.0, -6], [156, 1.0, 8], [148, 1.4, 3], [162, 0.9, -9], [134, 1.3, 10]].map((e, i) => '<circle class="sc-ember" cx="' + e[0] + '" cy="72" r="1.4" fill="#FFB43D" style="--dx:' + e[2] + 'px;animation-delay:-' + (i * 0.5) + 's;animation-duration:' + (2 + e[1]) + 's"/>').join('');
+  } else if (kind === 'shop') {
+    s = '<rect width="300" height="110" fill="#0E0A14"/><rect y="92" width="300" height="18" fill="#17121A"/>' +
+      '<path d="M70 16 L230 16 L244 40 L56 40Z" fill="#5B2A44" stroke="#120C10" stroke-width="2"/><path d="M70 16 L88 40 M110 16 L120 40 M150 16 L150 40 M190 16 L180 40 M230 16 L212 40" stroke="#8A4468" stroke-width="2"/>' +
+      '<rect x="66" y="40" width="6" height="52" fill="#4A3220"/><rect x="228" y="40" width="6" height="52" fill="#4A3220"/>' +
+      '<rect x="60" y="66" width="180" height="20" rx="2" fill="#6B4528" stroke="#120C10" stroke-width="2"/>' +
+      '<circle cx="84" cy="92" r="11" fill="#3A2616" stroke="#120C10" stroke-width="2"/><circle cx="216" cy="92" r="11" fill="#3A2616" stroke="#120C10" stroke-width="2"/>' +
+      [[96, '#B8E3FF'], [124, '#E8C86A'], [176, '#C99BFF'], [204, '#FF9AA8']].map(c => '<rect x="' + c[0] + '" y="54" width="14" height="18" rx="2" fill="' + c[1] + '" stroke="#120C10" stroke-width="1.5"/>').join('') +
+      '<g class="sc-mask"><g transform="translate(150 44) scale(1.3)" fill="#E8DCC4" stroke="#120C10" stroke-width="1.6">' + maskP + maskEyes + '</g></g>' +
+      '<g class="sc-lant" style="transform-origin:30px 14px"><path d="M30 14 L30 32" stroke="#120C10" stroke-width="2"/><rect x="23" y="32" width="14" height="18" rx="3" fill="#FFC23D" stroke="#120C10" stroke-width="2"/><circle cx="30" cy="41" r="14" fill="#FFC23D" opacity=".18"/></g>' +
+      [[262, 30], [276, 52], [40, 62], [254, 70]].map((p, i) => '<path class="sc-tw" d="M' + p[0] + ' ' + (p[1] - 5) + ' L' + (p[0] + 1.5) + ' ' + (p[1] - 1.5) + ' L' + (p[0] + 5) + ' ' + p[1] + ' L' + (p[0] + 1.5) + ' ' + (p[1] + 1.5) + ' L' + p[0] + ' ' + (p[1] + 5) + ' L' + (p[0] - 1.5) + ' ' + (p[1] + 1.5) + ' L' + (p[0] - 5) + ' ' + p[1] + ' L' + (p[0] - 1.5) + ' ' + (p[1] - 1.5) + 'Z" fill="#FFD76A" style="animation-delay:-' + (i * 0.45) + 's"/>').join('');
+  } else {
+    s = '<defs><radialGradient id="scg-t"><stop offset="0" stop-color="#FFD76A" stop-opacity=".7"/><stop offset="1" stop-color="#FFD76A" stop-opacity="0"/></radialGradient></defs>' +
+      '<rect width="300" height="110" fill="#0B0A10"/><path d="M40 110 L40 40 Q40 8 150 8 Q260 8 260 40 L260 110Z" fill="#1B1620" stroke="#120C10" stroke-width="3"/><path d="M62 110 L62 46 Q62 24 150 24 Q238 24 238 46 L238 110Z" fill="#0F0B14"/>' +
+      '<circle class="sc-glow" cx="150" cy="88" r="58" fill="url(#scg-t)"/><ellipse cx="150" cy="104" rx="88" ry="7" fill="#17121A"/>' +
+      [[110, 80], [190, 84], [150, 62], [128, 96], [176, 98], [96, 98], [206, 70]].map((p, i) => '<path class="sc-tw" d="M' + p[0] + ' ' + (p[1] - 6) + ' L' + (p[0] + 2) + ' ' + (p[1] - 2) + ' L' + (p[0] + 6) + ' ' + p[1] + ' L' + (p[0] + 2) + ' ' + (p[1] + 2) + ' L' + p[0] + ' ' + (p[1] + 6) + ' L' + (p[0] - 2) + ' ' + (p[1] + 2) + ' L' + (p[0] - 6) + ' ' + p[1] + ' L' + (p[0] - 2) + ' ' + (p[1] - 2) + 'Z" fill="#FFE9A8" style="animation-delay:-' + (i * 0.3) + 's"/>').join('') +
+      [[120, 90], [145, 94], [170, 90], [188, 96]].map((p, i) => '<circle class="sc-mote" cx="' + p[0] + '" cy="' + p[1] + '" r="1.3" fill="#FFD76A" style="animation-delay:-' + (i * 1.1) + 's"/>').join('');
+  }
+  return head + s + '</svg></div>';
+}
 function restHTML(V) {
   const me = V.P[V.me];
   const healAmt = Math.ceil(me.mx * 0.25);
-  return '<section class="panel"><h2>Rest site</h2><p class="muted">A dying campfire in the dark. Choose one.</p>' +
+  return '<section class="panel"><h2>Rest site</h2>' + sceneBanner('rest') + '<p class="muted">A dying campfire in the dark. Choose one.</p>' +
     (me.dn ? '<p>You rested.</p>' : '<div class="choices"><button type="button" class="btn primary" data-act="restheal">Rest: heal ' + healAmt + ' HP</button>' +
     '<button type="button" class="btn" data-act="restremove"' + (V.deck.length <= 5 ? ' disabled' : '') + '>Meditate: remove a card</button></div>') + waitNote(V) + '</section>';
 }
 function shopHTML(V) {
   const sh = V.shop, me = V.P[V.me];
-  return '<section class="panel"><h2>The Merchant</h2><p class="muted">A masked trader with a cart of whispering cards. Rare cards cost more.</p>' +
+  return '<section class="panel"><h2>The Merchant</h2>' + sceneBanner('shop') + '<p class="muted">A masked trader with a cart of whispering cards. Rare cards cost more.</p>' +
     '<div class="cards">' + sh.cards.map((s, i) => s.sold ? '' : cardHTML(s.id, 'buy', i, { price: s.price, dim: s.price > me.g })).join('') + '</div>' +
     '<div class="choices"><button type="button" class="btn" data-act="shopremove"' + (sh.removed || me.g < 60 || V.deck.length <= 5 || me.dn ? ' disabled' : '') + '>Remove a card · 60 gold</button>' +
     doneBtn(V, 'Leave') + '</div>' + waitNote(V) + '</section>';
@@ -2896,7 +3158,7 @@ function treasureHTML(V) {
   const details = '<p>You pry open a dusty chest: <b>+' + t.gold + ' gold</b>.</p>' +
     (t.relic ? '<p>Inside lies a relic: <b>' + esc(RELICS[t.relic].n) + '</b> · ' + esc(RELICS[t.relic].d) + '</p>' : '') +
     '<div class="row">' + doneBtn(V, 'Continue') + '</div>' + waitNote(V);
-  return '<section class="panel victory"><h2>Treasure</h2>' + st.html + (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's">' + details + '</div>' : '<p class="muted center">A dusty chest sits in the dark. Open it.</p>') + '</section>';
+  return '<section class="panel victory"><h2>Treasure</h2>' + sceneBanner('treasure') + st.html + (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's">' + details + '</div>' : '<p class="muted center">A dusty chest sits in the dark. Open it.</p>') + '</section>';
 }
 function duelIntroHTML(V) {
   return '<section class="panel duelintro"><span class="actbanner">The Faceless Spire falls</span><h2>Only one mask may leave</h2>' +
@@ -2973,12 +3235,12 @@ function titleHTML() {
     (sg ? '<div class="row"><button type="button" class="btn" data-act="continue">Continue solo run · ' + esc(HEROES[sg.P[0].hero].n) + ', Act ' + ROMAN[sg.act - 1] + '</button></div>' : '') +
     '</div></section>';
 }
-function heroPickCards(act, chosen) {
+function heroPickCards(act, chosen, other) {
   return '<div class="heropick">' + ['duelist', 'bulwark', 'brute'].map(k => {
     const h = HEROES[k];
     const counts = {};
     h.starter.forEach(id => { counts[CARDS[id].n] = (counts[CARDS[id].n] || 0) + 1; });
-    return '<div class="hcard' + (chosen === k ? ' chosen' : '') + '">' + portraitHTML(k, '', true) + '<h3>' + esc(h.n) + '</h3><span class="muted">' + esc(h.tag) + ' · ' + h.hp + ' HP</span>' +
+    return '<div class="hcard' + (chosen === k ? ' chosen' : '') + (other === k ? ' theirs' : '') + '">' + (other === k ? '<span class="ptag ready hbadge">Partner</span>' : '') + portraitHTML(k, '', true) + '<h3>' + esc(h.n) + '</h3><span class="muted">' + esc(h.tag) + ' · ' + h.hp + ' HP</span>' +
       '<p style="margin:0"><b>' + esc(h.passive.split(':')[0]) + ':</b>' + esc(h.passive.slice(h.passive.indexOf(':') + 1)) + '</p>' +
       '<p class="muted" style="margin:0">' + esc(h.style) + '</p>' +
       '<ul>' + Object.keys(counts).map(n => '<li>' + esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '') + '</li>').join('') + '</ul>' +
@@ -3029,7 +3291,7 @@ function lobbyHTML(V) {
   const slot = pi => {
     const q = V.P[pi];
     if (!q) return '<li><b>Player 2</b> · <span class="muted">waiting to join…</span></li>';
-    return '<li><b>' + (pi === me ? 'You' : 'Partner') + '</b> · ' + (q.h ? esc(HEROES[q.h].n) : '<span class="muted">choosing…</span>') + (q.on ? '' : ' <span class="waitnote">(disconnected)</span>') + '</li>';
+    return '<li><b>' + (pi === me ? 'You' : 'Partner') + '</b> · ' + (q.h ? esc(HEROES[q.h].n) + ' <span class="ptag ready">Ready</span>' : '<span class="muted">choosing…</span>') + (q.on ? '' : ' <span class="waitnote">(disconnected)</span>') + '</li>';
   };
   return '<section class="panel"><div class="row"><div style="display:flex;flex-direction:column;gap:4px"><span class="actbanner">Co-op lobby</span><h2>Room code <span class="bigcode">' + esc((V.code || '').toUpperCase()) + '</span></h2></div></div>' +
     lobbyBanner(V) +
@@ -3038,7 +3300,7 @@ function lobbyHTML(V) {
     '<p class="netline" role="status" aria-live="polite">' + esc(CL.copied || '') + '</p>' +
     '<ul class="lobbyl">' + slot(0) + slot(1) + '</ul>' +
     diffPickHTML(V.df == null ? 1 : V.df, 'hostdiff', host) +
-    heroPickCards('hero', V.P[me].h) +
+    heroPickCards('hero', V.P[me].h, V.n > 1 && V.P[1 - me] ? V.P[1 - me].h : null) +
     '<div class="row">' + (host ? '<button type="button" class="btn primary" data-act="start"' + (ready ? '' : ' disabled') + '>' + (p2 ? (ready ? 'Start the climb' : 'Waiting for both heroes…') : 'Waiting for partner…') + '</button>' : '<span class="muted">' + (ready ? 'Waiting for the host to start…' : 'Waiting for both heroes…') + '</span>') +
     '<button type="button" class="btn" data-act="leave">Leave</button></div>' + netLine() + '</section>';
 }
@@ -3106,8 +3368,11 @@ function flushFx(V, prev) {
     s.style.animationDelay = ((n - 1) * 90) + 'ms';
     const dm = /^−(\d+)/.exec(f.x);
     const dmg = dm && !/^(buff|heal|block|miss)$/.test(f.k || '') ? Number(dm[1]) : 0;
+    const bm = (f.k === 'block' || f.k === 'heal') ? /^\+(\d+)/.exec(f.x) : null;
+    if (bm) s.style.fontSize = Math.min(44, (f.k === 'block' ? 24 : 30) + Math.floor(Number(bm[1]) * 0.5)) + 'px';
     if (dmg) {
       s.style.fontSize = Math.min(56, 32 + Math.floor(dmg * 0.6)) + 'px';
+      if (dmg >= 20) s.classList.add('crit');
       if (dmg >= 12) {
         s.classList.add('big');
         if (f.t[0] === 'e' || f.t === 'p' + V.me) shakeScreen(dmg >= 20 ? 2 : 1);
@@ -3236,8 +3501,13 @@ function paint(V) {
   const handScroll = oldHand ? oldHand.scrollLeft : 0;
   const ae = document.activeElement;
   const focusedCard = ae && ae.closest && ae.closest('.hand [data-act="card"]') ? ae.dataset.arg : null;
+  const oldLogBody = app.querySelector('.logbody');
+  const logStick = !oldLogBody || oldLogBody.scrollHeight - oldLogBody.scrollTop - oldLogBody.clientHeight < 24;
+  const logTop = oldLogBody ? oldLogBody.scrollTop : 0;
   app.innerHTML = body;
   try { window.msAnnounceLogs(V); } catch (e) {}
+  const newLogBody = app.querySelector('.logbody');
+  if (newLogBody) newLogBody.scrollTop = logStick ? newLogBody.scrollHeight : logTop;
   const newHand = app.querySelector('.hand');
   if (newHand) {
     newHand.querySelectorAll('[data-act="card"]').forEach(el => {
@@ -3643,7 +3913,7 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'setdiff': setPrefDiff(Number(arg)); render(); break;
     case 'hostdiff': setPrefDiff(Number(arg)); send('diff', Number(arg)); break;
     case 'leave': leaveAll(); break;
-    case 'hero': send('hero', arg); break;
+    case 'hero': SND.ui('node'); send('hero', arg); break;
     case 'start': send('start'); break;
     case 'node': if (b.getAttribute('aria-disabled') !== 'true') send('node', arg); break;
     case 'card': {
@@ -3746,7 +4016,7 @@ document.getElementById('app').addEventListener('keydown', ev => {
 let kbT = null; /* idx of the keyboard-highlighted enemy while a card is selected */
 (function () {
   const st = document.createElement('style');
-  st.textContent = '.enemy.kbt{outline:3px solid #ffd54a;outline-offset:3px;border-radius:8px}.kbkeys{margin:8px 0;padding:0;list-style:none;text-align:left}.kbkeys li{margin:4px 0}.kbkeys kbd{display:inline-block;min-width:1.4em;padding:1px 6px;margin-right:6px;border:1px solid #888;border-radius:4px;background:rgba(255,255,255,.12);font:inherit;text-align:center}';
+  st.textContent = '.enemy.kbt{outline:3px solid #ffd54a;outline-offset:3px;border-radius:8px}.hand .card .kbn{position:absolute;bottom:4px;left:6px;min-width:1.3em;padding:0 5px;border:1px solid #888;border-radius:4px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;line-height:1.3;text-align:center;pointer-events:none}.kbn-e{display:inline-block;margin-left:6px;padding:0 5px;border:1px solid currentColor;border-radius:4px;font-size:.75em;opacity:.8}@media (hover:none){.hand .card .kbn,.kbn-e{display:none}}.kbkeys{margin:8px 0;padding:0;list-style:none;text-align:left}.kbkeys li{margin:4px 0}.kbkeys kbd{display:inline-block;min-width:1.4em;padding:1px 6px;margin-right:6px;border:1px solid #888;border-radius:4px;background:rgba(255,255,255,.12);font:inherit;text-align:center}';
   document.head.appendChild(st);
 })();
 function kbMark() {
