@@ -1446,7 +1446,15 @@ function close() {
   try { if (lastFocus && lastFocus.isConnected && lastFocus.focus) lastFocus.focus(); } catch (e) {}
 }
 window.MSTutorial = { open: open, close: close };
-window.addEventListener('load', function () { if (!isSeen()) setTimeout(open, 700); });
+/* first run: wait for a combat screen so the Energy / Block / intent spotlights have real targets */
+window.addEventListener('load', function () {
+  if (isSeen()) return;
+  var waitT = setInterval(function () {
+    if (isSeen()) { clearInterval(waitT); return; }
+    if (ov || document.getElementById('endconf') || document.getElementById('trwipe') && document.getElementById('trwipe').classList.contains('go')) return;
+    if (target('.energy') && target('.intentbar') && target('.shield')) { clearInterval(waitT); setTimeout(function () { if (!isSeen() && !ov) open(); }, 500); }
+  }, 500);
+});
 })();
 </script>
 <script src="/engine.js"></script>
