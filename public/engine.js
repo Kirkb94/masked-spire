@@ -365,7 +365,8 @@ const DIFF = 1.5; // extra difficulty on top of the base 1.15: enemy HP and dama
 const DIFFS = [{ k: 'easy', n: 'Easy', m: 0.8 }, { k: 'normal', n: 'Normal', m: 1 }, { k: 'hard', n: 'Hard', m: 1.2 }]; // G.diff indexes this; Normal = unchanged balance
 function normDiff(d) { d = d == null || d === '' ? NaN : Number(d); return Number.isInteger(d) && d >= 0 && d < DIFFS.length ? d : 1; }
 function diffMult() { return DIFFS[normDiff(G && G.diff)].m; }
-function log(s) { const c = G.combat; if (!c) return; c.log.unshift(s); if (c.log.length > 18) c.log.length = 18; }
+const MAX_LOG_LINES = 18, MAX_LOG_CHARS = 200;
+function log(s) { const c = G.combat; if (!c) return; s = String(s); if (s.length > MAX_LOG_CHARS) s = s.slice(0, MAX_LOG_CHARS); c.log.unshift(s); if (c.log.length > MAX_LOG_LINES) c.log.length = MAX_LOG_LINES; }
 function makeEnemy(key, idx, dup, hpOverride, raw) {
   const d = EN[key];
   const mult = raw ? 1 : 1.15 * DIFF * diffMult() * (G.P.length > 1 ? 1.6 : 1);

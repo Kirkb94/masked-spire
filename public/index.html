@@ -177,6 +177,9 @@ html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0
 @keyframes die { 0%, 55% { opacity: 1; } 100% { opacity: 0; transform: translateY(10px); } }
 @keyframes floatup { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.8); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -56px) scale(1); } }
 .card.flyghost { position: fixed; margin: 0; z-index: 60; pointer-events: none; transition: none; transform-origin: 50% 50%; }
+@keyframes shufpulse { 0% { transform: scale(1); } 35% { transform: scale(1.25); color: #fff; } 100% { transform: scale(1); } }
+.piles span.shuf { display: inline-block; animation: shufpulse .6s ease-out; }
+html.rm .piles span.shuf { animation: none; }
 
 /* Map */
 .mapcard { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
@@ -2253,7 +2256,7 @@ function cardHTML(id, act, arg, opts) {
   const live = d.live && ls ? '<span class="live">' + d.live(ls) + '</span>' : '';
   const rar = RAR[id];
   const cls = 'card t-' + d.t + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '');
-  return '<button type="button" class="' + cls + '" data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
+  return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
     '<span class="cost">' + (d.c < 0 ? '–' : d.c) + '</span>' + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + '</span><span class="cname">' + esc(d.n) + '</span>' +
     '<span class="cdesc">' + esc(d.d) + live + '</span>' + (opts.price != null ? '<span class="price">' + opts.price + ' gold</span>' : '') + '</button>';
 }
@@ -2450,7 +2453,7 @@ function combatHTML(V, prev) {
       : '<div class="big safe">' + ICON.check + 'No attacks at you next turn</div>';
   }
   const ls = liveSide(V);
-  const hand = cb.hand.map(([u, id], i) => cardHTML(id, 'card', u, { sel: CL.sel === u, dim: CARDS[id].c > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
+  const hand = cb.hand.map(([u, id], i) => cardHTML(id, 'card', u, { u: u, sel: CL.sel === u, dim: CARDS[id].c > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
   const endLabel = duel ? (myTurn ? 'End turn' : 'Rival’s turn') : waiting ? 'Waiting for partner…' : 'End turn';
   const canEnd = !cb.busy && !s.dn && myTurn;
   const selCard = CL.sel != null ? cb.hand.find(h => h[0] === CL.sel) : null;
@@ -2460,7 +2463,7 @@ function combatHTML(V, prev) {
     '<div class="enemies">' + right + '</div></div>' +
     '<div class="lastlog" aria-live="polite">' + esc(cb.logs[0] || '') + '</div>' +
     '<div class="dock"><div class="controls"><div class="energy" title="Energy">' + s.energy + '<small>energy</small></div>' +
-    '<div class="incoming">' + inc + '<div class="piles"><span>Draw ' + cb.piles[0] + '</span><span>Discard ' + cb.piles[1] + '</span><span>Exhaust ' + cb.piles[2] + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
+    '<div class="incoming">' + inc + '<div class="piles"><span data-pile="draw">Draw ' + cb.piles[0] + '</span><span data-pile="discard">Discard ' + cb.piles[1] + '</span><span>Exhaust ' + cb.piles[2] + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
     '<div class="endwrap"><button type="button" class="btn primary" data-act="end"' + (canEnd ? '' : ' disabled') + '>' + endLabel + '</button></div></div>' +
     '<div class="hint" aria-live="polite">' + (selCard ? 'Choose a target for ' + esc(CARDS[selCard[1]].n) + ' (tap the card again to cancel)' : '') + '</div>' +
     '<div class="hand" aria-label="Your hand">' + (hand || '<span class="muted">' + (cb.busy ? 'Resolving…' : waiting ? 'Waiting for your partner to end their turn…' : 'Your hand is empty.') + '</span>') + '</div></div>' +
@@ -2650,6 +2653,34 @@ function flushFx(V, prev) {
   });
   if (V.cb) V.cb.S.forEach(s => { if (s.fw[0] > prev && s.fw[1] > 0) footworkAnim(s.pi, s.fw[1]); });
 }
+function handFx(V, pv) {
+  if (REDUCE || !pv || !V || V.scr !== 'combat' || !V.cb || !pv.cb || pv.scr !== 'combat') return;
+  const old = {};
+  pv.cb.hand.forEach(h => { old[h[0]] = 1; });
+  const fresh = V.cb.hand.filter(h => !old[h[0]]).map(h => h[0]);
+  if (!fresh.length) return;
+  const pp = pv.cb.piles || [0, 0], cp = V.cb.piles || [0, 0];
+  const shuffled = fresh.length > pp[0] || cp[0] > pp[0];
+  const src = document.querySelector('.piles [data-pile="draw"]');
+  if (shuffled) document.querySelectorAll('.piles [data-pile="draw"], .piles [data-pile="discard"]').forEach(el => el.classList.add('shuf'));
+  if (!src) return;
+  const sr = src.getBoundingClientRect();
+  const base = shuffled ? 260 : 0;
+  let n = 0;
+  fresh.forEach(u => {
+    const el = document.querySelector('.hand .card[data-u="' + u + '"]');
+    if (!el || !el.animate) return;
+    const r = el.getBoundingClientRect();
+    const dx = (sr.left + sr.width / 2) - (r.left + r.width / 2);
+    const dy = (sr.top + sr.height / 2) - (r.top + r.height / 2);
+    el.animate([
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.3) rotate(-10deg)', opacity: 0 },
+      { opacity: 1, offset: .25 },
+      { transform: 'none', opacity: 1 }
+    ], { duration: 380, delay: base + n * 70, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
+    n++;
+  });
+}
 function paint(V) {
   const app = document.getElementById('app');
   let maxFx = V && V.fx && V.fx.length ? V.fx[V.fx.length - 1].s : 0;
@@ -2691,7 +2722,26 @@ function paint(V) {
   }
   if (!V || V.scr === 'lobby') body = '<button type="button" class="btn sndfloat" data-act="snd" aria-label="Sound settings">' + SND.SPK + ' Sound</button>' + body;
   const focusId = document.activeElement && document.activeElement.id;
+  const oldCards = new Map();
+  app.querySelectorAll('.hand [data-act="card"]').forEach(el => { if (el._sig) oldCards.set(el.dataset.arg, el); });
+  const oldHand = app.querySelector('.hand');
+  const handScroll = oldHand ? oldHand.scrollLeft : 0;
+  const ae = document.activeElement;
+  const focusedCard = ae && ae.closest && ae.closest('.hand [data-act="card"]') ? ae.dataset.arg : null;
   app.innerHTML = body;
+  const newHand = app.querySelector('.hand');
+  if (newHand) {
+    newHand.querySelectorAll('[data-act="card"]').forEach(el => {
+      const sig = el.outerHTML;
+      const old = oldCards.get(el.dataset.arg);
+      if (old && old._sig === sig) {
+        old.removeAttribute('disabled'); old.removeAttribute('aria-disabled');
+        el.replaceWith(old);
+        if (focusedCard !== null && focusedCard === old.dataset.arg) { try { old.focus({ preventScroll: true }); } catch (e) {} }
+      } else el._sig = sig;
+    });
+    newHand.scrollLeft = handScroll;
+  }
   if (CL.role === 'online' && !wsConnected()) {
     app.querySelectorAll('[data-act]').forEach(el => {
       if (SERVER_ACTS.indexOf(el.dataset.act) >= 0) { el.disabled = true; el.setAttribute('aria-disabled', 'true'); }
@@ -2699,6 +2749,7 @@ function paint(V) {
   }
   if (focusId === 'joincode') { const el = document.getElementById('joincode'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   if (V) flushFx(V, prev);
+  try { handFx(V, CL.pvV); } catch (e) {}
   try { sndSync(V, prev); } catch (e) {}
   if (V && V.scr === 'map') { try { mapAfterPaint(); } catch (e) {} }
   CL.lastFx = Math.max(prev, maxFx);
@@ -2780,7 +2831,7 @@ function updateColdScreen() {
     ov.id = 'coldscreen'; ov.setAttribute('role', 'status'); ov.setAttribute('aria-live', 'polite');
     ov.innerHTML = '<div class="cs-spin" aria-hidden="true"></div><h2>Waking the game server…</h2><p id="coldtext"></p><p>Free hosting sleeps when idle, so the first connection can take up to a minute. Hang tight, we will connect automatically.</p><div class="cs-row"><button type="button" id="coldretry">Try now</button><button type="button" id="coldcancel">Cancel</button></div>';
     document.body.appendChild(ov);
-    document.getElementById('coldretry').addEventListener('click', () => { if (CL.role === 'online' && !wsConnected() && !(ws && ws.readyState === 0)) { wsTries = 0; connect(); } });
+    document.getElementById('coldretry').addEventListener('click', retryNow);
     document.getElementById('coldcancel').addEventListener('click', () => { coldSince = 0; leaveAll(); render(); });
   }
   if (CL.role !== 'online' || wsConnected()) coldSince = 0;
@@ -2794,6 +2845,11 @@ function updateColdScreen() {
 }
 const SERVER_ACTS = ['hero', 'start', 'node', 'card', 'enemy', 'end', 'reward', 'bossreward', 'done', 'restheal', 'buy', 'remove'];
 function wsConnected() { return !!(ws && ws.readyState === 1); }
+function retryNow() {
+  if (CL.role !== 'online' || wsConnected()) return;
+  if (ws && ws.readyState === 0) { const old = ws; old.onopen = old.onmessage = old.onclose = old.onerror = null; try { old.close(); } catch (e) {} ws = null; }
+  wsTries = 0; connect();
+}
 function netFlash(msg) { netNote = msg; netNoteUntil = Date.now() + 2500; updateNetBar(); }
 function updateNetBar() {
   updateColdScreen();
@@ -2806,14 +2862,14 @@ function updateNetBar() {
     bar.id = 'netbar'; bar.setAttribute('role', 'status'); bar.setAttribute('aria-live', 'polite');
     const t = document.createElement('span'); t.id = 'netbartext';
     const b = document.createElement('button'); b.type = 'button'; b.id = 'netbarretry'; b.textContent = 'Retry now';
-    b.addEventListener('click', () => { if (CL.role === 'online' && !wsConnected() && !(ws && ws.readyState === 0)) { wsTries = 0; connect(); } });
+    b.addEventListener('click', retryNow);
     bar.appendChild(t); bar.appendChild(b); document.body.appendChild(bar);
   }
   const text = document.getElementById('netbartext'), btn = document.getElementById('netbarretry');
   let msg = '', showBtn = false;
   if (CL.role === 'online' && !wsConnected() && (CL.V || wsTries > 0)) {
     if (srvRestart) { msg = 'Server restarting… reconnecting automatically. Co-op games in progress may be lost.'; showBtn = !(ws && ws.readyState === 0); }
-    else if (ws && ws.readyState === 0) msg = 'Reconnecting to the game server…';
+    else if (ws && ws.readyState === 0) { msg = 'Reconnecting to the game server…'; showBtn = true; }
     else {
       const s = Math.max(0, Math.ceil((nextRetryAt - Date.now()) / 1000));
       msg = 'Connection lost. Retrying in ' + s + 's (attempt ' + (wsTries + 1) + '). Actions are paused.';
@@ -2835,7 +2891,9 @@ function connect() {
   try { sock = new WebSocket(wsURL()); } catch (e) { scheduleReconnect(); return; }
   ws = sock;
   sock.onopen = () => {
+    const wasRetrying = wsTries > 0;
     wsTries = 0; actLock = 0; srvRestart = 0; coldSince = 0; CL.net.state = 'Connected'; CL.err = '';
+    if (wasRetrying) netFlash('Reconnected.');
     updateColdScreen();
     hbStart(sock);
     if (CL.pending) wsSend(CL.pending); else if (CL.code) wsSend({ t: 'join', code: CL.code, tok: CL.tok, build: BUILD_ID });
@@ -2942,12 +3000,13 @@ function send(a, x, y) {
 }
 function inviteURL() { return location.origin + location.pathname + '?room=' + encodeURIComponent((CL.code || '').toUpperCase()); }
 let copiedTimer = 0;
+function lobbyNote(msg) {
+  CL.copied = msg; render();
+  clearTimeout(copiedTimer);
+  copiedTimer = setTimeout(() => { CL.copied = ''; render(); }, 2500);
+}
 function lobbyCopy(text, okMsg) {
-  const done = msg => {
-    CL.copied = msg; render();
-    clearTimeout(copiedTimer);
-    copiedTimer = setTimeout(() => { CL.copied = ''; render(); }, 2500);
-  };
+  const done = lobbyNote;
   const fallback = () => {
     let ok = false;
     try {
@@ -2964,6 +3023,7 @@ function lobbyCopy(text, okMsg) {
 }
 function leaveAll() {
   if (CL.role === 'online') { wsSend({ t: 'leave' }); }
+  clearTimeout(copiedTimer); CL.copied = '';
   clearTimeout(wsTimer);
   if (ws) { const s = ws; ws = null; try { s.close(); } catch (e) {} }
   try { sessionStorage.removeItem(CODEKEY); } catch (e) {}
@@ -3012,7 +3072,7 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'copycode': lobbyCopy((CL.code || '').toUpperCase(), 'Room code copied.'); break;
     case 'copylink': lobbyCopy(inviteURL(), 'Invite link copied.'); break;
     case 'sharelink':
-      if (navigator.share) navigator.share({ title: 'Masked Spire co-op', text: 'Join my Masked Spire co-op run! Room ' + (CL.code || '').toUpperCase(), url: inviteURL() }).catch(() => {});
+      if (navigator.share) navigator.share({ title: 'Masked Spire co-op', text: 'Join my Masked Spire co-op run! Room ' + (CL.code || '').toUpperCase(), url: inviteURL() }).then(() => lobbyNote('Invite shared.'), err => { if (!err || err.name !== 'AbortError') lobbyCopy(inviteURL(), 'Invite link copied.'); });
       else lobbyCopy(inviteURL(), 'Invite link copied.');
       break;
     case 'snd': SND.togglePanel(); break;

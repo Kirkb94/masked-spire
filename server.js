@@ -152,6 +152,25 @@ function createRoom(tok, diff) {
   rooms.set(code, room);
   return room;
 }
+/* Backstop for per-room memory: the engine already caps these, but enforce it here too. */
+const MAX_LOG_LINES = 18, MAX_FX = 14, MAX_LINE_CHARS = 200;
+function trimRoom(room) {
+  const G = room.E.G;
+  if (!G) return;
+  if (Array.isArray(G.fx)) {
+    if (G.fx.length > MAX_FX) G.fx.splice(0, G.fx.length - MAX_FX);
+    for (const f of G.fx) if (f && typeof f.x === 'string' && f.x.length > MAX_LINE_CHARS) f.x = f.x.slice(0, MAX_LINE_CHARS);
+  }
+  const c = G.combat;
+  if (c && Array.isArray(c.log)) {
+    if (c.log.length > MAX_LOG_LINES) c.log.length = MAX_LOG_LINES;
+    for (let i = 0; i < c.log.length; i++) if (typeof c.log[i] === 'string' && c.log[i].length > MAX_LINE_CHARS) c.log[i] = c.log[i].slice(0, MAX_LINE_CHARS);
+  }
+}
+function dropRoom(room) {
+  for (const t of room.timers) clearTimeout(t);
+  rooms.delete(room.code);
+}
 function scheduleBroadcast(room) {
   if (room.pending) return;
   room.pending = true;
@@ -305,6 +324,7 @@ wss.on('connection', (ws, req) => {
       const x = typeof m.x === 'number' || typeof m.x === 'string' ? (typeof m.x === 'string' ? m.x.slice(0, 20) : m.x) : null;
       const y = typeof m.y === 'number' || typeof m.y === 'string' ? (typeof m.y === 'string' ? m.y.slice(0, 20) : m.y) : null;
       try { room.E.doAction(ws.pi, a, x, y); } catch (e) { console.error('action failed', room.code, a, e); }
+      trimRoom(room);
       scheduleBroadcast(room);
     } else if (m.t === 'sync') {
       const now = Date.now();
@@ -356,7 +376,7 @@ setInterval(() => {
     if (room.sockets.size) { room.last = now; continue; }
     const G = room.E.G;
     const ended = G && ['defeat', 'victory', 'duelend'].includes(G.screen);
-    if (now - room.last > (ended ? ENDED_MS : IDLE_MS)) rooms.delete(room.code);
+    if (now - room.last > (ended ? ENDED_MS : IDLE_MS)) dropRoom(room);
   }
 }, 60000);
 
