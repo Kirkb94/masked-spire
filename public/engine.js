@@ -518,7 +518,7 @@ function hit(t, base, times) {
     if (t.parry && d > 0) { t.parry = false; float(tagOf(t), 'Parried!', 'miss'); log(t.n + ' parries a hit.'); continue; }
     a.atkTotal += d;
     const ab = Math.min(t.block, d);
-    t.block -= ab; t.hp -= d - ab;
+    if (!t.isP) { const pp = P(a.pi); pp.dmg = (pp.dmg || 0) + Math.max(0, Math.min(t.hp, d - ab)); } t.block -= ab; t.hp -= d - ab;
     const s = float(tagOf(t), d - ab > 0 ? '−' + (d - ab) : 'Blocked', d - ab > 0 ? '' : 'miss');
     if (t.isP) { if (d - ab > 0) { anim(t, 'hurt'); t.hurtNow = true; } } else t.hitS = s;
     if (t.reflect && d > 0) { const r = Math.floor(d / 2); if (r) { hurtSide(a, r, null); log('The mirror reflects ' + r + ' damage.'); } }
@@ -592,7 +592,7 @@ function playCard(pi, uid, tgt) {
     else if (fs.length === 1) t = fs[0];
     if (!t || t.dead || t.down) return;
   }
-  s.energy -= d.c; s.hand.splice(i, 1); s.atkTotal = 0; s.played++;
+  s.energy -= d.c; s.hand.splice(i, 1); s.atkTotal = 0; s.played++; P(pi).cp = (P(pi).cp || 0) + 1;
   log(heroName(pi) + ' plays ' + d.n + (t ? ' on ' + nameOf(t) : '') + '.');
   const b0 = s.block, hk = P(pi).hero;
   if (d.t === 'attack') anim(s, hk === 'bulwark' ? 'slam' : hk === 'brute' ? 'smash' : 'lunge');
@@ -972,7 +972,7 @@ function buildView(me) {
   const V = {
     me, n: G.P.length, mode: G.mode, code: G.code, scr: G.screen, act: G.act, floor: G.floor, tok: p ? p.tok : null, ack: p ? p.ack : 0,
     P: G.P.map(q => ({ h: q.hero, hp: q.hp, mx: q.maxHp, g: q.gold, rl: q.relics, dn: q.done ? 1 : 0, vt: q.vote, on: q.conn ? 1 : 0, k: q.kills })),
-    deck: p ? p.deck.map(x => [x.u, x.id]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff)
+    deck: p ? p.deck.map(x => [x.u, x.id]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff), rs: p ? { cp: p.cp || 0, dm: p.dmg || 0 } : null
   };
   const c = G.combat;
   if (G.screen === 'map') {

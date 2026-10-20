@@ -247,6 +247,20 @@ html.rm .piles span.shuf { animation: none; }
 }
 .hstats { display: flex; flex-direction: column; gap: 8px; }
 #app.scr-in { animation: scr-in .22s ease-out; }
+#app.scr-in[data-tr="combat"] { animation: tr-combat .45s cubic-bezier(.2, .8, .3, 1); }
+#app.scr-in[data-tr="map"], #app.scr-in[data-tr="reward"], #app.scr-in[data-tr="actclear"], #app.scr-in[data-tr="shop"], #app.scr-in[data-tr="rest"], #app.scr-in[data-tr="treasure"] { animation: tr-rise .3s ease-out; }
+#app.scr-in[data-tr="victory"], #app.scr-in[data-tr="defeat"], #app.scr-in[data-tr="duelintro"], #app.scr-in[data-tr="duelend"] { animation: tr-slow .7s ease-out; }
+@keyframes tr-combat { 0% { opacity: 0; transform: scale(1.03); filter: brightness(1.6); } 100% { opacity: 1; transform: none; filter: none; } }
+@keyframes tr-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes tr-slow { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
+/* Card-reward reveal: staggered flip with rarity glow and sparkle */
+.card.rar-u { --gl: #6FB4FF; } .card.rar-r { --gl: #E8BE52; }
+.reveal .card.rv { --d: calc(1.55s + var(--i, 0) * .22s); animation: rv-flip .7s cubic-bezier(.2, .8, .3, 1) calc(var(--d) - var(--rc, 0s)) backwards; }
+.reveal .card.rv.rar-u::after, .reveal .card.rv.rar-r::after { content: ""; position: absolute; inset: -6px; border-radius: 14px; pointer-events: none; opacity: 0; background: radial-gradient(circle at 15% 20%, var(--gl) 0 2px, transparent 3px), radial-gradient(circle at 85% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 70% 92%, var(--gl) 0 2px, transparent 3px), radial-gradient(circle at 25% 80%, #fff 0 1.5px, transparent 3px), radial-gradient(circle at 50% 4%, #fff 0 1.5px, transparent 3px); animation: rv-spark 1.1s ease-out calc(var(--d) + .35s - var(--rc, 0s)); }
+.reveal .card.rv.rar-r::after { animation-duration: 1.7s; }
+@keyframes rv-flip { 0% { opacity: 0; transform: perspective(800px) rotateY(90deg) translateY(14px) scale(.9); filter: brightness(1.8); } 55% { opacity: 1; transform: perspective(800px) rotateY(-12deg) scale(1.06); box-shadow: 0 0 28px 6px var(--gl, transparent); filter: brightness(1.3); } 100% { opacity: 1; transform: none; box-shadow: 0 0 0 0 transparent; filter: none; } }
+@keyframes rv-spark { 0% { opacity: 0; transform: scale(.6); } 30% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(1.25); } }
+html.rm .reveal .card.rv, html.rm .reveal .card.rv::after { animation: none; }
 @keyframes scr-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { #app.scr-in { animation: none; } }
 html.rm .card, html.rm .node.avail, html.rm .idle, html.rm .enemy.acting, html.rm .enemy.hit .art, html.rm .portrait.lunge, html.rm .portrait.hurt, html.rm .portrait.hurt::after { transition: none; animation: none; }
@@ -630,6 +644,13 @@ html.rm .rg *, html.rm .rg { animation: none !important; }
 /* Touch polish: no double-tap zoom (pinch-zoom stays available), no sticky hover, 44px targets, snap-scrolling hand */
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 body, button, .btn, .card, .node, .hand { touch-action: manipulation; }
+.hand .card { touch-action: pan-x; }
+.card.dragsrc { opacity: .35; }
+.dragghost { position: fixed; left: 0; top: 0; z-index: 1100; pointer-events: none; margin: 0; opacity: .92; box-shadow: 0 12px 30px rgba(0,0,0,.6); will-change: transform; }
+body.dragging, body.dragging * { user-select: none; -webkit-user-select: none; }
+.enemy.dz-valid { outline: 2px dashed #4fd1c5; outline-offset: 4px; }
+.enemy.dz-hot { outline: 3px solid #7ff5e8; outline-offset: 4px; box-shadow: 0 0 22px 4px rgba(79,209,197,.7); }
+.dz-row { outline: 2px dashed #4fd1c5; outline-offset: 4px; border-radius: 10px; }
 .hand { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; scroll-padding-inline: 16px; }
 .hand .card { scroll-snap-align: center; }
 @media (hover: none) { .card:hover, .hand .card:hover { transform: none; } .card.sel, .hand .card.sel { transform: translateY(-12px); } }
@@ -639,12 +660,23 @@ body, button, .btn, .card, .node, .hand { touch-action: manipulation; }
 .btn.snd { display: inline-flex; gap: 6px; align-items: center; }
 .sndpanel { position: fixed; top: calc(64px + env(safe-area-inset-top, 0px)); right: calc(10px + env(safe-area-inset-right, 0px)); z-index: 41; background: var(--panel); border: 1px solid var(--gold); border-radius: 10px; padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 30px #000A; font-size: 17px; }
 .sndpanel[hidden] { display: none; }
+.endconf-back { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.endconf { background: #1B1722; color: #EDE6D8; border: 1px solid var(--gold); border-radius: 12px; padding: 18px 20px; max-width: 360px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+.endconf h3 { margin: 0 0 8px; font-family: var(--display); color: var(--gold); }
+.endconf p { margin: 0 0 12px; }
+.endconf label { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.endconf input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--gold); }
+.endconf .row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
 .sndpanel label { display: flex; align-items: center; gap: 10px; }
 .sndpanel input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--gold); }
 .sndpanel input[type=range] { width: 130px; accent-color: var(--gold); }
 .sndpanel .sechead { font-family: var(--display); font-weight: 700; color: var(--gold); margin-top: 2px; }
 /* ---------- Display settings: larger text, high contrast / colorblind-safe ---------- */
-html.bigtext #app { zoom: 1.25; }
+html.ts1 #app { zoom: 1.25; }
+html.ts2 #app { zoom: 1.5; }
+html.ts1 .sndpanel { font-size: 20px; }
+html.ts2 .sndpanel { font-size: 23px; }
+.sndpanel select { font: inherit; background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
 html.hc {
   --bg: #000; --panel: #0C0C10; --panel2: #1A1A22; --line: #9A9AA8;
   --ink: #FFFFFF; --muted: #F0F0F0; --faint: #D8D8D8;
@@ -1046,6 +1078,45 @@ let REDUCE = false;
   else REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   document.documentElement.classList.toggle('rm', REDUCE);
 })();
+const ENDCKEY = 'masked-spire-endconfirm'; /* saved 'on' / 'off'; default on */
+let ENDCONF = true;
+try { ENDCONF = localStorage.getItem(ENDCKEY) !== 'off'; } catch (e) {}
+function setEndConfirm(v) {
+  ENDCONF = !!v;
+  try { localStorage.setItem(ENDCKEY, ENDCONF ? 'on' : 'off'); } catch (e) {}
+}
+/* number of cards in hand that could still be played right now (same rule as the dimmed-card check) */
+function endTurnPlayable(V) {
+  const cb = V && V.cb, s = cb && cb.S && cb.S[V.me];
+  if (!s) return 0;
+  let n = 0;
+  cb.hand.forEach(h => { const c = CARDS[h[1]]; if (c && c.c >= 0 && c.c <= s.energy && !(c.t === 'power' && s.st[3])) n++; });
+  return n;
+}
+function endTurnConfirm(n, energy, onYes) {
+  if (document.getElementById('endconf')) return;
+  const back = document.createElement('div');
+  back.id = 'endconf'; back.className = 'endconf-back';
+  back.innerHTML = '<div class="endconf" role="alertdialog" aria-modal="true" aria-label="End turn?"><h3>End your turn?</h3><p>You still have ' + n + ' playable card' + (n === 1 ? '' : 's') + ' and ' + energy + ' energy left.</p><label><input type="checkbox" data-ec="never"> Don’t ask again</label><div class="row"><button type="button" class="btn" data-ec="no">Keep playing</button><button type="button" class="btn primary" data-ec="yes">End turn</button></div></div>';
+  const close = () => { document.removeEventListener('keydown', onKey, true); back.remove(); };
+  const onKey = ev => { if (ev.key === 'Escape') { ev.preventDefault(); close(); } };
+  back.addEventListener('click', ev => {
+    const t = ev.target.closest ? ev.target.closest('[data-ec]') : null;
+    if (ev.target === back) { close(); return; }
+    if (!t) return;
+    const k = t.getAttribute('data-ec');
+    if (k === 'no') close();
+    else if (k === 'yes') {
+      const never = back.querySelector('[data-ec="never"]').checked;
+      close();
+      if (never) setEndConfirm(false);
+      onYes();
+    }
+  });
+  document.addEventListener('keydown', onKey, true);
+  document.body.appendChild(back);
+  const first = back.querySelector('[data-ec="no"]'); if (first) first.focus();
+}
 const VIBKEY = 'masked-spire-vibrate'; /* saved 'on' / 'off'; default on */
 let VIBRATE = true;
 try { VIBRATE = localStorage.getItem(VIBKEY) !== 'off'; } catch (e) {}
@@ -1585,13 +1656,13 @@ let toastTimer = null;
 /* ---------- Display settings (larger text, high contrast); applied as classes on <html>, saved in localStorage ---------- */
 const A11Y = (function () {
   const K = 'masked-spire-display';
-  const prefs = { big: false, hc: false, cb: false };
+  const prefs = { size: 0, hc: false, cb: false };
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(K) || 'null'); } catch (e) {}
-  if (saved && typeof saved === 'object') { prefs.big = saved.big === true; prefs.hc = saved.hc === true; prefs.cb = saved.cb === true; }
+  if (saved && typeof saved === 'object') { prefs.size = (saved.size === 0 || saved.size === 1 || saved.size === 2) ? saved.size : (saved.big === true ? 1 : 0); prefs.hc = saved.hc === true; prefs.cb = saved.cb === true; }
   else { try { prefs.hc = !!(window.matchMedia && matchMedia('(prefers-contrast: more)').matches); } catch (e) {} }
-  function apply() { const c = document.documentElement.classList; c.toggle('bigtext', prefs.big); c.toggle('hc', prefs.hc); c.toggle('cb', prefs.cb); if (prefs.cb) decorate(); }
-  function set(k, v) { if (k !== 'big' && k !== 'hc' && k !== 'cb') return; prefs[k] = !!v; try { localStorage.setItem(K, JSON.stringify(prefs)); } catch (e) {} apply(); }
+  function apply() { const c = document.documentElement.classList; c.toggle('ts1', prefs.size === 1); c.toggle('ts2', prefs.size === 2); c.toggle('hc', prefs.hc); c.toggle('cb', prefs.cb); if (prefs.cb) decorate(); }
+  function set(k, v) { if (k === 'size') v = Math.max(0, Math.min(2, Number(v) | 0)); else if (k === 'hc' || k === 'cb') v = !!v; else return; prefs[k] = v; try { localStorage.setItem(K, JSON.stringify(prefs)); } catch (e) {} apply(); }
   apply();
   /* colorblind mode: per-status glyphs on badges (shown via CSS attr()), float prefixes for damage/block/etc. */
   const CBI = [[/^Strength/, '\u2739'], [/^Ritual/, '\u21BB'], [/^Weak/, '\u21E3'], [/^Vulnerable/, '\u25C8'], [/^Thorns/, '\u2736'], [/^Artifact/, '\u2B21'], [/^Rooted/, '\u23DA'], [/^Intangible/, '\u25CC'], [/^Reflecting/, '\u21C4'], [/^En Garde/, '\u2691'], [/^Holding/, '\u25CF'], [/^Final Toll/, '\u2617'], [/^Shattered/, '\u2716'], [/^Unmasked/, '\u2610'], [/^Frail/, '\u25A6'], [/^Hushed/, '\u2298'], [/Energy next turn/, '\u03DF'], [/^Composure/, '\u2248'], [/^Perfect Rhythm/, '\u266A'], [/^Unbroken Stance/, '\u25A0'], [/^Rampart/, '\u25A4'], [/^Bastion/, '\u25A5'], [/^Blood Pact/, '\u2666'], [/^Unstoppable/, '\u27A4'], [/^Mantra/, '\u2630'], [/^Serenity/, '\u262F'], [/^Unbreakable/, '\u25FC']];
@@ -1944,6 +2015,7 @@ const SND = (function () {
   const NORM = {"hero":{"duelist":{"swing":1.75,"hit":0.95,"guard":2.38,"buff":2.24,"hurt":2.72,"foot":1.84},"bulwark":{"swing":2.09,"hit":0.52,"guard":0.86,"buff":2.32,"hurt":1.05,"foot":1.74},"brute":{"swing":1.51,"hit":0.59,"guard":1.35,"buff":1.74,"hurt":1.63,"foot":1.74}},"enemy":{"insect":{"atk":3.61,"hit":3.74,"die":3.48},"bird":{"atk":5,"hit":5,"die":3.47},"wood":{"atk":1.42,"hit":2.14,"die":1.2},"slime":{"atk":2.52,"hit":2.86,"die":2.52},"imp":{"atk":4.19,"hit":3.37,"die":3.74},"chant":{"atk":5,"hit":3.96,"die":4.07},"beast":{"atk":1.94,"hit":2.6,"die":2.34},"mech":{"atk":1.62,"hit":1.97,"die":1.65},"chain":{"atk":1.25,"hit":1.67,"die":2.15},"fire":{"atk":0.45,"hit":5,"die":3.43},"ghost":{"atk":3.3,"hit":5,"die":3.86},"glass":{"atk":2.07,"hit":2.37,"die":1.08},"bone":{"atk":5,"hit":4.07,"die":5},"stomp":{"atk":1.02,"hit":1.08,"die":0.88},"choral":{"atk":4.81,"hit":5,"die":4.61},"bell":{"atk":0.88,"hit":2.29,"die":0.89},"void":{"atk":2.39,"hit":3.01,"die":1.93},"paper":{"atk":0.48,"hit":1.93,"die":2.47}}};
   /* ----- live engine ----- */
   let ac = null, master = null, musicBus = null, sfxBus = null, sV = null, curBus = null;
+  const XFADE = { inDelay: 0.3, inTau: 0.9, outTau: 0.6, sameInDelay: 0.05, sameInTau: 0.35, sameOutTau: 0.35, killMs: 5000 };
   let want = { key: 'menu', mode: 'calm' }, playing = null, timer = null, nextT = 0, stepI = 0, duckUntil = 0;
   const hasAC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext);
   function ensure() {
@@ -1965,17 +2037,19 @@ const SND = (function () {
     if (ac.state === 'suspended') ac.resume().then(sync).catch(() => {});
     sync();
   }
-  function stopMusic() {
+  function stopMusic(tau) {
     if (timer) { clearInterval(timer); timer = null; }
-    if (curBus && ac) { const b = curBus; try { b.gain.cancelScheduledValues(ac.currentTime); b.gain.setTargetAtTime(0, ac.currentTime, 0.6); } catch (e) {} setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 5000); }
+    if (curBus && ac) { const b = curBus; try { b.gain.cancelScheduledValues(ac.currentTime); b.gain.setTargetAtTime(0, ac.currentTime, tau || XFADE.outTau); } catch (e) {} setTimeout(() => { try { b.disconnect(); } catch (e) {} }, XFADE.killMs); }
     curBus = null; playing = null;
   }
   function startMusic(key, mode) {
-    stopMusic();
+    const same = !!playing && playing.key === key;
+    const keepStep = same ? Math.ceil(stepI / 32) * 32 : 0;
+    stopMusic(same ? XFADE.sameOutTau : XFADE.outTau);
     if (!ac || !prefs.music || ac.state !== 'running') return;
-    const bus = ac.createGain(); bus.gain.setValueAtTime(0, ac.currentTime); bus.gain.setTargetAtTime(1, ac.currentTime + 0.3, 0.9); bus.connect(musicBus);
+    const bus = ac.createGain(); bus.gain.setValueAtTime(0, ac.currentTime); bus.gain.setTargetAtTime(1, ac.currentTime + (same ? XFADE.sameInDelay : XFADE.inDelay), same ? XFADE.sameInTau : XFADE.inTau); bus.connect(musicBus);
     curBus = bus; playing = { key, mode }; const V = voices(ac, bus), mi = MODE[mode] || 0, tr = TRACKS[key], sd = 60 / BPM[key][mi] / 4;
-    stepI = 0; nextT = ac.currentTime + 0.12;
+    stepI = keepStep; nextT = ac.currentTime + 0.12;
     const pump = () => {
       if (!ac || curBus !== bus) return;
       while (nextT < ac.currentTime + 1.4) { try { tr({ V, t: nextT, i: stepI, sd, mi }); } catch (e) {} nextT += sd; stepI++; }
@@ -2054,17 +2128,18 @@ const SND = (function () {
     panel.querySelector('[data-k="musicVol"]').value = Math.round(prefs.musicVol * 100);
     panel.querySelector('[data-k="sfxVol"]').value = Math.round(prefs.sfxVol * 100);
     panel.querySelector('[data-k="mute"]').checked = prefs.mute;
-    panel.querySelector('[data-k="big"]').checked = A11Y.prefs.big;
+    panel.querySelector('[data-k="ts"]').value = String(A11Y.prefs.size);
     panel.querySelector('[data-k="hc"]').checked = A11Y.prefs.hc;
     panel.querySelector('[data-k="cb"]').checked = A11Y.prefs.cb;
     panel.querySelector('[data-k="rm"]').checked = REDUCE;
     panel.querySelector('[data-k="vib"]').checked = VIBRATE;
+    panel.querySelector('[data-k="endc"]').checked = ENDCONF;
   }
   function togglePanel() {
     if (!panel) {
       panel = document.createElement('div'); panel.id = 'sndpanel'; panel.className = 'sndpanel'; panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Sound and display settings');
-      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label><input type="checkbox" data-k="big"> Larger text</label><label><input type="checkbox" data-k="hc"> High contrast</label><label><input type=\"checkbox\" data-k=\"cb\"> Colorblind mode (icons and patterns)</label><label><input type="checkbox" data-k="rm"> Reduce motion (overrides system setting)</label><label><input type="checkbox" data-k="vib"> Vibration (mobile; off when Reduce motion is on)</label>';
-      panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx' || k === 'mute') setPref(k, e.target.checked); else if (k === 'big' || k === 'hc' || k === 'cb') A11Y.set(k, e.target.checked); else if (k === 'rm') setReduceMotion(e.target.checked); else if (k === 'vib') setVibrate(e.target.checked); });
+      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label>Text size <select data-k="ts" aria-label="Text size"><option value="0">Normal</option><option value="1">Large</option><option value="2">Extra large</option></select></label><label><input type="checkbox" data-k="hc"> High contrast</label><label><input type=\"checkbox\" data-k=\"cb\"> Colorblind mode (icons and patterns)</label><label><input type="checkbox" data-k="rm"> Reduce motion (overrides system setting)</label><label><input type="checkbox" data-k="vib"> Vibration (mobile; off when Reduce motion is on)</label><div class="sechead">Gameplay</div><label><input type="checkbox" data-k="endc"> Confirm before ending turn</label>';
+      panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx' || k === 'mute') setPref(k, e.target.checked); else if (k === 'hc' || k === 'cb') A11Y.set(k, e.target.checked); else if (k === 'ts') A11Y.set('size', e.target.value); else if (k === 'rm') setReduceMotion(e.target.checked); else if (k === 'vib') setVibrate(e.target.checked); else if (k === 'endc') setEndConfirm(e.target.checked); });
       panel.addEventListener('input', e => { const k = e.target.getAttribute('data-k'); if (k === 'musicVol' || k === 'sfxVol') { setPref(k, Math.max(0, Math.min(1, Number(e.target.value) / 100))); if (k === 'sfxVol') ui('click'); } });
       panel.insertAdjacentHTML('beforeend', '<div class="sechead">Help</div><button type="button" class="btn" data-help="1">How to play</button>'); panel.addEventListener('click', e => { if (e.target.closest('[data-help]')) { panel.hidden = true; if (window.MSTutorial) window.MSTutorial.open(); } }); document.body.appendChild(panel);
     }
@@ -2391,8 +2466,8 @@ function cardHTML(id, act, arg, opts) {
   const ls = opts.live;
   const live = d.live && ls ? '<span class="live">' + d.live(ls) + '</span>' : '';
   const rar = RAR[id];
-  const cls = 'card t-' + d.t + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '');
-  return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
+  const cls = 'card t-' + d.t + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '');
+  return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + (opts.rv != null ? ' style="--i:' + opts.rv + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
     '<span class="cost">' + (d.c < 0 ? '–' : d.c) + '</span>' + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + '</span><span class="cname">' + esc(d.n) + '</span>' +
     '<span class="cdesc">' + esc(d.d) + live + '</span>' + (opts.price != null ? '<span class="price">' + opts.price + ' gold</span>' : '') + '</button>';
 }
@@ -2600,7 +2675,7 @@ function combatHTML(V, prev) {
     '<div class="lastlog" aria-live="polite">' + esc(cb.logs[0] || '') + '</div>' +
     '<div class="dock"><div class="controls"><div class="energy" title="Energy">' + s.energy + '<small>energy</small></div>' +
     '<div class="incoming">' + inc + '<div class="piles"><span data-pile="draw">Draw ' + cb.piles[0] + '</span><span data-pile="discard">Discard ' + cb.piles[1] + '</span><span>Exhaust ' + cb.piles[2] + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
-    '<div class="endwrap"><button type="button" class="btn primary" data-act="end"' + (canEnd ? '' : ' disabled') + '>' + endLabel + '</button></div></div>' +
+    '<div class="endwrap"><button type="button" class="btn kbhelp" data-act="keys" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">?</button><button type="button" class="btn primary" data-act="end"' + (canEnd ? '' : ' disabled') + '>' + endLabel + '</button></div></div>' +
     '<div class="hint" aria-live="polite">' + (selCard ? 'Choose a target for ' + esc(CARDS[selCard[1]].n) + ' (tap the card again to cancel)' : '') + '</div>' +
     '<div class="hand" aria-label="Your hand">' + (hand || '<span class="muted">' + (cb.busy ? 'Resolving…' : waiting ? 'Waiting for your partner to end their turn…' : 'Your hand is empty.') + '</span>') + '</div></div>' +
     '<details class="log"><summary>Battle log</summary><ol>' + cb.logs.map(l => '<li>' + esc(l) + '</li>').join('') + '</ol></details></section>';
@@ -2619,7 +2694,7 @@ function doneBtn(V, label) {
 function rewardHTML(V) {
   const rw = V.rw, st = chestStage(V, rw.relic ? 'iron' : 'wood', rw.relic, 'r:' + V.act + ':' + V.floor, 'chest');
   const details = '<div class="relicrow"><span><b>+' + rw.gold + ' gold</b></span>' + (rw.relic ? '<span>New relic: <b>' + esc(RELICS[rw.relic].n) + '</b> · ' + esc(RELICS[rw.relic].d) + '</span>' : '') + '</div>' +
-    (rw.taken ? '<p>Card added to your deck.</p>' : '<h3>Choose a card to add</h3><div class="cards">' + rw.cards.map((id, i) => cardHTML(id, 'reward', i)).join('') + '</div>') +
+    (rw.taken ? '<p>Card added to your deck.</p>' : '<h3>Choose a card to add</h3><div class="cards">' + rw.cards.map((id, i) => cardHTML(id, 'reward', i, { rv: i })).join('') + '</div>') +
     '<div class="row">' + doneBtn(V, rw.taken ? 'Continue' : 'Skip card') + '</div>' + waitNote(V);
   return '<section class="panel victory"><span class="actbanner">Victory</span><h2>The path ahead is clear</h2>' + st.html +
     (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's"><p class="muted">You catch your breath (+2 HP).</p>' + details + '</div>' : '<p class="muted center">Open the chest to claim your reward.</p>') + '</section>';
@@ -2627,7 +2702,7 @@ function rewardHTML(V) {
 function actclearHTML(V) {
   const a = V.ac, st = chestStage(V, 'gold', a.relic, 'c:' + a.act, 'boss chest');
   const details = '<p>You rest before the climb. <b>+' + a.healed + ' HP</b>, <b>+' + a.gold + ' gold</b>' + (a.relic ? ', and a relic: <b>' + esc(RELICS[a.relic].n) + '</b> · ' + esc(RELICS[a.relic].d) : '') + '.</p>' +
-    (a.taken ? '<p>Card added to your deck.</p>' : '<h3>Choose a boss reward card</h3><div class="cards">' + a.cards.map((id, i) => cardHTML(id, 'bossreward', i)).join('') + '</div>') +
+    (a.taken ? '<p>Card added to your deck.</p>' : '<h3>Choose a boss reward card</h3><div class="cards">' + a.cards.map((id, i) => cardHTML(id, 'bossreward', i, { rv: i })).join('') + '</div>') +
     '<div class="row">' + doneBtn(V, 'Continue to Act ' + ROMAN[a.act] + ': ' + esc(ACTS[a.act].n)) + '</div>' + waitNote(V);
   return '<section class="panel victory"><span class="actbanner">Act ' + ROMAN[a.act - 1] + ' cleared</span><h2>' + esc(EN[ACTS[a.act - 1].boss].n) + ' is defeated</h2>' + st.html +
     (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's">' + details + '</div>' : '<p class="muted center">The boss’s hoard awaits. Open the chest.</p>') + '</section>';
@@ -2668,6 +2743,32 @@ function duelEndHTML(V) {
     '<div class="row"><button type="button" class="btn primary" data-act="leave">Back to title</button></div></section>';
 }
 function endHTML(V, won) {
+  const html = endHTML0(V, won);
+  const per = ROWS + 1;
+  const floors = won ? 3 * per : Math.max(0, (V.act - 1) * per + V.floor - 1);
+  const rs = V.rs || { cp: 0, dm: 0 };
+  const counts = {};
+  V.deck.forEach(d => { const n = CARDS[d[1]].n; counts[n] = (counts[n] || 0) + 1; });
+  const deck = Object.keys(counts).sort().map(n => esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '')).join(', ');
+  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules"><li>Floors cleared: ' + floors + '</li><li>Cards played: ' + rs.cp + '</li><li>Damage dealt: ' + rs.dm + '</li></ul><p class="muted">Final deck (' + V.deck.length + '): ' + deck + '</p></div>';
+  const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : '';
+  const marker = '<div class="row"><button type="button" class="btn primary" data-act="leave">';
+  return html.replace(marker, () => sum + '<div class="row">' + again + '<button type="button" class="btn' + (again ? '' : ' primary') + '" data-act="leave">');
+}
+function endHTML0(V, won) {
+  const html = endHTML0(V, won);
+  const per = ROWS + 1;
+  const floors = won ? 3 * per : Math.max(0, (V.act - 1) * per + V.floor - 1);
+  const rs = V.rs || { cp: 0, dm: 0 };
+  const counts = {};
+  V.deck.forEach(d => { const n = CARDS[d[1]].n; counts[n] = (counts[n] || 0) + 1; });
+  const deck = Object.keys(counts).sort().map(n => esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '')).join(', ');
+  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules"><li>Floors cleared: ' + floors + '</li><li>Cards played: ' + rs.cp + '</li><li>Damage dealt: ' + rs.dm + '</li></ul><p class="muted">Final deck (' + V.deck.length + '): ' + deck + '</p></div>';
+  const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : '';
+  const marker = '<div class="row"><button type="button" class="btn primary" data-act="leave">';
+  return html.replace(marker, () => sum + '<div class="row">' + again + '<button type="button" class="btn' + (again ? '' : ' primary') + '" data-act="leave">');
+}
+function endHTML0(V, won) {
   const me = V.P[V.me];
   return '<section class="panel"><h2>' + (won ? 'The Spire falls silent' : 'Your mask shatters') + '</h2>' +
     (won ? '<div class="vstage solo tier-gold" style="--ce:0s">' + heroCheer(V) + confettiHTML(true) + '</div>' : '') +
@@ -2841,7 +2942,7 @@ function paint(V) {
   const prev = CL.lastFx;
   const sk = V ? V.scr : (CL.role || 'title');
   if (CL.scrKey !== undefined && CL.scrKey !== sk) {
-    if (!REDUCE) { app.classList.remove('scr-in'); void app.offsetWidth; app.classList.add('scr-in'); setTimeout(() => app.classList.remove('scr-in'), 260); }
+    if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
     if (['reward', 'actclear', 'victory', 'defeat', 'duelend'].indexOf(sk) < 0) SND.fire('transition');
   }
   CL.scrKey = sk;
@@ -3257,6 +3358,8 @@ document.getElementById('app').addEventListener('click', ev => {
   const V = curView();
   switch (act) {
     case 'solo': CL.role = 'pick'; E.G = null; render(); break;
+    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(h, CL.tok)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; render(); saveSolo(); break; }
+    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(h, CL.tok)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; render(); saveSolo(); break; }
     case 'solohero': { const G = E.baseG('solo', prefDiff()); G.P = [E.newPlayer(arg, CL.tok)]; E.G = G; CL.role = 'solo'; CL.seen = false; render(); saveSolo(); break; }
     case 'host': CL.err = ''; goOnline({ t: 'create', tok: CL.tok, diff: prefDiff() }); break;
     case 'continue': {
@@ -3274,6 +3377,7 @@ document.getElementById('app').addEventListener('click', ev => {
       else lobbyCopy(inviteURL(), 'Invite link copied.');
       break;
     case 'snd': SND.togglePanel(); break;
+    case 'keys': kbHelp(); break;
     case 'setdiff': setPrefDiff(Number(arg)); render(); break;
     case 'hostdiff': setPrefDiff(Number(arg)); send('diff', Number(arg)); break;
     case 'leave': leaveAll(); break;
@@ -3295,7 +3399,12 @@ document.getElementById('app').addEventListener('click', ev => {
       break;
     }
     case 'enemy': if (CL.sel != null) { const u = CL.sel; CL.sel = null; sendCard(V, u, Number(arg)); } break;
-    case 'end': CL.sel = null; send('end'); break;
+    case 'end': {
+      const left = ENDCONF ? endTurnPlayable(V) : 0;
+      if (left) endTurnConfirm(left, V.cb.S[V.me].energy, () => { CL.sel = null; send('end'); });
+      else { CL.sel = null; send('end'); }
+      break;
+    }
     case 'chest':
       if (CL.curChest && !(CL.chest && CL.chest.key === CL.curChest.key)) {
         CL.chest = { key: CL.curChest.key, t: performance.now() };
@@ -3314,6 +3423,96 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'close': CL.overlay = null; paint(V); break;
     case 'remove': { const from = CL.overlay && CL.overlay.from; CL.overlay = null; send('remove', Number(arg), from); if (CL.role === 'online') paint(V); break; }
     default: break;
+  }
+});
+/* Combat keyboard shortcuts */
+let kbT = null; /* idx of the keyboard-highlighted enemy while a card is selected */
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '.enemy.kbt{outline:3px solid #ffd54a;outline-offset:3px;border-radius:8px}.kbkeys{margin:8px 0;padding:0;list-style:none;text-align:left}.kbkeys li{margin:4px 0}.kbkeys kbd{display:inline-block;min-width:1.4em;padding:1px 6px;margin-right:6px;border:1px solid #888;border-radius:4px;background:rgba(255,255,255,.12);font:inherit;text-align:center}';
+  document.head.appendChild(st);
+})();
+function kbMark() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.querySelectorAll('.enemy.kbt').forEach(el => el.classList.remove('kbt'));
+  if (CL.sel == null || kbT == null) return;
+  const el = app.querySelector('.enemy[data-act="enemy"][data-arg="' + kbT + '"]');
+  if (el) el.classList.add('kbt');
+}
+new MutationObserver(kbMark).observe(document.getElementById('app'), { childList: true, subtree: true });
+function kbHelp() {
+  if (document.getElementById('kbhelp')) return;
+  const back = document.createElement('div');
+  back.id = 'kbhelp'; back.className = 'endconf-back';
+  back.innerHTML = '<div class="endconf" role="dialog" aria-modal="true" aria-labelledby="kbhelp-h"><h3 id="kbhelp-h">Keyboard shortcuts</h3><ul class="kbkeys">' +
+    '<li><kbd>1</kbd>–<kbd>9</kbd>, <kbd>0</kbd> Select / play card 1–10</li>' +
+    '<li><kbd>Tab</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> Cycle targets</li>' +
+    '<li><kbd>Enter</kbd> Confirm target</li>' +
+    '<li><kbd>Esc</kbd> Cancel selection</li>' +
+    '<li><kbd>E</kbd> End turn</li>' +
+    '<li><kbd>?</kbd> or <kbd>H</kbd> This help</li></ul>' +
+    '<div class="row"><button type="button" class="btn primary" data-kb="close">Close</button></div></div>';
+  const lastFocus = document.activeElement;
+  const close = () => {
+    document.removeEventListener('keydown', onKey, true);
+    back.remove();
+    try { if (lastFocus && lastFocus.isConnected && lastFocus.focus) lastFocus.focus(); } catch (e) {}
+  };
+  const onKey = ev => {
+    if (ev.key === 'Escape' || ev.key === '?' || ev.key === 'h' || ev.key === 'H') { ev.preventDefault(); ev.stopPropagation(); close(); }
+    else if (ev.key === 'Tab') { ev.preventDefault(); const b = back.querySelector('[data-kb="close"]'); if (b) b.focus(); }
+  };
+  back.addEventListener('click', ev => { if (ev.target === back || (ev.target.closest && ev.target.closest('[data-kb="close"]'))) close(); });
+  document.addEventListener('keydown', onKey, true);
+  document.body.appendChild(back);
+  const first = back.querySelector('[data-kb="close"]'); if (first) first.focus();
+}
+document.addEventListener('keydown', ev => {
+  if (ev.defaultPrevented || ev.repeat || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+  const t = ev.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+  if (document.getElementById('endconf') || document.getElementById('mstut') || document.getElementById('kbhelp')) return;
+  const V = curView();
+  if (!V || !V.cb || CL.overlay || !document.querySelector('.battle')) return;
+  const k = ev.key;
+  if (k === '?' || k === 'h' || k === 'H') { ev.preventDefault(); kbHelp(); return; }
+  const live = V.cb.en.filter(e => !e.dead).map(e => e.idx);
+  if (CL.sel != null && live.length) {
+    if (!live.includes(kbT)) { kbT = live[0]; kbMark(); }
+    let d = 0;
+    if (k === 'Tab') d = ev.shiftKey ? -1 : 1;
+    else if (k === 'ArrowRight' || k === 'ArrowDown') d = 1;
+    else if (k === 'ArrowLeft' || k === 'ArrowUp') d = -1;
+    if (d) {
+      ev.preventDefault();
+      kbT = live[(live.indexOf(kbT) + d + live.length) % live.length];
+      kbMark();
+      return;
+    }
+    if (k === 'Enter') {
+      ev.preventDefault();
+      const b = document.querySelector('.enemy[data-act="enemy"][data-arg="' + kbT + '"]');
+      if (b) b.click();
+      kbT = null;
+      return;
+    }
+    if (k === 'Escape') { ev.preventDefault(); CL.sel = null; kbT = null; paint(V); return; }
+  }
+  if (k === 'e' || k === 'E') {
+    const b = document.querySelector('.battle [data-act="end"]');
+    if (b && !b.disabled) { ev.preventDefault(); b.click(); }
+    return;
+  }
+  if (/^[0-9]$/.test(k)) {
+    const cards = Array.from(document.querySelectorAll('.hand [data-act="card"]'));
+    const el = cards[k === '0' ? 9 : Number(k) - 1];
+    if (!el) return;
+    ev.preventDefault();
+    kbT = null;
+    el.click();
+    if (CL.sel != null) kbT = live.length ? live[0] : null;
+    kbMark();
   }
 });
 /* Sound hook layer: delegated hover / click / end-turn sounds for any [data-act] control */
@@ -3364,7 +3563,117 @@ function showPreview(V) {
     el.className = 'pv' + (r.lethal ? ' lethal' : r.loss === 0 ? ' safe' : '');
   });
 }
+/* ---------- Drag a hand card to play it ---------- */
+let DRAG = null, dragSwallow = 0;
+function dragPlayable(V, u) {
+  const s = V && V.cb && V.cb.S && V.cb.S[V.me];
+  const h = s && V.cb.hand.find(x => x[0] === u);
+  const c = h && CARDS[h[1]];
+  return !!c && c.c >= 0 && c.c <= s.energy && !(c.t === 'power' && s.st[3]);
+}
+function dragInfo(V, u) {
+  const h = V.cb.hand.find(x => x[0] === u), d = CARDS[h[1]];
+  const live = V.cb.en.filter(e => !e.dead);
+  const tg = !!d.tg && !V.cb.duel;
+  return { live, tg, multi: tg && live.length > 1 };
+}
+function dragZone(y) {
+  const hand = document.querySelector('.hand');
+  const r = (hand || DRAG.el).getBoundingClientRect();
+  return y < r.top ? 'above' : y > r.bottom ? 'below' : 'hand';
+}
+function dragEnemyAt(x, y) {
+  const els = document.elementsFromPoint(x, y);
+  return els.find(el => el.matches && el.matches('.enemy[data-act="enemy"]:not(.dying)')) || null;
+}
+function dragClear() {
+  document.querySelectorAll('.enemy.dz-valid, .enemy.dz-hot, .dz-row').forEach(el => el.classList.remove('dz-valid', 'dz-hot', 'dz-row'));
+}
+function dragMark(x, y) {
+  const V = curView();
+  if (!V || !V.cb || !dragPlayable(V, DRAG.u)) { dragClear(); return; }
+  const info = dragInfo(V, DRAG.u), over = info.multi ? dragEnemyAt(x, y) : null, above = dragZone(y) === 'above';
+  dragClear();
+  const enemies = document.querySelectorAll('.enemy[data-act="enemy"]:not(.dying)');
+  if (info.multi) enemies.forEach(el => { el.classList.add('dz-valid'); if (el === over) el.classList.add('dz-hot'); });
+  else if (above && enemies.length) { const row = enemies[0].parentElement; if (row) row.classList.add('dz-row'); }
+}
+function dragMove(x, y) {
+  DRAG.gx = x; DRAG.gy = y;
+  DRAG.ghost.style.transform = 'translate(' + (x - DRAG.ox) + 'px,' + (y - DRAG.oy) + 'px)';
+  dragMark(x, y);
+}
+function dragStop() {
+  if (!DRAG) return;
+  window.removeEventListener('pointermove', dragOnMove, true);
+  window.removeEventListener('pointerup', dragOnUp, true);
+  window.removeEventListener('pointercancel', dragOnCancel, true);
+  window.removeEventListener('keydown', dragOnKey, true);
+  if (DRAG.ghost) DRAG.ghost.remove();
+  if (DRAG.el) DRAG.el.classList.remove('dragsrc');
+  document.body.classList.remove('dragging');
+  dragClear();
+  const was = DRAG.active;
+  DRAG = null;
+  if (was) { dragSwallow = Date.now() + 400; CL.hov = null; showPreview(CL.pvV); }
+}
+function dragOnMove(ev) {
+  if (!DRAG || ev.pointerId !== DRAG.id) return;
+  if (!DRAG.active) {
+    if (Math.hypot(ev.clientX - DRAG.sx, ev.clientY - DRAG.sy) < 8) return;
+    const V = curView();
+    if (!V || !V.cb || !dragPlayable(V, DRAG.u)) { dragStop(); return; }
+    DRAG.active = true;
+    const r = DRAG.el.getBoundingClientRect();
+    const g = DRAG.el.cloneNode(true);
+    g.removeAttribute('id'); g.removeAttribute('data-act'); g.classList.add('dragghost');
+    g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
+    document.body.appendChild(g);
+    DRAG.ghost = g; DRAG.ox = r.width / 2; DRAG.oy = r.height / 2;
+    DRAG.el.classList.add('dragsrc');
+    document.body.classList.add('dragging');
+    CL.sel = null; CL.hov = DRAG.u; showPreview(CL.pvV);
+  }
+  ev.preventDefault();
+  dragMove(ev.clientX, ev.clientY);
+}
+function dragOnUp(ev) {
+  if (!DRAG || ev.pointerId !== DRAG.id) return;
+  if (!DRAG.active) { dragStop(); return; }
+  const u = DRAG.u, x = ev.clientX, y = ev.clientY, zone = dragZone(y);
+  const V = curView();
+  const over = V && V.cb && dragPlayable(V, u) ? dragInfo(V, u) : null;
+  const hit = over && over.multi ? dragEnemyAt(x, y) : null;
+  dragStop();
+  if (!over) return;
+  if (over.multi) {
+    if (hit) { const idx = Number(hit.dataset.arg); if (over.live.some(e => e.idx === idx)) { CL.sel = null; sendCard(V, u, idx); } }
+  } else if (zone === 'above') {
+    CL.sel = null;
+    sendCard(V, u, over.tg && over.live.length ? over.live[0].idx : null);
+  }
+}
+function dragOnCancel(ev) { if (DRAG && ev.pointerId === DRAG.id) dragStop(); }
+function dragOnKey(ev) { if (ev.key === 'Escape') { ev.preventDefault(); dragStop(); } }
+document.getElementById('app').addEventListener('pointerdown', ev => {
+  if (DRAG || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+  const el = ev.target.closest ? ev.target.closest('.hand .card[data-act="card"]') : null;
+  if (!el) return;
+  const V = curView(), u = Number(el.dataset.arg);
+  if (!V || !V.cb || !dragPlayable(V, u)) return;
+  DRAG = { id: ev.pointerId, u, el, sx: ev.clientX, sy: ev.clientY, active: false, ghost: null, ox: 0, oy: 0 };
+  window.addEventListener('pointermove', dragOnMove, true);
+  window.addEventListener('pointerup', dragOnUp, true);
+  window.addEventListener('pointercancel', dragOnCancel, true);
+  window.addEventListener('keydown', dragOnKey, true);
+});
+document.addEventListener('dragstart', ev => { if (DRAG) ev.preventDefault(); }, true);
+document.addEventListener('click', ev => {
+  if (dragSwallow && Date.now() < dragSwallow) { ev.stopPropagation(); ev.preventDefault(); }
+  dragSwallow = 0;
+}, true);
 const pvHover = ev => {
+  if (DRAG) return;
   const c = ev.target.closest ? ev.target.closest('.card[data-act="card"]') : null;
   const u = c ? Number(c.dataset.arg) : null;
   if (u === (CL.hov == null ? null : CL.hov)) return;
