@@ -7,9 +7,10 @@ function createEngine(hooks) {
 hooks = hooks || {};
 const isReduce = () => !!hooks.reduce;
 
-const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-const pick = a => a[Math.floor(Math.random() * a.length)];
-function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const rng = typeof hooks.rng === 'function' ? hooks.rng : Math.random;
+const rnd = (a, b) => a + Math.floor(rng() * (b - a + 1));
+const pick = a => a[Math.floor(rng() * a.length)];
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 const wait = ms => new Promise(r => setTimeout(r, isReduce() ? Math.min(ms, 120) : ms));
 let uidN = 1;
 const mk = id => ({ u: uidN++, id });
@@ -130,6 +131,21 @@ const CARDS = {
   serenity:  { n: 'Serenity', c: 1, t: 'power', d: 'Whenever you leave Calm, also draw 2 cards.', p: () => { SF().serenity += 2; } },
   bastionform:{ n: 'Unbreakable', c: 2, t: 'power', d: 'Iron gives 4 more Block each turn, and no longer lowers your Attack damage.', p: () => { SF().ironplus += 4; } },
 
+  /* Elementalist */
+  estrike:   { n: 'Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage.', p: e => hit(e, 6) },
+  eguard:    { n: 'Ward', c: 1, t: 'skill', d: 'Gain 5 Block.', p: () => gain(5) },
+  emberlash: { n: 'Ember Lash', c: 1, t: 'attack', tg: 1, d: 'Deal 4 damage. Apply 1 Vulnerable.', p: e => { hit(e, 4); debuffEnemy(e, 'vuln', 1); } },
+  rimespiral:{ n: 'Rime Spiral', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage. Apply 1 Weak.', p: e => { hit(e, 5); debuffEnemy(e, 'weak', 1); } },
+  cinderbolt:{ n: 'Cinder Bolt', c: 0, t: 'attack', tg: 1, d: 'Deal 4 damage.', p: e => hit(e, 4) },
+  scorch:    { n: 'Scorch', c: 1, t: 'attack', tg: 1, d: 'Deal 9 damage.', p: e => hit(e, 9) },
+  frostward: { n: 'Frost Ward', c: 1, t: 'skill', d: 'Gain 8 Block.', p: () => gain(8) },
+  gust:      { n: 'Gust Step', c: 1, t: 'skill', d: 'Gain 5 Block. Draw 1 card.', p: () => { gain(5); draw(1); } },
+  icelance:  { n: 'Ice Lance', c: 1, t: 'attack', tg: 1, d: 'Deal 7 damage. Apply 1 Weak.', p: e => { hit(e, 7); debuffEnemy(e, 'weak', 1); } },
+  stormcrash:{ n: 'Stormstone Crash', c: 2, t: 'attack', d: 'Deal 11 damage to ALL enemies.', p: () => foes().forEach(e => hit(e, 11)) },
+  rimeshroud:{ n: 'Rime Shroud', c: 1, t: 'skill', d: 'Gain 8 Block. Apply 1 Weak to ALL enemies.', p: () => { foes().forEach(e => debuffEnemy(e, 'weak', 1)); gain(8); } },
+  tempest:   { n: 'Tempest', c: 2, t: 'attack', d: 'Deal 6 damage to ALL enemies twice.', p: () => foes().forEach(e => hit(e, 6, 2)) },
+  stonemask: { n: 'Stonebound Mask', c: 1, t: 'power', d: 'At the end of your turn, gain 3 Block.', p: () => { SF().rampart++; } },
+
   /* Status and curses */
   dazed:     { n: 'Dazed', c: -1, t: 'status', eth: 1, d: 'Unplayable. Exhausts at end of turn.' },
   doombell:  { n: 'Doom Bell', c: 1, t: 'status', x: 1, d: 'Exhaust. After Final Toll, deals 5 damage to you at end of turn while held.', p: () => {} },
@@ -153,7 +169,10 @@ const RAR = {
   rampage: 'r', bloodpact: 'r', unstoppable: 'r',
   eruption: 'c', innerpeace: 'c', ironform: 'c', wildswing: 'c', breathe: 'c',
   formbreak: 'u', tidal: 'u',
-  avalanche: 'r', mantra: 'r', serenity: 'r', bastionform: 'r'
+  avalanche: 'r', mantra: 'r', serenity: 'r', bastionform: 'r',
+  estrike: 'c', eguard: 'c', emberlash: 'c', rimespiral: 'c', cinderbolt: 'c', scorch: 'c', frostward: 'c', gust: 'c',
+  icelance: 'u', stormcrash: 'u', rimeshroud: 'u',
+  tempest: 'r', stonemask: 'r'
 };
 const RAR_NAME = { c: 'Common', u: 'Uncommon', r: 'Rare' };
 const RAR_ODDS = { fight: [62, 32, 6], elite: [40, 45, 15], shop: [55, 35, 10], boss: [0, 50, 50] };
@@ -182,6 +201,13 @@ const HEROES = {
     starter: ['rstrike', 'rstrike', 'rstrike', 'rstrike', 'rdefend', 'rdefend', 'rdefend', 'rdefend', 'eruption', 'innerpeace'],
     pool: ['cleave', 'frenzy', 'ironhide', 'reckless', 'ironform', 'wildswing', 'breathe', 'uppercut', 'intimidate', 'feast', 'formbreak', 'tidal', 'avalanche', 'mantra', 'serenity', 'bastionform'],
     style: 'Bank Energy in Calm, cash it out in Fury, and drop into Iron before the big hits land.'
+  },
+  elementalist: {
+    n: 'The Elementalist', tag: 'Masked · four elements', hp: 80, relic: 'quadmask', color: '#2C1F55', edge: '#5B448F',
+    passive: 'Quadrant Mask: each Attack you play gives 1 Block (not reduced by Frail).',
+    starter: ['estrike', 'estrike', 'estrike', 'estrike', 'eguard', 'eguard', 'eguard', 'eguard', 'emberlash', 'rimespiral'],
+    pool: ['cinderbolt', 'scorch', 'frostward', 'gust', 'icelance', 'stormcrash', 'rimeshroud', 'tempest', 'stonemask'],
+    style: 'Fire, frost, storm and stone. Chain cheap Attacks so the mask turns every swing into Block, and spread Weak and Vulnerable across the room.'
   }
 };
 
@@ -190,6 +216,7 @@ const RELICS = {
   mask:        { n: 'Cracked Mask', d: 'Start each combat with 1 Flow on your first turn.', start: 1 },
   lanternhelm: { n: 'Lantern Helm', d: 'Start each combat with 8 Block.', start: 1 },
   hornedmask:  { n: 'Horned Mask', d: 'Start each combat in Calm stance.', start: 1 },
+  quadmask:    { n: 'Quadrant Mask', d: 'Start each combat with 5 Block.', start: 1 },
   whetstone:   { n: 'Whetstone', d: 'Your Attacks deal 1 extra damage per hit.' },
   locket:      { n: 'Iron Locket', d: 'Start each combat with 6 Block.' },
   hourglass:   { n: 'Sand Hourglass', d: 'Draw 2 extra cards on your first turn.' },
@@ -282,8 +309,8 @@ function genMap() {
   }
   for (let r = 0; r < ROWS - 1; r++) for (let l = 0; l < LANES; l++) {
     const n = rows[r][l].next; n.push(l);
-    if (l > 0 && Math.random() < 0.45) n.push(l - 1);
-    if (l < LANES - 1 && Math.random() < 0.45) n.push(l + 1);
+    if (l > 0 && rng() < 0.45) n.push(l - 1);
+    if (l < LANES - 1 && rng() < 0.45) n.push(l + 1);
   }
   return { rows };
 }
@@ -314,7 +341,7 @@ function freeRelic(pi, boss) {
   return left.length ? pick(left) : null;
 }
 function gainRelic(pi, r) { if (!r) return; const p = P(pi); p.relics.push(r); if (r === 'heartstone') { p.maxHp += 12; p.hp += 12; } if (r === 'satchel') p.gold += 30; if (r === 'tonic') p.hp = Math.min(p.maxHp, p.hp + 15); }
-function rollTier(kind) { const o = RAR_ODDS[kind] || RAR_ODDS.fight, x = Math.random() * 100; return x < o[0] ? 'c' : x < o[0] + o[1] ? 'u' : 'r'; }
+function rollTier(kind) { const o = RAR_ODDS[kind] || RAR_ODDS.fight, x = rng() * 100; return x < o[0] ? 'c' : x < o[0] + o[1] ? 'u' : 'r'; }
 function cardChoices(pi, n, kind) {
   const pool = HEROES[P(pi).hero].pool, out = [];
   for (let i = 0; i < n; i++) {
@@ -410,7 +437,7 @@ function startTurnSide(s) {
   const first = s.turnN === 1, pi = s.pi;
   let keep = 0;
   if (!first && P(pi).hero === 'bulwark') keep = s.keepAll ? s.block : Math.floor(s.block / 2);
-  s.block = keep + (first && hasR(pi, 'locket') ? 6 : 0) + (first && hasR(pi, 'lanternhelm') ? 8 : 0) + (first && hasR(pi, 'wardenseal') ? 12 : 0);
+  s.block = keep + (first && hasR(pi, 'locket') ? 6 : 0) + (first && hasR(pi, 'lanternhelm') ? 8 : 0) + (first && hasR(pi, 'quadmask') ? 5 : 0) + (first && hasR(pi, 'wardenseal') ? 12 : 0);
   s.energy = Math.max(0, 3 + (first && hasR(pi, 'quill') ? 1 : 0) - s.drain);
   if (s.drain) log(heroName(pi) + ' is Shackled: ' + s.energy + ' Energy.');
   s.drain = 0;
@@ -602,7 +629,7 @@ function playCard(pi, uid, tgt) {
   if (d.p) d.p(t);
   if (d.t !== 'attack') anim(s, s.block > b0 ? 'guard' : 'buff');
   if (c.over) return render();
-  if (d.t === 'attack') { if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
+  if (d.t === 'attack') { if (P(pi).hero === 'elementalist') gain(1, true); if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
   if (d.t === 'skill' && !c.duel) aliveEnemies().filter(x => x.key === 'ogre').forEach(og => { og.str += 2; float(tagOf(og), '+2 Strength', 'buff'); log('The Ogre enrages: +2 Strength.'); });
   if (d.t !== 'power') (d.x ? s.exhaust : s.discard).push(card);
   if (!c.duel && !aliveEnemies().length) { c.busy = true; render(); setTimeout(win, isReduce() ? 100 : 650); return; }
@@ -934,7 +961,8 @@ function previewCard(id, s, e) {
     pinpoint: [7], hamstring: [7], whirl: [5], coup: [e.hp * 2 < e.max ? 22 : 14], cascade: [6], finale: [5 * f],
     bstrike: [6], bash: [Math.floor(bl / 2)], counter: [6], bulldoze: [Math.floor(bl / 2)], flare: [4], heavyswing: [16],
     rstrike: [7], haymaker: [14], cleave: [7], uppercut: [12], frenzy: [3, 4], headbutt: [9], reckless: [9], rampage: [5 + 3 * r], feast: [18],
-    eruption: [9], wildswing: [8], formbreak: [6 + 6 * sw], avalanche: [7, 1 + sw]
+    eruption: [9], wildswing: [8], formbreak: [6 + 6 * sw], avalanche: [7, 1 + sw],
+    estrike: [6], emberlash: [4], rimespiral: [5], cinderbolt: [4], scorch: [9], icelance: [7], stormcrash: [11], tempest: [6, 2]
   };
   const row = tbl[id];
   if (!row || (id === 'finale' && !f)) return null;

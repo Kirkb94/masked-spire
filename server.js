@@ -6,6 +6,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
+const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 const { createEngine } = require('./public/engine.js');
 
@@ -112,6 +114,67 @@ function send(res, code, headers, body) {
   res.writeHead(code, Object.assign({}, SEC_HEADERS, headers));
   res.end(body);
 }
+/* Static cache: path -> { raw, gz, etag, type, mtimeMs }. Validated against mtime on every hit, and reset on each deploy. */
+const COMPRESSIBLE = new Set(['.html', '.js', '.css', '.svg']);
+const staticCache = new Map();
+let INDEX_ENTRY = null; // index.html with the build id injected (not read from disk per request)
+function makeEntry(raw, ext, mtimeMs) {
+  const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 16);
+  const entry = { raw, gz: null, etag: '"' + hash + '"', type: TYPES[ext] || 'application/octet-stream', mtimeMs };
+  if (COMPRESSIBLE.has(ext) && raw.length >= 1024) {
+    const gz = zlib.gzipSync(raw, { level: 9 });
+    if (gz.length < raw.length) entry.gz = gz;
+  }
+  return entry;
+}
+function loadStatic(file, cb) {
+  fs.stat(file, (serr, st) => {
+    if (serr || !st.isFile()) { staticCache.delete(file); cb(serr || new Error('not a file')); return; }
+    const hit = staticCache.get(file);
+    if (hit && hit.mtimeMs === st.mtimeMs) { cb(null, hit); return; }
+    fs.readFile(file, (err, data) => {
+      if (err) { staticCache.delete(file); cb(err); return; }
+      let entry;
+      try { entry = makeEntry(data, path.extname(file), st.mtimeMs); } catch (e) { cb(e); return; }
+      staticCache.set(file, entry);
+      cb(null, entry);
+    });
+  });
+}
+function acceptsGzip(req) {
+  const h = String(req.headers['accept-encoding'] || '').toLowerCase();
+  if (!h) return false;
+  let gz = null, star = null;
+  for (const part of h.split(',')) {
+    const bits = part.trim().split(';');
+    const name = bits[0].trim();
+    let q = 1;
+    for (let i = 1; i < bits.length; i++) {
+      const m = /^\s*q\s*=\s*([0-9.]+)\s*$/.exec(bits[i]);
+      if (m) q = parseFloat(m[1]);
+    }
+    if (name === 'gzip' || name === 'x-gzip') gz = q;
+    else if (name === '*') star = q;
+  }
+  if (gz !== null) return gz > 0;
+  return star !== null && star > 0;
+}
+function etagMatches(header, etag) {
+  if (!header) return false;
+  if (header.trim() === '*') return true;
+  return header.split(',').some((t) => t.trim().replace(/^W\//, '') === etag);
+}
+function serveStatic(req, res, entry, head) {
+  const useGz = !!entry.gz && acceptsGzip(req);
+  const etag = useGz ? entry.etag.slice(0, -1) + '-gz"' : entry.etag;
+  const headers = { 'content-type': entry.type, 'cache-control': 'no-cache', etag, vary: 'Accept-Encoding' };
+  if (etagMatches(req.headers['if-none-match'], etag)) { send(res, 304, headers); return; }
+  const body = useGz ? entry.gz : entry.raw;
+  if (useGz) headers['content-encoding'] = 'gzip';
+  headers['content-length'] = body.length;
+  send(res, 200, headers, head ? undefined : body);
+}
+
 const server = http.createServer((req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') { send(res, 405, { 'content-type': 'text/plain', allow: 'GET, HEAD' }, 'Method not allowed'); return; }
   const head = req.method === 'HEAD';
@@ -130,13 +193,10 @@ const server = http.createServer((req, res) => {
   const p = pathname === '/' ? '/index.html' : pathname;
   const file = path.resolve(PUBLIC, '.' + path.sep + p.replace(/^[\/\\]+/, ''));
   if (file !== PUBLIC && !file.startsWith(PUBLIC + path.sep)) { send(res, 403, { 'content-type': 'text/plain' }, 'Forbidden'); return; }
-  if (INDEX_HTML && file === path.join(PUBLIC, 'index.html')) {
-    send(res, 200, { 'content-type': TYPES['.html'], 'cache-control': 'no-cache' }, head ? undefined : INDEX_HTML);
-    return;
-  }
-  fs.readFile(file, (err, data) => {
+  if (INDEX_ENTRY && file === path.join(PUBLIC, 'index.html')) { serveStatic(req, res, INDEX_ENTRY, head); return; }
+  loadStatic(file, (err, entry) => {
     if (err) { send(res, 404, { 'content-type': 'text/plain' }, 'Not found'); return; }
-    send(res, 200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-cache' }, head ? undefined : data);
+    serveStatic(req, res, entry, head);
   });
 });
 
@@ -410,6 +470,18 @@ process.on('uncaughtException', e => onFatalish('uncaughtException', e));
 process.on('unhandledRejection', e => onFatalish('unhandledRejection', e));
 server.on('clientError', (e, socket) => { try { socket.destroy(); } catch (x) {} });
 
+/* Warm the static cache before accepting traffic so the level-9 gzip never blocks live co-op sockets. */
+try {
+  if (INDEX_HTML) {
+    INDEX_ENTRY = makeEntry(INDEX_HTML, '.html', 0);
+    console.log('index.html: ' + INDEX_ENTRY.raw.length + ' B raw, ' + (INDEX_ENTRY.gz ? INDEX_ENTRY.gz.length : 'n/a') + ' B gzip');
+  }
+  const engineFile = path.join(PUBLIC, 'engine.js');
+  const eraw = fs.readFileSync(engineFile);
+  const eentry = makeEntry(eraw, '.js', fs.statSync(engineFile).mtimeMs);
+  staticCache.set(engineFile, eentry);
+  console.log('engine.js: ' + eraw.length + ' B raw, ' + (eentry.gz ? eentry.gz.length : 'n/a') + ' B gzip');
+} catch (e) { console.warn('Static cache warm-up failed', e && e.message); }
 server.listen(PORT, () => console.log('Masked Spire listening on ' + PORT));
 
 /* ---------- Graceful shutdown (Render sends SIGTERM on deploy) ---------- */

@@ -206,7 +206,7 @@ html.hc .slashfx { background: #fff; box-shadow: 0 0 0 2px #000; }
 html.hc .burstfx { border-color: #fff; color: #fff; box-shadow: none; }
 @keyframes burstfx { 0% { opacity: 0; transform: scale(.4); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(4); } }
 .healflash { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; background: rgba(110,230,140,.3); box-shadow: inset 0 0 18px 3px rgba(138,245,154,.8); animation: blockflash .5s ease-out forwards; }
-@keyframes hostshake { 25% { transform: translateX(-5px); } 60% { transform: translateX(4px); } }
+@keyframes hostshake { 25% { transform: translateX(calc(var(--hs, 5px) * -1)); } 60% { transform: translateX(calc(var(--hs, 5px) * .8)); } }
 .hitshake { animation: hostshake .3s linear; }
 html.rm .hitshake { animation: none; }
 .battle.shake1 { animation: shake1 .35s linear; }
@@ -376,7 +376,8 @@ html.rm .battle.shake1, html.rm .battle.shake2 { animation: none; }
 .rage { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 17px; font-weight: 700; color: #FF9A7A; }
 .rage i { width: 11px; height: 11px; transform: rotate(45deg); background: #FF6A3A; box-shadow: 0 0 8px #FF6A3A; }
 .shellhint { font-size: 15px; font-weight: 700; color: var(--def-fg); }
-.heropick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.heropick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1180px) { .heropick { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .hcard { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--panel2); border: 2px solid var(--line); border-radius: 12px; min-width: 0; }
 .hcard h3 { font-size: 24px; }
 .hcard ul { margin: 0; padding-left: 18px; font-size: 16px; display: grid; gap: 4px; }
@@ -396,7 +397,7 @@ html.rm .hcard .portrait, html.rm .hcard { animation: none; transition: none; }
 html.rm .hcard:hover { transform: none; }
 .hrelic { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 8px; font-size: 16px; }
 .hrelic b { font-family: var(--display); font-size: 18px; color: var(--ink); }
-.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.trio { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .trio .portrait { border-radius: 10px; }
 .actbanner { font-family: var(--display); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 @media (max-width: 860px) { .heropick { grid-template-columns: 1fr; } }
@@ -1101,6 +1102,35 @@ html.rm .scenehd .sc-ember, html.rm .scenehd .sc-mote { opacity: .5; }
   .victory .card .cname { font-size: 16px; }
   .victory .card .cdesc { font-size: 13px; line-height: 1.25; }
 }
+/* ---------- Mobile pass: shop, map hit areas, safe areas, portrait/landscape ---------- */
+@media (pointer: coarse) {
+  body { overscroll-behavior-y: contain; }
+  .node::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; }
+  .choices .btn { min-height: 44px; }
+  .shoppanel .cards { gap: 12px; }
+}
+@media (max-width: 640px) {
+  .shoppanel .choices { flex-direction: column; align-items: stretch; }
+  .shoppanel .choices .btn { width: 100%; min-height: 48px; }
+  .shoppanel .cards { justify-content: center; }
+  .hand { scroll-snap-type: x mandatory; }
+  .controls .endwrap .btn { min-height: 48px; }
+  .mapcard, .shoppanel { padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px)); }
+}
+@media (max-width: 520px) {
+  .shoppanel .card { width: min(138px, calc(50% - 8px)); }
+}
+@media (pointer: coarse) and (orientation: landscape) {
+  #app { min-height: 100dvh; }
+  .shoppanel { padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); gap: 8px; max-height: calc(100dvh - 70px); overflow: auto; }
+  .shoppanel h2 { font-size: 22px; margin: 0; }
+  .shoppanel .muted { margin: 0; font-size: 14px; }
+  .shoppanel .cards { gap: 10px; padding: 4px 0; }
+  .shoppanel .card { width: calc(var(--u) * 16); min-height: calc(var(--u) * 20); padding: 10px 9px 8px; }
+  .shoppanel .card .cname { font-size: 16px; }
+  .shoppanel .card .cdesc { font-size: 13px; line-height: 1.25; }
+  .shoppanel .choices { gap: 10px; }
+}
 </style>
 </head>
 <body>
@@ -1141,11 +1171,21 @@ window.msAnnounceLogs = function (V) {
   prev = cur;
   if (k <= 0) return;
   var fresh = cur.slice(0, k).slice(0, 4).reverse();
-  var el = document.getElementById('sr-live');
-  if (!el || !fresh.length) return;
+  if (!fresh.length) return;
+  window.msSay(fresh);
+};
+var q = [];
+window.msSay = function (m) {
+  q = q.concat(m);
   clearTimeout(t);
-  el.textContent = '';
-  t = setTimeout(function () { el.textContent = fresh.join('. '); }, 60);
+  t = setTimeout(function () {
+    var el = document.getElementById('sr-live');
+    var txt = q.slice(-6).join('. ');
+    q = [];
+    if (!el || !txt) return;
+    el.textContent = '';
+    setTimeout(function () { el.textContent = txt; }, 30);
+  }, 60);
 };
 })();
 </script>
@@ -1240,7 +1280,7 @@ window.addEventListener('resize', hide);
 
 /* ----- tutorial ----- */
 var STEPS = [
-  ['Welcome to Masked Spire', 'Climb the Spire with a party of three heroes, building your deck as you go. Play solo, or team up online with a partner; a co-op run ends in a duel after the final boss.'],
+  ['Welcome to Masked Spire', 'Climb the Spire with a roster of four heroes, building your deck as you go. Play solo, or team up online with a partner; a co-op run ends in a duel after the final boss.'],
   ['Playing cards', 'Tap a card in your hand to play it. Cards that need a target ask you to tap an enemy. Tap the card again to cancel. When you are done, press End turn.'],
   ['Energy', 'The glowing counter by the End turn button is your Energy. Each card costs some, and it refills at the start of every turn. Unspent Energy is not saved.'],
   ['Block and HP', 'Block soaks up damage before your HP does, and it usually fades at the start of your next turn. If your HP hits zero, you fall.'],
@@ -1593,6 +1633,7 @@ const RIGSPEC = {
   duelist: { hero: 1, lead: 3, p: [['wep', 0, /M8 150 L110 8|M18 140 Q14 122/], ['tail', 0, /M90 82 Q112 80/]], piv: { wep: [26, 128] } },
   bulwark: { hero: 1, lead: 3, p: [['wep', [-20, 70, 48, 150]]], piv: { wep: [44, 112] } },
   brute: { hero: 1, lead: 3, p: [] },
+  elementalist: { hero: 1, lead: 3, p: [] },
   /* enemies face left. Boxes are in art coordinates and must fully contain a piece to claim it. */
   moth: { fl: 'fl-f', auto: 0, p: [['head', [38, 16, 82, 56]], ['body', [48, 52, 72, 80]], ['wing', [0, 0, 61, 100]], ['wingB', [59, 0, 121, 100]]] },
   rootling: { auto: 0, p: [['head', [30, 0, 90, 74]], ['legs', [20, 76, 100, 100]]] },
@@ -1829,7 +1870,23 @@ const HERO_ART = {
     '<path d="M84 150 L88 134 Q92 118 106 116 Q122 114 122 134 L122 150Z" fill="#C67A56"/><path d="M88 138 L122 134 M86 146 L122 143" stroke="#E8DCC4" stroke-width="4"/></g>' +
     '<path d="M60 40 L57 56 L63 66 L59 86" fill="none" stroke="#FFB24A" stroke-width="5" filter="url(#glow)" opacity=".85"/><path d="M60 40 L57 56 L63 66 L59 86" fill="none" stroke="#FF7A1F" stroke-width="2" stroke-linejoin="round"/>' +
     '<ellipse cx="51" cy="62" rx="6" ry="3.5" fill="#FF5A1F" filter="url(#glow)"/><ellipse cx="69" cy="62" rx="6" ry="3.5" fill="#FF5A1F" filter="url(#glow)"/>' +
-    '<ellipse cx="51" cy="62" rx="3" ry="1.6" fill="#FFD27A"/><ellipse cx="69" cy="62" rx="3" ry="1.6" fill="#FFD27A"/></g>'
+    '<ellipse cx="51" cy="62" rx="3" ry="1.6" fill="#FFD27A"/><ellipse cx="69" cy="62" rx="3" ry="1.6" fill="#FFD27A"/></g>',
+  elementalist: '<rect width="120" height="144" fill="#231A44"/><circle cx="50" cy="34" r="40" fill="#B9A9E0" filter="url(#soft)" opacity=".3"/>' +
+    '<ellipse cx="22" cy="72" rx="20" ry="20" fill="#FF6B2C" filter="url(#soft)" opacity=".45"/><ellipse cx="100" cy="100" rx="20" ry="20" fill="#4FD1FF" filter="url(#soft)" opacity=".4"/>@@' +
+    '<g stroke="#140A0C" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">' +
+    '<path d="M18 150 Q24 100 60 84 Q96 100 102 150Z" fill="#3E2A6E"/>' +
+    '<path d="M32 90 Q24 80 22 68" fill="none" stroke="#3A2A6E" stroke-width="9"/><path d="M88 92 Q98 98 102 104" fill="none" stroke="#3A2A6E" stroke-width="9"/>' +
+    '<path d="M40 150 L45 88 L75 88 L80 150Z" fill="#4A3784"/><path d="M60 90 L60 150" stroke-width="1.6"/>' +
+    '<path d="M42 108 Q60 116 78 108 L79 118 Q60 126 41 118Z" fill="#E9E4F0"/>' +
+    '<path d="M38 90 Q46 80 58 86 L54 98 Q42 99 38 90Z M82 90 Q74 80 62 86 L66 98 Q78 99 82 90Z" fill="#E9E4F0"/>' +
+    '<path d="M42 74 Q38 40 60 32 Q82 40 78 74 Q60 84 42 74Z" fill="#2C1F55"/><path d="M47 72 Q46 46 60 40 Q74 46 73 72 Q60 80 47 72Z" fill="#0D0918" stroke="none"/>' +
+    '<path d="M50 52 Q60 44 70 52 L69 68 Q64 78 60 79 Q56 78 51 68Z" fill="#EFE9F5"/>' +
+    '<path d="M52 56 Q56 52 59 57 Q56 60 52 56Z" fill="#FF6B2C" stroke="none"/><path d="M68 56 L63 52 L61 58 L66 61Z" fill="#4FD1FF" stroke="none"/>' +
+    '<path d="M53 69 L56 65 L57 70Z" fill="#6FBF73" stroke="none"/><path d="M67 69 L64 65 L63 70Z" fill="#F5D76E" stroke="none"/></g>' +
+    '<g filter="url(#glow)"><circle cx="46" cy="98" r="2.4" fill="#FF6B2C"/><circle cx="54" cy="101" r="2.4" fill="#F5D76E"/><circle cx="66" cy="101" r="2.4" fill="#6FBF73"/><circle cx="74" cy="98" r="2.4" fill="#4FD1FF"/>' +
+    '<path d="M44 26 L47 16 L50 26Z" fill="#FF6B2C"/><path d="M54 22 L57 10 L60 22Z" fill="#F5D76E"/><path d="M62 22 L65 10 L68 22Z" fill="#6FBF73"/><path d="M72 26 L75 16 L78 26Z" fill="#4FD1FF"/>' +
+    '<circle cx="22" cy="66" r="8" fill="#FFB347"/><circle cx="22" cy="66" r="4" fill="#FFF3C4"/>' +
+    '<path d="M100 98 L108 88 L106 102Z M102 108 L114 108 L104 112Z" fill="#8FE3FF"/><circle cx="101" cy="104" r="4" fill="#E8FBFF"/></g></g>'
 };
 function heroFx(key) {
   let h = '<g class="sfx sfx-slam"><ellipse cx="96" cy="132" rx="26" ry="8" fill="none" stroke="#FFE08A" stroke-width="3"/></g>';
@@ -2176,6 +2233,13 @@ const SND = (function () {
       buff(V, t) { V.tone({ t, f: 70, f2: 150, d: 0.5, a: 0.1, r: 0.25, v: 0.17, type: 'sawtooth', lp: 500, lp2: 1400 }); for (let k = 0; k < 8; k++) V.noise({ t: t + 0.05 + k * 0.06 + hs(k, 21) * 0.04, d: 0.015, type: 'hp', f: 3000, v: 0.05, r: 0.03 }); },
       hurt(V, t) { V.tone({ t, f: 200, f2: 85, d: 0.2, a: 0.01, r: 0.12, v: 0.2, type: 'sawtooth', lp: 900 }); V.noise({ t, d: 0.1, type: 'bp', f: 800, v: 0.1 }); },
       foot(V, t) { thump(V, t, 0.2, 75); }
+    },
+    elementalist: {
+      swing(V, t) { V.noise({ t, d: 0.22, a: 0.05, type: 'bp', f: 600, f2: 3200, q: 1.1, v: 0.18, r: 0.08 }); V.tone({ t: t + 0.05, f: 880, f2: 1320, d: 0.12, a: 0.02, r: 0.2, v: 0.06, type: 'sine' }); },
+      hit(V, t) { V.noise({ t, d: 0.09, type: 'bp', f: 2600, q: 0.9, v: 0.22, r: 0.1 }); V.tone({ t, f: 1180, d: 0.04, r: 0.4, v: 0.1, parts: BELL }); V.tone({ t, f: 140, f2: 80, d: 0.1, r: 0.12, v: 0.14, type: 'sine' }); },
+      guard(V, t) { V.tone({ t, f: 1400, d: 0.04, r: 0.6, v: 0.11, parts: BELL }); V.tone({ t: t + 0.05, f: 2100, d: 0.03, r: 0.5, v: 0.08, parts: BELL }); thump(V, t, 0.14, 110); },
+      buff(V, t) { [[110, 'sawtooth'], [330, 'sine'], [660, 'triangle'], [220, 'sine']].forEach((n, k) => V.tone({ t: t + k * 0.07, f: n[0] * 2, d: 0.08, a: 0.01, r: 0.3, v: 0.07, type: n[1], lp: 2400 })); },
+      hurt(V, t) { V.tone({ t, f: 900, f2: 380, d: 0.12, a: 0.005, r: 0.12, v: 0.1, type: 'triangle', parts: [[1, 1], [2.76, 0.5]] }); V.noise({ t, d: 0.08, type: 'bp', f: 1800, v: 0.07 }); }
     }
   };
   const STANCE_SFX = {
@@ -2284,7 +2348,7 @@ const SND = (function () {
   };
 
   /* per-sound loudness trim, measured offline so every voice lands at a similar peak */
-  const NORM = {"hero":{"duelist":{"swing":1.75,"hit":0.95,"guard":2.38,"buff":2.24,"hurt":2.72,"foot":1.84},"bulwark":{"swing":2.09,"hit":0.52,"guard":0.86,"buff":2.32,"hurt":1.05,"foot":1.74},"brute":{"swing":1.51,"hit":0.59,"guard":1.35,"buff":1.74,"hurt":1.63,"foot":1.74}},"enemy":{"insect":{"atk":3.61,"hit":3.74,"die":3.48},"bird":{"atk":5,"hit":5,"die":3.47},"wood":{"atk":1.42,"hit":2.14,"die":1.2},"slime":{"atk":2.52,"hit":2.86,"die":2.52},"imp":{"atk":4.19,"hit":3.37,"die":3.74},"chant":{"atk":5,"hit":3.96,"die":4.07},"beast":{"atk":1.94,"hit":2.6,"die":2.34},"mech":{"atk":1.62,"hit":1.97,"die":1.65},"chain":{"atk":1.25,"hit":1.67,"die":2.15},"fire":{"atk":0.45,"hit":5,"die":3.43},"ghost":{"atk":3.3,"hit":5,"die":3.86},"glass":{"atk":2.07,"hit":2.37,"die":1.08},"bone":{"atk":5,"hit":4.07,"die":5},"stomp":{"atk":1.02,"hit":1.08,"die":0.88},"choral":{"atk":4.81,"hit":5,"die":4.61},"bell":{"atk":0.88,"hit":2.29,"die":0.89},"void":{"atk":2.39,"hit":3.01,"die":1.93},"paper":{"atk":0.48,"hit":1.93,"die":2.47}}};
+  const NORM = {"hero":{"duelist":{"swing":1.75,"hit":0.95,"guard":2.38,"buff":2.24,"hurt":2.72,"foot":1.84},"bulwark":{"swing":2.09,"hit":0.52,"guard":0.86,"buff":2.32,"hurt":1.05,"foot":1.74},"brute":{"swing":1.51,"hit":0.59,"guard":1.35,"buff":1.74,"hurt":1.63,"foot":1.74},"elementalist":{"swing":1.8,"hit":1.0,"guard":2.0,"buff":2.0,"hurt":2.0}},"enemy":{"insect":{"atk":3.61,"hit":3.74,"die":3.48},"bird":{"atk":5,"hit":5,"die":3.47},"wood":{"atk":1.42,"hit":2.14,"die":1.2},"slime":{"atk":2.52,"hit":2.86,"die":2.52},"imp":{"atk":4.19,"hit":3.37,"die":3.74},"chant":{"atk":5,"hit":3.96,"die":4.07},"beast":{"atk":1.94,"hit":2.6,"die":2.34},"mech":{"atk":1.62,"hit":1.97,"die":1.65},"chain":{"atk":1.25,"hit":1.67,"die":2.15},"fire":{"atk":0.45,"hit":5,"die":3.43},"ghost":{"atk":3.3,"hit":5,"die":3.86},"glass":{"atk":2.07,"hit":2.37,"die":1.08},"bone":{"atk":5,"hit":4.07,"die":5},"stomp":{"atk":1.02,"hit":1.08,"die":0.88},"choral":{"atk":4.81,"hit":5,"die":4.61},"bell":{"atk":0.88,"hit":2.29,"die":0.89},"void":{"atk":2.39,"hit":3.01,"die":1.93},"paper":{"atk":0.48,"hit":1.93,"die":2.47}}};
   /* ----- live engine ----- */
   let ac = null, master = null, musicBus = null, sfxBus = null, sV = null, curBus = null;
   const XFADE = { inDelay: 0.3, inTau: 0.9, outTau: 0.6, sameInDelay: 0.05, sameInTau: 0.35, sameOutTau: 0.35, killMs: 5000 };
@@ -2351,7 +2415,7 @@ const SND = (function () {
   const ok = () => ac && prefs.sfx && !prefs.mute && ac.state === 'running';
   function gv(g) { const n = ac.createGain(); n.gain.value = g; n.connect(sfxBus); return voices(ac, n); }
   function hero(h, kind, delay) {
-    if (!ok()) return; const H = HERO[h]; if (!H) return;
+    if (!ok()) return; const H = HERO[h] || HERO.duelist; if (!H) return;
     if (kind.indexOf('stance:') === 0) { const f = STANCE_SFX[kind.slice(7)]; if (f) f(sV, ac.currentTime + 0.02); return; }
     if (H[kind]) H[kind](gv((NORM.hero[h] || {})[kind] || 1), ac.currentTime + 0.02 + (delay || 0));
   }
@@ -2472,7 +2536,11 @@ const SND = (function () {
   if (typeof document !== 'undefined') {
     const first = () => { unlock(); };
     ['pointerdown', 'keydown', 'touchend'].forEach(ev => document.addEventListener(ev, first, { passive: true }));
-    document.addEventListener('visibilitychange', () => { if (document.hidden) { stopAmb(); return; } if (ac && ac.state !== 'running') ac.resume().then(sync).catch(() => {}); else syncAmb(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { stopAmb(); if (ac && ac.state === 'running') ac.suspend().catch(() => {}); return; }
+      /* always resume: a suspend() still pending when the tab returns would otherwise leave audio stuck off */
+      if (ac) ac.resume().then(sync).catch(() => {}); else syncAmb();
+    });
   }
   return { prefs, scene, ambient, stinger, hero, enemy, ui, fire, hit, block, HOOKS, togglePanel, unlock, SPK, _t: { voices, TRACKS, STING, playSting, BPM, MODE, HERO, ARCH, EVOICE, UI }, get ctx() { return ac; }, get playing() { return playing; } };
 })();
@@ -3040,6 +3108,7 @@ function resourceHTML(hero, s) {
     return '<span class="stance st-' + (s.sn || 'none') + '" title="' + esc(st ? st.d : 'No stance. Play stance cards to enter Fury, Iron or Calm.') + '"><i></i>' + (st ? st.n : 'No stance') + '</span>' +
       (st ? '<span class="stancetip">' + esc(st.d) + '</span>' : '') + (s.sw ? '<span class="muted">' + s.sw + ' switch' + (s.sw > 1 ? 'es' : '') + ' this turn</span>' : '');
   }
+  if (hero === 'elementalist') return '<span class="shellhint" title="Quadrant Mask: each Attack you play gives 1 Block.">Quadrant Mask: Attacks give 1 Block</span>';
   return '<span class="shellhint" title="Iron Shell: keep half your Block at the start of your turn.">Iron Shell keeps ' + s.kb + ' Block</span>';
 }
 function heroBoxHTML(V, s, prev, mini) {
@@ -3236,7 +3305,7 @@ function restHTML(V) {
 }
 function shopHTML(V) {
   const sh = V.shop, me = V.P[V.me];
-  return '<section class="panel"><h2>The Merchant</h2>' + sceneBanner('shop') + '<p class="muted">A masked trader with a cart of whispering cards. Rare cards cost more.</p>' +
+  return '<section class="panel shoppanel"><h2>The Merchant</h2>' + sceneBanner('shop') + '<p class="muted">A masked trader with a cart of whispering cards. Rare cards cost more.</p>' +
     '<div class="cards">' + sh.cards.map((s, i) => s.sold ? '' : cardHTML(s.id, 'buy', i, { price: s.price, dim: s.price > me.g })).join('') + '</div>' +
     '<div class="choices"><button type="button" class="btn" data-act="shopremove"' + (sh.removed || me.g < 60 || V.deck.length <= 5 || me.dn ? ' disabled' : '') + '>Remove a card · 60 gold</button>' +
     doneBtn(V, 'Leave') + '</div>' + waitNote(V) + '</section>';
@@ -3333,8 +3402,8 @@ function titleHTML() {
   const saved = loadSave();
   const sg = saved && saved.G && saved.G.mode === 'solo' && saved.G.P && saved.G.P[0] && saved.G.P[0].hero ? saved.G : null;
   const rooms = CL.roomOK;
-  return '<section class="panel title"><div class="trio">' + ['duelist', 'bulwark', 'brute'].map(k => portraitHTML(k, '', true)).join('') + '</div><div style="display:flex;flex-direction:column;gap:16px;min-width:0">' +
-    '<h1>Masked Spire</h1><p class="muted">Prototype · Three acts · Three heroes · Solo or 2-player co-op</p>' +
+  return '<section class="panel title"><div class="trio">' + ['duelist', 'bulwark', 'brute', 'elementalist'].map(k => portraitHTML(k, '', true)).join('') + '</div><div style="display:flex;flex-direction:column;gap:16px;min-width:0">' +
+    '<h1>Masked Spire</h1><p class="muted">Prototype · Three acts · Four heroes · Solo or 2-player co-op</p>' +
     '<p>Climb through the Hollow Wood, the Rust Bazaar and the Faceless Crown. In co-op you fight side by side, and after the final boss the two of you duel for the last mask.</p>' +
     '<ul class="rules"><li><b>Energy:</b> 3 each turn. Cards cost Energy to play.</li><li><b>Block</b> absorbs damage. Each enemy shows its next move and, in co-op, who it is aiming at.</li><li>In co-op you both play at the same time; enemies act once you have both pressed End turn.</li></ul>' +
     '<div class="row"><button type="button" class="btn primary" data-act="solo">Solo run</button>' +
@@ -3346,7 +3415,7 @@ function titleHTML() {
     '</div></section>';
 }
 function heroPickCards(act, chosen, other) {
-  return '<div class="heropick">' + ['duelist', 'bulwark', 'brute'].map(k => {
+  return '<div class="heropick">' + ['duelist', 'bulwark', 'brute', 'elementalist'].map(k => {
     const h = HEROES[k];
     const counts = {};
     h.starter.forEach(id => { counts[CARDS[id].n] = (counts[CARDS[id].n] || 0) + 1; });
@@ -3380,6 +3449,74 @@ function lobbyBanner(V) {
   else if (ps === 'away') { cls = ' wait'; ic = '\u2026'; txt = 'Connected. Your partner is away (tab in the background).'; }
   else { cls = ' bad'; ic = '!'; txt = 'Connected. Your partner disconnected; waiting for them to rejoin with code ' + (V.code || '').toUpperCase() + '.'; }
   return '<div class="lbanner' + cls + '" role="status" aria-live="polite"><span class="lbic" aria-hidden="true">' + ic + '</span><span>' + esc(txt) + '</span></div>';
+}
+function a11yState(V) {
+  const A = CL.a11y || (CL.a11y = {});
+  const say = window.msSay || function () {};
+  const scr = V ? V.scr : (CL.role || 'title');
+  const out = [];
+  const names = ids => ids.map(id => CARDS[id] ? CARDS[id].n : id).join(', ');
+  if (A.scr !== scr) {
+    const first = A.scr === undefined;
+    A.scr = scr; A.ck = null; A.busy = false; A.rdy = false;
+    if (V && !first) {
+      if (scr === 'map') out.push('Map. Choose your next node.');
+      else if (scr === 'shop') out.push('Shop.');
+      else if (scr === 'rest') out.push('Rest site.');
+      else if (scr === 'treasure') out.push('Treasure.');
+      else if (scr === 'duelintro') out.push('The duel is about to begin.');
+      else if (scr === 'duelend') out.push('The duel is over.');
+      else if (scr === 'victory') out.push('Victory. Your run is complete.');
+      else if (scr === 'defeat') out.push('Defeat. Your run has ended.');
+      else if (scr === 'reward' && V.rw) {
+        const rw = V.rw;
+        out.push('Victory. Reward: ' + rw.gold + ' gold' + (rw.relic && RELICS[rw.relic] ? ', relic ' + RELICS[rw.relic].n : '') + '. Open the chest, then choose a card or skip. Cards: ' + names(rw.cards || []));
+      } else if (scr === 'actclear' && V.ac) {
+        const a = V.ac;
+        out.push('Act ' + a.act + ' cleared. ' + (a.healed ? 'Healed ' + a.healed + ' HP. ' : '') + a.gold + ' gold' + (a.relic && RELICS[a.relic] ? ', relic ' + RELICS[a.relic].n : '') + '. Choose a boss reward card: ' + names(a.cards || []));
+      }
+    }
+  }
+  if (V && V.scr === 'combat' && V.cb) {
+    const cb = V.cb, me = V.me, s = cb.S[me], duel = cb.duel;
+    const key = duel ? 'd' + duel.r + ':' + duel.a : 't' + cb.t;
+    if (A.ck === null || A.ck === undefined) {
+      A.ck = key;
+      if (duel) out.push('Duel round ' + duel.r + '. ' + (duel.a === me ? 'Your turn.' : 'Rival\u2019s turn.'));
+      else out.push('Battle begins. Turn ' + cb.t + '. ' + s.energy + ' energy.');
+    } else if (A.ck !== key && !cb.busy) {
+      A.ck = key;
+      if (duel) out.push('Round ' + duel.r + '. ' + (duel.a === me ? 'Your turn.' : 'Rival\u2019s turn.'));
+      else out.push('Turn ' + cb.t + '. Your turn. ' + s.energy + ' energy.');
+    }
+    if (cb.busy && !A.busy && !duel) out.push('Enemy turn.');
+    A.busy = !!cb.busy;
+    if (!duel && !cb.busy && s.rdy && !A.rdy && V.n > 1) out.push('Waiting for partner.');
+    A.rdy = !!s.rdy;
+  }
+  if (out.length) say(out);
+}
+function a11yLabels(V) {
+  if (!V) return;
+  app.querySelectorAll('[data-act="reward"],[data-act="bossreward"]').forEach(el => {
+    if (!el.getAttribute('aria-label')) el.setAttribute('aria-label', (el.textContent || '').replace(/\s+/g, ' ').trim());
+  });
+  if (V.scr !== 'combat' || !V.cb) return;
+  const cb = V.cb, s = cb.S[V.me];
+  const hand = app.querySelector('.hand');
+  if (hand) hand.setAttribute('role', 'group');
+  const en = app.querySelector('.energy');
+  if (en) { en.setAttribute('role', 'img'); en.setAttribute('aria-label', 'Energy ' + s.energy); }
+  const eb = app.querySelector('[data-act="end"]');
+  if (eb) eb.setAttribute('aria-label', (eb.textContent || '').replace(/\s+E\s*$/, '').trim() || 'End turn');
+  const byU = new Map((cb.hand || []).map(h => [String(h[0]), h[1]]));
+  app.querySelectorAll('.hand [data-act="card"]').forEach(el => {
+    const c = CARDS[byU.get(String(el.dataset.arg))];
+    let l = el.getAttribute('aria-label') || (el.textContent || '').replace(/\s+/g, ' ').trim();
+    if (c && c.c < 0) l += ' (unplayable)';
+    else if (c && c.c > s.energy) l += ' (not enough energy)';
+    el.setAttribute('aria-label', l);
+  });
 }
 function turnChip(V, cb) {
   if (V.n < 2 || cb.duel || cb.busy) return '';
@@ -3432,10 +3569,11 @@ function shakeScreen(level) {
   app.classList.add(level > 1 ? 'shake2' : 'shake1');
   setTimeout(() => app.classList.remove('shake1', 'shake2'), 500);
 }
-function flashHit(host) {
+function flashHit(host, dmg) {
   if (REDUCE) return;
   const b = document.createElement('span');
   b.className = 'hitflash';
+  b.style.opacity = String(Math.min(1, 0.4 + (dmg || 0) * 0.04));
   host.appendChild(b);
   setTimeout(() => b.remove(), 500);
 }
@@ -3446,10 +3584,11 @@ function flashHeal(host) {
   host.appendChild(b);
   setTimeout(() => b.remove(), 600);
 }
-function shakeHost(host) {
+function shakeHost(host, dmg) {
   if (REDUCE) return;
   host.classList.remove('hitshake');
   void host.offsetWidth;
+  host.style.setProperty('--hs', Math.min(9, 2 + (dmg || 0) * 0.4).toFixed(1) + 'px');
   host.classList.add('hitshake');
   setTimeout(() => host.classList.remove('hitshake'), 400);
 }
@@ -3510,8 +3649,8 @@ function flushFx(V, prev) {
       }
     }
     if (dmg) {
-      flashHit(host);
-      shakeHost(host);
+      flashHit(host, dmg);
+      shakeHost(host, dmg);
       if (f.t === 'p' + V.me) buzz(dmg >= 12 ? [60, 30, 60] : dmg >= 6 ? 40 : 20);
       else if (f.t[0] === 'e') buzz(10);
     }
@@ -3702,6 +3841,8 @@ function paint(V) {
   const logStick = !oldLogBody || oldLogBody.scrollHeight - oldLogBody.scrollTop - oldLogBody.clientHeight < 24;
   const logTop = oldLogBody ? oldLogBody.scrollTop : 0;
   app.innerHTML = body;
+  try { a11yState(V); } catch (e) {}
+  try { a11yLabels(V); } catch (e) {}
   try { window.msAnnounceLogs(V); } catch (e) {}
   const newLogBody = app.querySelector('.logbody');
   if (newLogBody) newLogBody.scrollTop = logStick ? newLogBody.scrollHeight : logTop;
@@ -4038,12 +4179,15 @@ function flyCard(el, targetKey) {
   g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.width = r.width + 'px'; g.style.height = r.height + 'px';
   document.body.appendChild(g);
   const dx = tr.left + tr.width / 2 - (r.left + r.width / 2), dy = tr.top + tr.height / 2 - (r.top + r.height / 2);
+  const gl = (getComputedStyle(el).getPropertyValue('--gl') || '').trim();
+  const glow = gl ? '0 0 18px 4px ' + gl : 'none';
   const an = g.animate([
-    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-    { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(.35)', opacity: 0.2 }
-  ], { duration: 380, easing: 'ease-in', fill: 'forwards' });
+    { transform: 'translate(0, 0) scale(1)', opacity: 1, boxShadow: 'none', offset: 0 },
+    { transform: 'translate(0, -14px) scale(1.08)', opacity: 1, boxShadow: glow, offset: 0.25, easing: 'ease-in' },
+    { transform: 'translate(' + dx + 'px, ' + dy + 'px) scale(.35)', opacity: 0.2, boxShadow: glow, offset: 1 }
+  ], { duration: 460, easing: 'ease-out', fill: 'forwards' });
   an.onfinish = () => g.remove();
-  setTimeout(() => g.remove(), 700);
+  setTimeout(() => g.remove(), 800);
   return g;
 }
 function sendCard(V, u, tgtIdx) {

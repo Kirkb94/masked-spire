@@ -5,7 +5,9 @@
   "description": "Masked Spire: a three-hero roguelike deckbuilder with solo play and 2-player online co-op.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test test/",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=18"
