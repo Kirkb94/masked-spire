@@ -142,6 +142,9 @@ button { font: inherit; color: inherit; }
 .blockflash { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; background: radial-gradient(circle, rgba(140,200,255,.55), rgba(80,150,255,.15) 70%); box-shadow: inset 0 0 22px 4px rgba(150,210,255,.9); animation: blockflash .55s ease-out forwards; }
 @keyframes blockflash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
 html.hc .blockflash { background: rgba(255,255,255,.35); box-shadow: inset 0 0 0 4px #fff; }
+.hitflash { position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; background: rgba(224,74,94,.45); box-shadow: inset 0 0 18px 3px rgba(255,90,110,.9); animation: blockflash .4s ease-out forwards; }
+html.hc .hitflash { background: rgba(255,255,255,.2); box-shadow: inset 0 0 0 4px #ff4a5e; }
+html.rm .hitflash { display: none; }
 .battle.shake1 { animation: shake1 .35s linear; }
 .battle.shake2 { animation: shake2 .45s linear; }
 @keyframes shake1 { 10% { transform: translate(-4px, 2px); } 30% { transform: translate(4px, -2px); } 50% { transform: translate(-3px, 1px); } 70% { transform: translate(2px, -1px); } 100% { transform: none; } }
@@ -247,8 +250,8 @@ html.rm .piles span.shuf { animation: none; }
 @keyframes scr-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { #app.scr-in { animation: none; } }
 html.rm .card, html.rm .node.avail, html.rm .idle, html.rm .enemy.acting, html.rm .enemy.hit .art, html.rm .portrait.lunge, html.rm .portrait.hurt, html.rm .portrait.hurt::after { transition: none; animation: none; }
-html.rm .float { animation-duration: .01s; }
-html.rm .float.big { animation-duration: .01s; }
+@keyframes floatfade { 0% { opacity: 0; transform: translate(-50%, 0); } 12% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, 0); } }
+html.rm .float, html.rm .float.big { animation-name: floatfade; animation-duration: 1.1s; animation-timing-function: linear; }
 html.rm .battle.shake1, html.rm .battle.shake2 { animation: none; }
 
 /* Hero resources and hero select */
@@ -668,6 +671,15 @@ html.hc .float { text-shadow: 0 0 3px #000, 0 2px 0 #000, 0 0 10px #000; }
 html.hc .float.block { color: #BFE6FF; }
 html.hc .hpbar { border-color: #FFFFFF; background: #2A0A12; }
 html.hc .hpbar > i { background: #E8743B; }
+/* Colorblind mode: shapes + patterns in addition to color */
+html.cb .badge[data-ic]::before { content: attr(data-ic) ' '; }
+html.cb .badge.bad { background-image: repeating-linear-gradient(135deg, rgba(255,255,255,.16) 0 4px, transparent 4px 8px); border-style: double; border-width: 3px; }
+html.cb .badge.good { background-image: radial-gradient(rgba(255,255,255,.28) 1.2px, transparent 1.7px); background-size: 7px 7px; border-style: dotted; border-width: 2px; }
+html.cb .shield { background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.2) 0 2px, transparent 2px 6px); border-style: dashed; border-width: 2px; }
+html.cb .intentbar.k-atk { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0 5px, transparent 5px 10px); }
+html.cb .intentbar.k-def { background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.16) 0 3px, transparent 3px 8px); }
+html.cb .intentbar.k-buf { background-image: radial-gradient(rgba(255,255,255,.28) 1.4px, transparent 1.9px); background-size: 8px 8px; }
+html.cb .intentbar.k-deb { background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.14) 0 3px, transparent 3px 7px), repeating-linear-gradient(-45deg, rgba(255,255,255,.14) 0 3px, transparent 3px 7px); }
 
 /* ---------- Map art ---------- */
 .mapcard .mapwrap { max-width: 540px; height: auto; border-radius: 14px; overflow: hidden; border: 1px solid #000A; box-shadow: inset 0 0 40px #000B, 0 6px 22px #0008; background: #0C0A12; }
@@ -1034,8 +1046,21 @@ let REDUCE = false;
   else REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   document.documentElement.classList.toggle('rm', REDUCE);
 })();
+const VIBKEY = 'masked-spire-vibrate'; /* saved 'on' / 'off'; default on */
+let VIBRATE = true;
+try { VIBRATE = localStorage.getItem(VIBKEY) !== 'off'; } catch (e) {}
+function setVibrate(v) {
+  VIBRATE = !!v;
+  try { localStorage.setItem(VIBKEY, VIBRATE ? 'on' : 'off'); } catch (e) {}
+  if (VIBRATE) buzz(15);
+}
+function buzz(p) {
+  if (!VIBRATE || REDUCE) return;
+  try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {}
+}
 function setReduceMotion(v) {
   REDUCE = !!v;
+  if (REDUCE) { try { if (navigator.vibrate) navigator.vibrate(0); } catch (e) {} }
   try { localStorage.setItem(RMKEY, REDUCE ? 'on' : 'off'); } catch (e) {}
   document.documentElement.classList.toggle('rm', REDUCE);
 }
@@ -1560,15 +1585,39 @@ let toastTimer = null;
 /* ---------- Display settings (larger text, high contrast); applied as classes on <html>, saved in localStorage ---------- */
 const A11Y = (function () {
   const K = 'masked-spire-display';
-  const prefs = { big: false, hc: false };
+  const prefs = { big: false, hc: false, cb: false };
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(K) || 'null'); } catch (e) {}
-  if (saved && typeof saved === 'object') { prefs.big = saved.big === true; prefs.hc = saved.hc === true; }
+  if (saved && typeof saved === 'object') { prefs.big = saved.big === true; prefs.hc = saved.hc === true; prefs.cb = saved.cb === true; }
   else { try { prefs.hc = !!(window.matchMedia && matchMedia('(prefers-contrast: more)').matches); } catch (e) {} }
-  function apply() { const c = document.documentElement.classList; c.toggle('bigtext', prefs.big); c.toggle('hc', prefs.hc); }
-  function set(k, v) { if (k !== 'big' && k !== 'hc') return; prefs[k] = !!v; try { localStorage.setItem(K, JSON.stringify(prefs)); } catch (e) {} apply(); }
+  function apply() { const c = document.documentElement.classList; c.toggle('bigtext', prefs.big); c.toggle('hc', prefs.hc); c.toggle('cb', prefs.cb); if (prefs.cb) decorate(); }
+  function set(k, v) { if (k !== 'big' && k !== 'hc' && k !== 'cb') return; prefs[k] = !!v; try { localStorage.setItem(K, JSON.stringify(prefs)); } catch (e) {} apply(); }
   apply();
-  return { prefs, set };
+  /* colorblind mode: per-status glyphs on badges (shown via CSS attr()), float prefixes for damage/block/etc. */
+  const CBI = [[/^Strength/, '\u2739'], [/^Ritual/, '\u21BB'], [/^Weak/, '\u21E3'], [/^Vulnerable/, '\u25C8'], [/^Thorns/, '\u2736'], [/^Artifact/, '\u2B21'], [/^Rooted/, '\u23DA'], [/^Intangible/, '\u25CC'], [/^Reflecting/, '\u21C4'], [/^En Garde/, '\u2691'], [/^Holding/, '\u25CF'], [/^Final Toll/, '\u2617'], [/^Shattered/, '\u2716'], [/^Unmasked/, '\u2610'], [/^Frail/, '\u25A6'], [/^Hushed/, '\u2298'], [/Energy next turn/, '\u03DF'], [/^Composure/, '\u2248'], [/^Perfect Rhythm/, '\u266A'], [/^Unbroken Stance/, '\u25A0'], [/^Rampart/, '\u25A4'], [/^Bastion/, '\u25A5'], [/^Blood Pact/, '\u2666'], [/^Unstoppable/, '\u27A4'], [/^Mantra/, '\u2630'], [/^Serenity/, '\u262F'], [/^Unbreakable/, '\u25FC']];
+  function decorate() {
+    document.querySelectorAll('.badge:not([data-ic])').forEach(b => {
+      const t = b.textContent.trim();
+      let ic = b.classList.contains('bad') ? '\u25BC' : '\u25B2';
+      for (let i = 0; i < CBI.length; i++) { if (CBI[i][0].test(t)) { ic += ' ' + CBI[i][1]; break; } }
+      b.setAttribute('data-ic', ic);
+    });
+  }
+  function cbFloat(f) {
+    if (!prefs.cb || !f) return '';
+    const k = f.k || '', x = f.x || '';
+    if (x === 'Blocked' || k === 'block') return '\u25A3 ';
+    if (k === 'heal') return '\u271A ';
+    if (k === 'buff') return '\u25B2 ';
+    if (k === 'miss') return '\u2205 ';
+    if (/^\u2212\d/.test(x)) return '\u2738 ';
+    return '';
+  }
+  if (typeof MutationObserver !== 'undefined') {
+    let pend = false;
+    new MutationObserver(() => { if (!prefs.cb || pend) return; pend = true; requestAnimationFrame(() => { pend = false; decorate(); }); }).observe(document.documentElement, { childList: true, subtree: true });
+  }
+  return { prefs, set, cbFloat };
 })();
 /* ---------- Audio: synthesized soundtrack and effects (Web Audio, no files) ---------- */
 const SND = (function () {
@@ -2007,13 +2056,15 @@ const SND = (function () {
     panel.querySelector('[data-k="mute"]').checked = prefs.mute;
     panel.querySelector('[data-k="big"]').checked = A11Y.prefs.big;
     panel.querySelector('[data-k="hc"]').checked = A11Y.prefs.hc;
+    panel.querySelector('[data-k="cb"]').checked = A11Y.prefs.cb;
     panel.querySelector('[data-k="rm"]').checked = REDUCE;
+    panel.querySelector('[data-k="vib"]').checked = VIBRATE;
   }
   function togglePanel() {
     if (!panel) {
       panel = document.createElement('div'); panel.id = 'sndpanel'; panel.className = 'sndpanel'; panel.hidden = true; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Sound and display settings');
-      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label><input type="checkbox" data-k="big"> Larger text</label><label><input type="checkbox" data-k="hc"> High contrast (colorblind-safe)</label><label><input type="checkbox" data-k="rm"> Reduce motion (overrides system setting)</label>';
-      panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx' || k === 'mute') setPref(k, e.target.checked); else if (k === 'big' || k === 'hc') A11Y.set(k, e.target.checked); else if (k === 'rm') setReduceMotion(e.target.checked); });
+      panel.innerHTML = '<label><input type="checkbox" data-k="music"> Music</label><label><input type="checkbox" data-k="sfx"> Sound effects</label><label class="vol">Music volume <input type="range" min="0" max="100" step="5" data-k="musicVol" aria-label="Music volume"></label><label class="vol">Effects volume <input type="range" min="0" max="100" step="5" data-k="sfxVol" aria-label="Sound effects volume"></label><label><input type="checkbox" data-k="mute"> Mute all</label><div class="sechead">Display</div><label><input type="checkbox" data-k="big"> Larger text</label><label><input type="checkbox" data-k="hc"> High contrast</label><label><input type=\"checkbox\" data-k=\"cb\"> Colorblind mode (icons and patterns)</label><label><input type="checkbox" data-k="rm"> Reduce motion (overrides system setting)</label><label><input type="checkbox" data-k="vib"> Vibration (mobile; off when Reduce motion is on)</label>';
+      panel.addEventListener('change', e => { const k = e.target.getAttribute('data-k'); if (k === 'music' || k === 'sfx' || k === 'mute') setPref(k, e.target.checked); else if (k === 'big' || k === 'hc' || k === 'cb') A11Y.set(k, e.target.checked); else if (k === 'rm') setReduceMotion(e.target.checked); else if (k === 'vib') setVibrate(e.target.checked); });
       panel.addEventListener('input', e => { const k = e.target.getAttribute('data-k'); if (k === 'musicVol' || k === 'sfxVol') { setPref(k, Math.max(0, Math.min(1, Number(e.target.value) / 100))); if (k === 'sfxVol') ui('click'); } });
       panel.insertAdjacentHTML('beforeend', '<div class="sechead">Help</div><button type="button" class="btn" data-help="1">How to play</button>'); panel.addEventListener('click', e => { if (e.target.closest('[data-help]')) { panel.hidden = true; if (window.MSTutorial) window.MSTutorial.open(); } }); document.body.appendChild(panel);
     }
@@ -2701,6 +2752,13 @@ function shakeScreen(level) {
   app.classList.add(level > 1 ? 'shake2' : 'shake1');
   setTimeout(() => app.classList.remove('shake1', 'shake2'), 500);
 }
+function flashHit(host) {
+  if (REDUCE) return;
+  const b = document.createElement('span');
+  b.className = 'hitflash';
+  host.appendChild(b);
+  setTimeout(() => b.remove(), 500);
+}
 function flashBlock(host) {
   const b = document.createElement('span');
   b.className = 'blockflash';
@@ -2720,7 +2778,7 @@ function flushFx(V, prev) {
     const n = counts[f.t] = (counts[f.t] || 0) + 1;
     const s = document.createElement('span');
     s.className = 'float ' + f.k;
-    s.textContent = f.x;
+    s.textContent = A11Y.cbFloat(f) + f.x;
     s.style.marginTop = ((n - 1) * 30) + 'px';
     s.style.animationDelay = ((n - 1) * 90) + 'ms';
     const dm = /^−(\d+)/.exec(f.x);
@@ -2732,11 +2790,17 @@ function flushFx(V, prev) {
         if (f.t[0] === 'e' || f.t === 'p' + V.me) shakeScreen(dmg >= 20 ? 2 : 1);
       }
     }
-    if (f.x === 'Blocked' || f.k === 'block') flashBlock(host);
+    if (dmg) {
+      flashHit(host);
+      if (f.t === 'p' + V.me) buzz(dmg >= 12 ? [60, 30, 60] : dmg >= 6 ? 40 : 20);
+      else if (f.t[0] === 'e') buzz(10);
+    }
+    if (f.x === 'Blocked' || f.k === 'block') { flashBlock(host); buzz(12); }
     host.appendChild(s);
-    setTimeout(() => s.remove(), 1400);
+    setTimeout(() => s.remove(), 1800);
   });
   if (V.cb) V.cb.S.forEach(s => { if (s.fw[0] > prev && s.fw[1] > 0) footworkAnim(s.pi, s.fw[1]); });
+  if (V.cb && V.scr === 'combat' && prev > 0 && V.cb.en.some(e => e.ds > prev)) { shakeScreen(1); buzz([40, 40, 80]); }
 }
 function handFx(V, pv) {
   if (REDUCE || !pv || !V || V.scr !== 'combat' || !V.cb || !pv.cb || pv.scr !== 'combat') return;
