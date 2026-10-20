@@ -462,6 +462,30 @@ html.rm .hcard:hover { transform: none; }
   .hcard .btn { margin-top: auto; flex: none; padding-top: 8px; padding-bottom: 8px; }
 }
 
+/* iPad: fit all four heroes on the select screen */
+@media (min-width: 700px) and (max-width: 1200px) and (orientation: portrait) {
+  .heropick { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: stretch; max-height: calc(100vh - 190px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .hcard { gap: 4px; padding: 8px 10px; }
+  .hcard .portrait { width: clamp(64px, 9vh, 100px); }
+  .hcard h3 { font-size: 19px; }
+  .hcard p, .hcard ul { font-size: 13px; line-height: 1.25; }
+  .hcard ul { grid-template-columns: 1fr 1fr; column-gap: 12px; gap: 1px 12px; }
+  .hcard .hrelic { padding: 5px 8px; font-size: 12.5px; line-height: 1.2; gap: 1px; }
+  .hcard .hrelic b { font-size: 14px; }
+  .hcard .btn { padding-top: 8px; padding-bottom: 8px; }
+}
+@media (min-width: 900px) and (max-height: 820px) and (orientation: landscape) {
+  .heropick { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; align-items: stretch; max-height: calc(100vh - 170px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .hcard { gap: 3px; padding: 6px 8px; }
+  .hcard .portrait { width: clamp(56px, 10vh, 80px); }
+  .hcard h3 { font-size: 17px; }
+  .hcard p, .hcard ul { font-size: 12px; line-height: 1.2; }
+  .hcard p.muted { display: none; }
+  .hcard ul { gap: 0; }
+  .hcard .hrelic { height: 70px; padding: 4px 7px; font-size: 11.5px; }
+  .hcard .btn { padding-top: 7px; padding-bottom: 7px; }
+}
+
 
 /* Brute stances */
 .stance { display: inline-flex; align-items: center; gap: 7px; font-family: var(--display); font-weight: 700; font-size: 18px; padding: 3px 12px 3px 8px; border-radius: 999px; border: 2px solid var(--line); background: var(--panel2); }
