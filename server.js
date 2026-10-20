@@ -15,6 +15,27 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 const IDLE_MS = 30 * 60 * 1000;     // an empty room is kept this long so players can rejoin
 const ENDED_MS = 2 * 60 * 1000;     // a finished game with nobody connected is cleaned up sooner
 const MAX_ROOMS = 200;
+const MAX_CONN_PER_IP = 20;         // simultaneous sockets from one IP
+const MAX_CONN_TOTAL = 2000;        // backstop for the whole server
+const MSG_BURST = 30, MSG_RATE = 15;        // all messages: burst size, refills per second
+const JOIN_BURST = 5, JOIN_RATE = 0.5;      // create/join: burst size, refills per second
+const STRIKE_WINDOW_MS = 10000, MAX_STRIKES = 100; // this many dropped messages in the window => disconnect
+const CRASH_WINDOW_MS = 60000, MAX_CRASHES = 10;   // this many uncaught errors in the window => exit so Render restarts us
+
+const ipCounts = new Map();
+let totalConns = 0;
+function clientIp(req) {
+  const h = req.headers;
+  const v = h['cf-connecting-ip'] || h['true-client-ip'] || String(h['x-forwarded-for'] || '').split(',')[0];
+  return String(v || (req.socket && req.socket.remoteAddress) || 'unknown').trim().slice(0, 64);
+}
+function takeToken(b, rate, burst) {
+  const now = Date.now();
+  b.n = Math.min(burst, b.n + (now - b.t) * rate / 1000);
+  b.t = now;
+  if (b.n >= 1) { b.n -= 1; return true; }
+  return false;
+}
 
 /* ---------- Static files ---------- */
 const SEC_HEADERS = {
@@ -100,14 +121,44 @@ function detach(ws) {
 
 /* ---------- Sockets ---------- */
 const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 4096 });
-wss.on('connection', ws => {
+wss.on('error', e => console.error('wss error', e));
+wss.on('connection', (ws, req) => {
+  ws.on('error', e => { console.error('socket error', e && e.message); });
+  const err = (msg, fatal) => { try { ws.send(JSON.stringify({ t: 'err', msg, fatal: !!fatal })); } catch (e) {} };
+  const ip = clientIp(req);
+  const n = ipCounts.get(ip) || 0;
+  if (n >= MAX_CONN_PER_IP || totalConns >= MAX_CONN_TOTAL) {
+    err('Too many connections. Close other tabs and try again.', true);
+    try { ws.close(1013, 'Too many connections'); } catch (e) {}
+    return;
+  }
+  ipCounts.set(ip, n + 1);
+  totalConns++;
+  let released = false;
+  ws.on('close', () => {
+    if (released) return;
+    released = true;
+    totalConns--;
+    const c = (ipCounts.get(ip) || 1) - 1;
+    if (c <= 0) ipCounts.delete(ip); else ipCounts.set(ip, c);
+  });
   ws.isAlive = true;
   ws.on('pong', () => { ws.isAlive = true; });
-  const err = (msg, fatal) => { try { ws.send(JSON.stringify({ t: 'err', msg, fatal: !!fatal })); } catch (e) {} };
+  const allBucket = { n: MSG_BURST, t: Date.now() };
+  const joinBucket = { n: JOIN_BURST, t: Date.now() };
+  let strikes = 0, strikeStart = Date.now(), lastWarn = 0;
+  const limited = () => {
+    const now = Date.now();
+    if (now - strikeStart > STRIKE_WINDOW_MS) { strikeStart = now; strikes = 0; }
+    if (++strikes >= MAX_STRIKES) { try { ws.terminate(); } catch (e) {} return; }
+    if (now - lastWarn > 5000) { lastWarn = now; err('Slow down, you are sending too many requests.'); }
+  };
   ws.on('message', raw => {
+    if (!takeToken(allBucket, MSG_RATE, MSG_BURST)) return limited();
     let m;
     try { m = JSON.parse(String(raw)); } catch (e) { return; }
     if (!m || typeof m.t !== 'string') return;
+    if ((m.t === 'create' || m.t === 'join') && !takeToken(joinBucket, JOIN_RATE, JOIN_BURST)) return limited();
     const tok = typeof m.tok === 'string' ? m.tok.slice(0, 40) : '';
     if (m.t === 'create') {
       if (!tok) return err('Missing player id.');
@@ -175,4 +226,45 @@ setInterval(() => {
   }
 }, 60000);
 
+/* one bad request must not take the server (and every room in memory) down */
+const crashTimes = [];
+function onFatalish(kind, e) {
+  console.error(kind, e && e.stack || e);
+  const now = Date.now();
+  crashTimes.push(now);
+  while (crashTimes.length && now - crashTimes[0] > CRASH_WINDOW_MS) crashTimes.shift();
+  if (crashTimes.length >= MAX_CRASHES) {
+    console.error('Too many uncaught errors; exiting so the host restarts the server.');
+    process.exit(1);
+  }
+}
+process.on('uncaughtException', e => onFatalish('uncaughtException', e));
+process.on('unhandledRejection', e => onFatalish('unhandledRejection', e));
+server.on('clientError', (e, socket) => { try { socket.destroy(); } catch (x) {} });
+
 server.listen(PORT, () => console.log('Masked Spire listening on ' + PORT));
+
+/* ---------- Graceful shutdown (Render sends SIGTERM on deploy) ---------- */
+let shuttingDown = false;
+function shutdown(sig) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(sig + ' received: shutting down, notifying ' + wss.clients.size + ' client(s)');
+  const hardExit = setTimeout(() => process.exit(0), 8000);
+  hardExit.unref();
+  try { server.close(); } catch (e) {}
+  if (typeof server.closeIdleConnections === 'function') { try { server.closeIdleConnections(); } catch (e) {} }
+  for (const ws of wss.clients) {
+    try { ws.send(JSON.stringify({ t: 'restart', msg: 'Server restarting' })); } catch (e) {}
+  }
+  setTimeout(() => {
+    for (const ws of wss.clients) { try { ws.close(1012, 'Server restarting'); } catch (e) {} }
+    setTimeout(() => {
+      for (const ws of wss.clients) { try { ws.terminate(); } catch (e) {} }
+      process.exit(0);
+    }, 1000);
+  }, 800);
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+

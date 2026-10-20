@@ -2371,7 +2371,7 @@ function onEngineChange() { if (CL.role === 'solo') { render(); saveSolo(); } }
 function saveSolo() { const G = E.G; try { if (G && G.mode === 'solo' && !['defeat', 'victory'].includes(G.screen) && !(G.combat && G.combat.busy)) localStorage.setItem(KEY, JSON.stringify({ G, uidN: E.uidN })); } catch (e) {} }
 function wsURL() { return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'; }
 function wsSend(o) { if (ws && ws.readyState === 1) { ws.send(JSON.stringify(o)); return true; } return false; }
-let actLock = 0, nextRetryAt = 0, netNote = '', netNoteUntil = 0;
+let actLock = 0, nextRetryAt = 0, netNote = '', netNoteUntil = 0, srvRestart = 0;
 const SERVER_ACTS = ['hero', 'start', 'node', 'card', 'enemy', 'end', 'reward', 'bossreward', 'done', 'restheal', 'buy', 'remove'];
 function wsConnected() { return !!(ws && ws.readyState === 1); }
 function netFlash(msg) { netNote = msg; netNoteUntil = Date.now() + 2500; updateNetBar(); }
@@ -2391,7 +2391,8 @@ function updateNetBar() {
   const text = document.getElementById('netbartext'), btn = document.getElementById('netbarretry');
   let msg = '', showBtn = false;
   if (CL.role === 'online' && !wsConnected() && (CL.V || wsTries > 0)) {
-    if (ws && ws.readyState === 0) msg = 'Reconnecting to the game server…';
+    if (srvRestart) { msg = 'Server restarting… reconnecting automatically. Co-op games in progress may be lost.'; showBtn = !(ws && ws.readyState === 0); }
+    else if (ws && ws.readyState === 0) msg = 'Reconnecting to the game server…';
     else {
       const s = Math.max(0, Math.ceil((nextRetryAt - Date.now()) / 1000));
       msg = 'Connection lost. Retrying in ' + s + 's (attempt ' + (wsTries + 1) + '). Actions are paused.';
@@ -2412,13 +2413,14 @@ function connect() {
   try { sock = new WebSocket(wsURL()); } catch (e) { scheduleReconnect(); return; }
   ws = sock;
   sock.onopen = () => {
-    wsTries = 0; actLock = 0; CL.net.state = 'Connected'; CL.err = '';
+    wsTries = 0; actLock = 0; srvRestart = 0; CL.net.state = 'Connected'; CL.err = '';
     if (CL.pending) wsSend(CL.pending); else if (CL.code) wsSend({ t: 'join', code: CL.code, tok: CL.tok });
     render();
   };
   sock.onmessage = ev => {
     let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
-    if (m.t === 'joined') { CL.code = m.code; CL.pending = null; try { sessionStorage.setItem(CODEKEY, m.code); } catch (e) {} render(); }
+    if (m.t === 'restart') { srvRestart = Date.now(); updateNetBar(); }
+    else if (m.t === 'joined') { CL.code = m.code; CL.pending = null; try { sessionStorage.setItem(CODEKEY, m.code); } catch (e) {} render(); }
     else if (m.t === 'view') {
       actLock = 0;
       CL.V = m.v;
@@ -2429,7 +2431,7 @@ function connect() {
       if (m.fatal) { const msg = CL.err; leaveAll(); CL.err = msg; render(); } else render();
     }
   };
-  sock.onclose = () => { if (ws !== sock) return; ws = null; actLock = 0; if (CL.role === 'online') { CL.net.state = 'Connection lost. Reconnecting…'; render(); scheduleReconnect(); } };
+  sock.onclose = ev => { if (ws !== sock) return; if (ev && ev.code === 1012) srvRestart = Date.now(); ws = null; actLock = 0; if (CL.role === 'online') { CL.net.state = 'Connection lost. Reconnecting…'; render(); scheduleReconnect(); } };
   sock.onerror = () => {};
 }
 function scheduleReconnect() {
