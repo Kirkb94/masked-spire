@@ -776,6 +776,9 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; -webkit-tap-highl
 body, button, .btn, .card, .node, .hand { touch-action: manipulation; }
 .hand .card { touch-action: pan-x; }
 .card.dragsrc { opacity: .35; }
+.dragghost.dz-ok { outline: 2px solid #7ff5e8; outline-offset: 2px; border-radius: 10px; }
+.dragghost.dz-no { opacity: .65; filter: saturate(.6); }
+.dragghost.snapping { transition: transform .18s cubic-bezier(.2,.8,.3,1), opacity .18s ease; opacity: .8; }
 .dragghost { position: fixed; left: 0; top: 0; z-index: 1100; pointer-events: none; margin: 0; opacity: .92; box-shadow: 0 12px 30px rgba(0,0,0,.6); will-change: transform; }
 body.dragging, body.dragging * { user-select: none; -webkit-user-select: none; }
 .enemy.dz-valid { outline: 2px dashed #4fd1c5; outline-offset: 4px; }
@@ -806,6 +809,12 @@ body.dragging, body.dragging * { user-select: none; -webkit-user-select: none; }
 /* ---------- Display settings: larger text, high contrast / colorblind-safe ---------- */
 html.ts1 #app { zoom: 1.25; }
 html.ts2 #app { zoom: 1.5; }
+@supports not (zoom: 1) {
+  html.ts1 #app { transform: scale(1.25); transform-origin: top center; width: 80%; }
+  html.ts2 #app { transform: scale(1.5); transform-origin: top center; width: 66.667%; }
+  html.ts1 #app:has(.battle) { height: calc((100dvh - 12px) / 1.25); }
+  html.ts2 #app:has(.battle) { height: calc((100dvh - 12px) / 1.5); }
+}
 html.ts1 .sndpanel { font-size: 20px; }
 html.ts2 .sndpanel { font-size: 23px; }
 .sndpanel select { font: inherit; background: var(--panel2); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
@@ -869,6 +878,9 @@ html.hc .card .rgem { outline: 2px solid #FFFFFF; }
 .me-hot { fill: none; stroke: #E8BE52; stroke-width: 3.5; stroke-dasharray: 8 6; stroke-linecap: round; animation: me-flow 1s linear infinite; }
 .me-lit { fill: none; stroke: #5FE6E2; stroke-width: 3.5; stroke-linecap: round; filter: drop-shadow(0 0 4px #5FE6E2); }
 @keyframes me-flow { to { stroke-dashoffset: -28; } }
+.me-hot { filter: drop-shadow(0 0 4px #E8BE52); }
+html.rm .me-hot { animation: none; }
+@media (prefers-reduced-motion: reduce) { html:not(.rm-off) .me-hot { animation: none; } }
 .mapcard .node { z-index: 3; width: 54px; height: 54px; border-width: 3px; background: radial-gradient(circle at 35% 30%, #4A3E5E, #1F1830 75%); box-shadow: 0 3px 8px #000A, inset 0 0 0 2px #0006; color: var(--ink); }
 .mapcard .node svg { width: 33px; height: 33px; }
 .node.t-fight { background: radial-gradient(circle at 35% 30%, #8A3440, #3A141C 78%); border-color: #C4646E; }
@@ -882,7 +894,9 @@ html.hc .card .rgem { outline: 2px solid #FFFFFF; }
 .mapcard .node.bossnode svg { width: 52px; height: 52px; }
 .mapcard .node.done { background: radial-gradient(circle at 35% 30%, #3A3548, #1A1624 78%); border-color: #5A5068; filter: saturate(.45) brightness(.8); }
 .node.done::after { content: "✓"; position: absolute; right: -3px; bottom: -3px; width: 20px; height: 20px; border-radius: 50%; background: #2D8E8A; color: #fff; font-size: 13px; line-height: 1; display: grid; place-items: center; border: 2px solid #0A1A1A; font-family: var(--body); }
-.node.avail:hover { transform: translate(-50%, -50%) scale(1.1); }
+.node.avail { transition: filter .18s ease, transform .18s ease; }
+.node.avail:hover, .node.avail:focus-visible { transform: translate(-50%, -50%) scale(1.12); filter: drop-shadow(0 0 8px #E8BE52) drop-shadow(0 0 16px #E8BE5299); outline: none; }
+.mapcard .node:not(.avail):not(.done):not(.cur):not(.voted) { opacity: .72; }
 .mapcard .node.cur { box-shadow: 0 0 0 4px var(--teal), 0 3px 8px #000A; }
 .maptok { position: absolute; width: 42px; z-index: 4; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 3px 4px #000C); }
 .maptok .portrait { width: 42px; height: 42px; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--gold); animation: tokbob 1.8s ease-in-out infinite; }
@@ -964,6 +978,19 @@ html.rm .mp { opacity: .45; } html.rm .confetti { display: none; }
 @keyframes efv { from { opacity: 0; } to { opacity: 1; } }
 html.rm .endfx.conf { display: none; }
 html.rm .endfx.vig { animation: none; opacity: .85; }
+/* end-screen panel entrance */
+.endscr h2 { animation: es-pop .7s cubic-bezier(.2, .9, .3, 1.2) calc(.1s - var(--ce, 0s)) both; }
+.endscr.won h2 { color: #E8BE52; text-shadow: 0 0 18px rgba(232, 190, 82, .45); }
+.endscr.lost h2 { color: #E04A5E; text-shadow: 0 0 18px rgba(224, 74, 94, .4); }
+.endscr .runsum { animation: es-rise .5s ease-out calc(.3s - var(--ce, 0s)) both; border: 1px solid rgba(255, 255, 255, .12); border-radius: 10px; padding: 8px 14px; background: rgba(0, 0, 0, .25); }
+.endscr .runsum li { animation: es-rise .45s ease-out calc(.4s + var(--i, 0) * .3s - var(--ce, 0s)) both; }
+.endscr .dchips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
+.endscr .dchip { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .06); animation: es-chip .35s ease-out calc(1.2s + var(--i, 0) * .04s - var(--ce, 0s)) both; }
+@keyframes es-pop { from { opacity: 0; transform: scale(.85) translateY(8px); letter-spacing: .12em; } to { opacity: 1; transform: none; } }
+@keyframes es-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes es-chip { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: none; } }
+html.rm .endscr h2, html.rm .endscr .runsum, html.rm .endscr .runsum li, html.rm .endscr .dchip { animation: none; }
+@media (prefers-reduced-motion: reduce) { html:not(.rm-off) .endscr h2, html:not(.rm-off) .endscr .runsum, html:not(.rm-off) .endscr .runsum li, html:not(.rm-off) .endscr .dchip { animation: none; } }
 /* ---------- Landscape-only touch layout (phones and tablets) ---------- */
 #rotate { display: none; position: fixed; inset: 0; z-index: 1000; background: var(--bg); color: var(--ink); flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 24px; }
 #rotate svg { width: 96px; height: 96px; animation: rot-tilt 2.4s ease-in-out infinite; }
@@ -2790,8 +2817,9 @@ function sndSync(V, prev) {
   CL.sndHand = hu;
   if (CL.sndT !== undefined && c.t !== CL.sndT && !c.duel) SND.ui('turn');
   CL.sndT = c.t;
+  let enemyActed = false;
   c.en.forEach(e => {
-    if (e.ac > prev) SND.enemy(e.key, 'atk');
+    if (e.ac > prev) { if (!enemyActed && !c.duel) { enemyActed = true; SND.ui('enemyturn'); } SND.enemy(e.key, 'atk'); }
     if (e.ds > prev) SND.enemy(e.key, 'die', 0.12);
     const pk = V.act + ':' + V.floor + ':' + e.idx;
     CL.sndP2 = CL.sndP2 || {};
@@ -3130,7 +3158,7 @@ function combatHTML(V, prev) {
     turnChip(V, cb) +
     '<div class="lastlog' + (cb.logs[0] ? ' lg-' + logKind(cb.logs[0])[0] : '') + '">' + (cb.logs[0] ? '<span class="lgi" aria-hidden="true">' + logKind(cb.logs[0])[1] + '</span>' : '') + esc(cb.logs[0] || '') + '</div>' +
     '<div class="dock"><div class="controls"><div class="energy" title="Energy">' + s.energy + '<small>energy</small></div>' +
-    '<div class="incoming">' + inc + '<div class="piles"><span data-pile="draw" data-act="pile" data-arg="draw" role="button" tabindex="0" aria-haspopup="dialog">Draw ' + cb.piles[0] + '</span><span data-pile="discard" data-act="pile" data-arg="discard" role="button" tabindex="0" aria-haspopup="dialog">Discard ' + cb.piles[1] + '</span><span data-pile="exhaust" data-act="pile" data-arg="exhaust" role="button" tabindex="0" aria-haspopup="dialog">Exhaust ' + cb.piles[2] + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
+    '<div class="incoming">' + inc + '<div class="piles"><span data-pile="draw" data-act="pile" data-arg="draw" role="button" tabindex="0" aria-haspopup="dialog">Draw ' + cb.piles[0] + '</span><span data-pile="discard" data-act="pile" data-arg="discard" role="button" tabindex="0" aria-haspopup="dialog">Discard ' + cb.piles[1] + '</span><span data-pile="exhaust" data-act="pile" data-arg="exhaust" role="button" tabindex="0" aria-haspopup="dialog">Exhaust ' + cb.piles[2] + '</span><span data-pile="deck" data-act="pile" data-arg="deck" role="button" tabindex="0" aria-haspopup="dialog">Deck ' + (cb.piles[0] + cb.piles[1] + cb.piles[2] + (cb.hand ? cb.hand.length : 0)) + '</span><span>Turn ' + (duel ? duel.r : cb.t) + '</span><span>Cards played ' + cb.played + '</span></div></div>' +
     '<div class="endwrap"><button type="button" class="btn kbhelp" data-act="keys" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">?</button><button type="button" class="btn primary" data-act="end"' + (canEnd ? '' : ' disabled') + '>' + endLabel + ' <kbd class="kbn-e" aria-hidden="true">E</kbd></button></div></div>' +
     '<div class="hint" aria-live="polite">' + (selCard ? (selNeedsTarget(V) ? 'Choose a target for ' + esc(CARDS[selCard[1]].n) + ' (←/→ to pick, Enter to confirm, Esc or tap the card again to cancel) <button type="button" class="btn" data-act="cancelsel">Cancel</button>' : '<span class="selask">Play ' + esc(CARDS[selCard[1]].n) + '?</span> <button type="button" class="btn primary" data-act="playsel">Play</button> <button type="button" class="btn" data-act="cancelsel">Cancel</button>') : '') + '</div>' +
     '<div class="hand" aria-label="Your hand">' + (hand || '<span class="muted">' + (cb.busy ? 'Resolving…' : waiting ? 'Waiting for your partner to end their turn…' : 'Your hand is empty.') + '</span>') + '</div></div>' +
@@ -3272,6 +3300,7 @@ function endTick() {
   if (more) { endTickOn = true; requestAnimationFrame(endTick); }
 }
 function endHTMLBase(V, won) {
+  endFxInit(V);
   const html = endHTML0(V, won);
   endFxInit(V);
   if (!document.getElementById('endcnt-css')) {
@@ -3283,11 +3312,11 @@ function endHTMLBase(V, won) {
   const per = ROWS + 1;
   const floors = won ? 3 * per : Math.max(0, (V.act - 1) * per + V.floor - 1);
   const rs = V.rs || { cp: 0, dm: 0, tn: 0 };
-  const stat = (label, to, i) => { to = Number(to) || 0; return '<li>' + label + ': <b class="cnt" data-to="' + to + '" data-i="' + i + '">' + endCountVal(to, i) + '</b></li>'; };
+  const stat = (label, to, i) => { to = Number(to) || 0; return '<li style="--i:' + i + '">' + label + ': <b class="cnt" data-to="' + to + '" data-i="' + i + '">' + endCountVal(to, i) + '</b></li>'; };
   const counts = {};
   V.deck.forEach(d => { const n = CARDS[d[1]].n; counts[n] = (counts[n] || 0) + 1; });
-  const deck = Object.keys(counts).sort().map(n => esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '')).join(', ');
-  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules">' + stat('Floors cleared', floors, 0) + stat('Turns', rs.tn, 1) + stat('Cards played', rs.cp, 2) + stat('Damage dealt', rs.dm, 3) + '</ul><p class="muted">Final deck (' + V.deck.length + '): ' + deck + '</p></div>';
+  const deck = '<div class="dchips">' + Object.keys(counts).sort().map((n, i) => '<span class="dchip" style="--i:' + i + '">' + esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '') + '</span>').join('') + '</div>';
+  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules">' + stat('Floors cleared', floors, 0) + stat('Turns', rs.tn, 1) + stat('Cards played', rs.cp, 2) + stat('Damage dealt', rs.dm, 3) + stat('Gold', V.P[V.me].g, 4) + '</ul><p class="muted">Final deck (' + V.deck.length + ')</p>' + deck + '</div>';
   const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : '';
   const marker = '<div class="row"><button type="button" class="btn primary" data-act="leave">';
   if (!REDUCE && !endTickOn) { endTickOn = true; requestAnimationFrame(endTick); }
@@ -3295,7 +3324,7 @@ function endHTMLBase(V, won) {
 }
 function endHTML0(V, won) {
   const me = V.P[V.me];
-  return '<section class="panel"><h2>' + (won ? 'The Spire falls silent' : 'Your mask shatters') + '</h2>' +
+  return '<section class="panel endscr ' + (won ? 'won' : 'lost') + '" style="--ce:' + f1(ENDFX ? Math.min(9, (performance.now() - ENDFX.t) / 1000) : 0) + 's"><h2>' + (won ? 'The Spire falls silent' : 'Your mask shatters') + '</h2>' +
     (won ? '<div class="vstage solo tier-gold" style="--ce:0s">' + heroCheer(V) + confettiHTML(true) + '</div>' : '') +
     '<p>' + (won ? esc(HEROES[me.h].n) + ' conquered all three acts of the Masked Spire.' : (V.n > 1 ? 'Your party fell' : 'You fell') + ' in Act ' + ROMAN[V.act - 1] + ', floor ' + V.floor + '.') + ' Enemies defeated: ' + me.k + '. Deck size: ' + V.deck.length + '.</p><p class="muted">Difficulty: ' + esc((E.DIFFS[V.df] || E.DIFFS[1]).n) + '</p>' +
     '<div class="row"><button type="button" class="btn primary" data-act="leave">Back to title</button></div></section>';
@@ -3464,8 +3493,9 @@ function flushFx(V, prev) {
     const s = document.createElement('span');
     s.className = 'float ' + f.k;
     s.textContent = A11Y.cbFloat(f) + f.x;
-    s.style.marginTop = ((n - 1) * 30) + 'px';
-    s.style.animationDelay = ((n - 1) * 90) + 'ms';
+    const sn = Math.min(n - 1, 5); /* cap stack offset and delay on busy targets */
+    s.style.marginTop = (sn * 30) + 'px';
+    s.style.animationDelay = (sn * 90) + 'ms';
     const dm = /^−(\d+)/.exec(f.x);
     const dmg = dm && !/^(buff|heal|block|miss)$/.test(f.k || '') ? Number(dm[1]) : 0;
     const bm = (f.k === 'block' || f.k === 'heal') ? /^\+(\d+)/.exec(f.x) : null;
@@ -4200,22 +4230,30 @@ document.getElementById('app').addEventListener('click', ev => {
   st.textContent = `.piles span[data-act='pile']{cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}.piles span[data-act='pile']:focus-visible{outline:3px solid #ffd54a;outline-offset:2px;border-radius:4px}.pcg{position:relative}.pcn{position:absolute;top:-6px;right:-6px;z-index:2;background:#ffd54a;color:#15121A;font-weight:700;border-radius:10px;padding:0 7px;font-size:14px}`;
   document.head.appendChild(st);
 })();
-const PILE_NAMES = { draw: 'Draw pile', discard: 'Discard pile', exhaust: 'Exhaust pile' };
+const PILE_NAMES = { draw: 'Draw pile', discard: 'Discard pile', exhaust: 'Exhaust pile', deck: 'Deck (this combat)' };
 function pileView(which, opener) {
   if (document.getElementById('pilev')) return;
   const V = curView();
-  const idx = { draw: 0, discard: 1, exhaust: 2 }[which];
+  const idx = { draw: 0, discard: 1, exhaust: 2, deck: 3 }[which];
   if (idx == null || !V || !V.cb || !V.cb.pc) return;
-  const ids = (V.cb.pc[idx] || []).filter(id => CARDS[id]);
+  const rawIds = idx === 3 ? [].concat(V.cb.pc[0] || [], V.cb.pc[1] || [], V.cb.pc[2] || [], (V.cb.hand || []).map(x => x[1])) : (V.cb.pc[idx] || []);
+  const ids = rawIds.filter(id => CARDS[id]);
   const groups = new Map();
   ids.forEach(id => groups.set(id, (groups.get(id) || 0) + 1));
-  const list = [...groups.entries()].sort((a, b) => CARDS[a[0]].n.localeCompare(CARDS[b[0]].n) || (a[0] < b[0] ? -1 : 1));
+  const TYPE_ORD = { attack: 0, skill: 1, power: 2, status: 3 };
+  const cmp = { name: () => 0, cost: (a, b) => CARDS[a[0]].c - CARDS[b[0]].c, type: (a, b) => (TYPE_ORD[CARDS[a[0]].t] != null ? TYPE_ORD[CARDS[a[0]].t] : 9) - (TYPE_ORD[CARDS[b[0]].t] != null ? TYPE_ORD[CARDS[b[0]].t] : 9), count: (a, b) => b[1] - a[1] };
+  let mode = 'name';
+  const cardsHTML = () => {
+    const list = [...groups.entries()].sort((a, b) => cmp[mode](a, b) || CARDS[a[0]].n.localeCompare(CARDS[b[0]].n) || (a[0] < b[0] ? -1 : 1));
+    return list.length ? list.map(([id, n]) => `<div class='pcg'>` + (n > 1 ? `<span class='pcn'>×${n}</span>` : '') + cardHTML(id, 'noop', '') + `</div>`).join('') : `<p class='muted'>This pile is empty.</p>`;
+  };
+  const sortBtns = () => ['name', 'cost', 'type', 'count'].map(m => `<button type='button' class='btn${m === mode ? ' primary' : ''}' data-sort='${m}' aria-pressed='${m === mode}'>${m[0].toUpperCase() + m.slice(1)}</button>`).join(' ');
   const back = document.createElement('div');
   back.id = 'pilev'; back.className = 'overlay';
   back.setAttribute('role', 'dialog'); back.setAttribute('aria-modal', 'true'); back.setAttribute('aria-labelledby', 'pilev-h');
   back.innerHTML = `<section class='panel'><div class='row'><h2 id='pilev-h'>${PILE_NAMES[which]} (${ids.length})</h2><span class='spacer'></span><button type='button' class='btn primary' data-pv='close'>Close</button></div>` +
-    `<p class='muted'>${which === 'draw' ? 'Sorted by name. Draw order is hidden.' : 'Sorted by name.'}</p>` +
-    `<div class='cards'>` + (list.length ? list.map(([id, n]) => `<div class='pcg'>` + (n > 1 ? `<span class='pcn'>×${n}</span>` : '') + cardHTML(id, 'noop', '') + `</div>`).join('') : `<p class='muted'>This pile is empty.</p>`) + `</div></section>`;
+    `<p class='muted'>${which === 'draw' ? 'Draw order is hidden. ' : ''}${which === 'deck' ? 'Cards in your piles and hand; played Powers are not listed. ' : ''}Sort: <span id='pilev-s'>${sortBtns()}</span></p>` +
+    `<div class='cards' id='pilev-c'>` + cardsHTML() + `</div></section>`;
   let watch = null;
   const close = () => {
     clearInterval(watch);
@@ -4236,6 +4274,14 @@ function pileView(which, opener) {
     }
   };
   back.addEventListener('click', ev => { if (ev.target === back || (ev.target.closest && ev.target.closest('[data-pv]'))) close(); });
+  back.addEventListener('click', ev => {
+    const s = ev.target.closest && ev.target.closest('[data-sort]');
+    if (!s) return;
+    mode = s.dataset.sort;
+    back.querySelector('#pilev-c').innerHTML = cardsHTML();
+    back.querySelector('#pilev-s').innerHTML = sortBtns();
+    const nb = back.querySelector(`[data-sort='${mode}']`); if (nb) nb.focus();
+  });
   document.addEventListener('keydown', onKey, true);
   document.body.appendChild(back);
   watch = setInterval(() => { if (!document.querySelector('.battle')) close(); }, 500);
@@ -4356,8 +4402,8 @@ function kbHelp() {
     '<li><kbd>1</kbd>–<kbd>9</kbd>, <kbd>0</kbd> Select / play card 1–10</li>' +
     '<li><kbd>Shift</kbd>+<kbd>1</kbd>–<kbd>0</kbd> Select / play card 11–20</li>' +
     '<li><kbd>Tab</kbd> <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> Cycle targets</li>' +
-    '<li><kbd>Enter</kbd> Confirm target</li>' +
-    '<li><kbd>Esc</kbd> Cancel selection</li>' +
+    '<li><kbd>Enter</kbd> Confirm target, or end turn when no card is selected</li>' +
+    '<li><kbd>Esc</kbd> Cancel selection, or open pause / settings</li>' +
     '<li><kbd>E</kbd> End turn</li>' +
     '<li><kbd>?</kbd> or <kbd>H</kbd> This help</li></ul>' +
     '<div class="row"><button type="button" class="btn primary" data-kb="close">Close</button></div></div>';
@@ -4406,6 +4452,18 @@ document.addEventListener('keydown', ev => {
       return;
     }
     if (k === 'Escape') { ev.preventDefault(); CL.sel = null; kbT = null; paint(V); return; }
+  }
+  if (k === 'Escape') {
+    const sp = document.getElementById('sndpanel');
+    if (sp && !sp.hidden) return; /* the panel's own Esc handler closes it */
+    ev.preventDefault();
+    SND.togglePanel();
+    return;
+  }
+  if (k === 'Enter' && CL.sel == null && t && !(t.closest && t.closest('button,a,summary,[role="button"],[data-act]'))) {
+    const eb = document.querySelector('.battle [data-act="end"]');
+    if (eb && !eb.disabled) { ev.preventDefault(); eb.click(); }
+    return;
   }
   if (k === 'e' || k === 'E') {
     const b = document.querySelector('.battle [data-act="end"]');
@@ -4542,7 +4600,7 @@ document.addEventListener('keydown', ev => {
   });
   root.addEventListener('click', ev => {
     const b = live(ev.target);
-    if (!b) return;
+    if (!b) { const d = ev.target.closest ? ev.target.closest('[data-act]') : null; if (d && d.dataset.act !== 'card') SND.ui('bad'); return; }
     const act = b.dataset.act;
     if (act === 'end') SND.fire('endturn');
     else if (act === 'card' && b.classList.contains('dim')) SND.ui('bad');
@@ -4690,8 +4748,9 @@ function dragClear() {
 }
 function dragMark(x, y) {
   const V = curView();
-  if (!V || !V.cb || !dragPlayable(V, DRAG.u)) { dragClear(); return; }
+  if (!V || !V.cb || !dragPlayable(V, DRAG.u)) { dragClear(); if (DRAG.ghost) { DRAG.ghost.classList.remove('dz-ok'); DRAG.ghost.classList.add('dz-no'); } return; }
   const info = dragInfo(V, DRAG.u), over = info.multi ? dragEnemyAt(x, y) : null, above = dragZone(y) === 'above';
+  if (DRAG.ghost) { const ok = info.multi ? !!over : above; DRAG.ghost.classList.toggle('dz-ok', ok); DRAG.ghost.classList.toggle('dz-no', !ok); }
   dragClear();
   const enemies = document.querySelectorAll('.enemy[data-act="enemy"]:not(.dying)');
   if (info.multi) enemies.forEach(el => { el.classList.add('dz-valid'); if (el === over) el.classList.add('dz-hot'); });
@@ -4702,13 +4761,21 @@ function dragMove(x, y) {
   DRAG.ghost.style.transform = 'translate(' + (x - DRAG.ox) + 'px,' + (y - DRAG.oy) + 'px)';
   dragMark(x, y);
 }
-function dragStop() {
+function dragStop(snap) {
   if (!DRAG) return;
   window.removeEventListener('pointermove', dragOnMove, true);
   window.removeEventListener('pointerup', dragOnUp, true);
   window.removeEventListener('pointercancel', dragOnCancel, true);
   window.removeEventListener('keydown', dragOnKey, true);
-  if (DRAG.ghost) DRAG.ghost.remove();
+  if (DRAG.ghost) {
+    const g = DRAG.ghost, src = DRAG.el;
+    if (snap && !REDUCE && src && src.isConnected) {
+      const r = src.getBoundingClientRect();
+      g.classList.remove('dz-ok'); g.classList.add('snapping');
+      g.style.transform = 'translate(' + r.left + 'px,' + r.top + 'px)';
+      setTimeout(() => g.remove(), 200);
+    } else g.remove();
+  }
   if (DRAG.el) DRAG.el.classList.remove('dragsrc');
   document.body.classList.remove('dragging');
   dragClear();
@@ -4743,17 +4810,16 @@ function dragOnUp(ev) {
   const V = curView();
   const over = V && V.cb && dragPlayable(V, u) ? dragInfo(V, u) : null;
   const hit = over && over.multi ? dragEnemyAt(x, y) : null;
-  dragStop();
-  if (!over) return;
-  if (over.multi) {
-    if (hit) { const idx = Number(hit.dataset.arg); if (over.live.some(e => e.idx === idx)) { CL.sel = null; sendCard(V, u, idx); } }
-  } else if (zone === 'above') {
-    CL.sel = null;
-    sendCard(V, u, over.tg && over.live.length ? over.live[0].idx : null);
-  }
+  let target;
+  if (over && over.multi) { const idx = hit ? Number(hit.dataset.arg) : NaN; if (hit && over.live.some(e => e.idx === idx)) target = idx; }
+  else if (over && zone === 'above') target = over.tg && over.live.length ? over.live[0].idx : null;
+  dragStop(target === undefined);
+  if (target === undefined) return;
+  CL.sel = null;
+  sendCard(V, u, target);
 }
-function dragOnCancel(ev) { if (DRAG && ev.pointerId === DRAG.id) dragStop(); }
-function dragOnKey(ev) { if (ev.key === 'Escape') { ev.preventDefault(); dragStop(); } }
+function dragOnCancel(ev) { if (DRAG && ev.pointerId === DRAG.id) dragStop(true); }
+function dragOnKey(ev) { if (ev.key === 'Escape') { ev.preventDefault(); dragStop(true); } }
 document.getElementById('app').addEventListener('pointerdown', ev => {
   if (DRAG || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
   const el = ev.target.closest ? ev.target.closest('.hand .card[data-act="card"]') : null;
