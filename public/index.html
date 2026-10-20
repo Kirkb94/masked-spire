@@ -2342,11 +2342,17 @@ function paint(V) {
   if (!V || V.scr === 'lobby') body = '<button type="button" class="btn sndfloat" data-act="snd" aria-label="Sound settings">' + SND.SPK + ' Sound</button>' + body;
   const focusId = document.activeElement && document.activeElement.id;
   app.innerHTML = body;
+  if (CL.role === 'online' && !wsConnected()) {
+    app.querySelectorAll('[data-act]').forEach(el => {
+      if (SERVER_ACTS.indexOf(el.dataset.act) >= 0) { el.disabled = true; el.setAttribute('aria-disabled', 'true'); }
+    });
+  }
   if (focusId === 'joincode') { const el = document.getElementById('joincode'); if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }
   if (V) flushFx(V, prev);
   try { sndSync(V, prev); } catch (e) {}
   if (V && V.scr === 'map') { try { mapAfterPaint(); } catch (e) {} }
   CL.lastFx = Math.max(prev, maxFx);
+  updateNetBar();
 }
 
 /* ---------- Render + networking (Render server) ---------- */
@@ -2365,6 +2371,39 @@ function onEngineChange() { if (CL.role === 'solo') { render(); saveSolo(); } }
 function saveSolo() { const G = E.G; try { if (G && G.mode === 'solo' && !['defeat', 'victory'].includes(G.screen) && !(G.combat && G.combat.busy)) localStorage.setItem(KEY, JSON.stringify({ G, uidN: E.uidN })); } catch (e) {} }
 function wsURL() { return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'; }
 function wsSend(o) { if (ws && ws.readyState === 1) { ws.send(JSON.stringify(o)); return true; } return false; }
+let actLock = 0, nextRetryAt = 0, netNote = '', netNoteUntil = 0;
+const SERVER_ACTS = ['hero', 'start', 'node', 'card', 'enemy', 'end', 'reward', 'bossreward', 'done', 'restheal', 'buy', 'remove'];
+function wsConnected() { return !!(ws && ws.readyState === 1); }
+function netFlash(msg) { netNote = msg; netNoteUntil = Date.now() + 2500; updateNetBar(); }
+function updateNetBar() {
+  let bar = document.getElementById('netbar');
+  if (!bar) {
+    const st = document.createElement('style');
+    st.textContent = '#netbar{position:fixed;top:0;left:0;right:0;z-index:9999;display:none;align-items:center;justify-content:center;gap:12px;padding:8px 12px;background:#7a1f1f;color:#fff;font:600 14px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.5)}#netbar button{font:inherit;padding:3px 10px;border-radius:6px;border:1px solid #fff;background:transparent;color:#fff;cursor:pointer}#netbar button:focus-visible{outline:3px solid #ffd54a;outline-offset:2px}';
+    document.head.appendChild(st);
+    bar = document.createElement('div');
+    bar.id = 'netbar'; bar.setAttribute('role', 'status'); bar.setAttribute('aria-live', 'polite');
+    const t = document.createElement('span'); t.id = 'netbartext';
+    const b = document.createElement('button'); b.type = 'button'; b.id = 'netbarretry'; b.textContent = 'Retry now';
+    b.addEventListener('click', () => { if (CL.role === 'online' && !wsConnected() && !(ws && ws.readyState === 0)) { wsTries = 0; connect(); } });
+    bar.appendChild(t); bar.appendChild(b); document.body.appendChild(bar);
+  }
+  const text = document.getElementById('netbartext'), btn = document.getElementById('netbarretry');
+  let msg = '', showBtn = false;
+  if (CL.role === 'online' && !wsConnected() && (CL.V || wsTries > 0)) {
+    if (ws && ws.readyState === 0) msg = 'Reconnecting to the game server…';
+    else {
+      const s = Math.max(0, Math.ceil((nextRetryAt - Date.now()) / 1000));
+      msg = 'Connection lost. Retrying in ' + s + 's (attempt ' + (wsTries + 1) + '). Actions are paused.';
+      showBtn = true;
+    }
+  } else if (CL.role === 'online' && netNote && Date.now() < netNoteUntil) msg = netNote;
+  if (text.textContent !== msg) text.textContent = msg;
+  btn.style.display = showBtn ? '' : 'none';
+  bar.style.display = msg ? 'flex' : 'none';
+}
+setInterval(updateNetBar, 500);
+window.addEventListener('online', () => { if (CL.role === 'online' && !wsConnected() && !(ws && ws.readyState === 0)) { wsTries = 0; connect(); } });
 function connect() {
   clearTimeout(wsTimer);
   CL.net.state = wsTries ? 'Reconnecting to the game server…' : 'Connecting to the game server…';
@@ -2373,7 +2412,7 @@ function connect() {
   try { sock = new WebSocket(wsURL()); } catch (e) { scheduleReconnect(); return; }
   ws = sock;
   sock.onopen = () => {
-    wsTries = 0; CL.net.state = 'Connected'; CL.err = '';
+    wsTries = 0; actLock = 0; CL.net.state = 'Connected'; CL.err = '';
     if (CL.pending) wsSend(CL.pending); else if (CL.code) wsSend({ t: 'join', code: CL.code, tok: CL.tok });
     render();
   };
@@ -2381,18 +2420,25 @@ function connect() {
     let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
     if (m.t === 'joined') { CL.code = m.code; CL.pending = null; try { sessionStorage.setItem(CODEKEY, m.code); } catch (e) {} render(); }
     else if (m.t === 'view') {
+      actLock = 0;
       CL.V = m.v;
       if (CL.sel != null && (!m.v.cb || !m.v.cb.hand.some(h => h[0] === CL.sel))) CL.sel = null;
       render();
     } else if (m.t === 'err') {
-      CL.err = m.msg || 'Server error';
+      actLock = 0; CL.err = m.msg || 'Server error';
       if (m.fatal) { const msg = CL.err; leaveAll(); CL.err = msg; render(); } else render();
     }
   };
-  sock.onclose = () => { if (ws !== sock) return; ws = null; if (CL.role === 'online') { CL.net.state = 'Connection lost. Reconnecting…'; render(); scheduleReconnect(); } };
+  sock.onclose = () => { if (ws !== sock) return; ws = null; actLock = 0; if (CL.role === 'online') { CL.net.state = 'Connection lost. Reconnecting…'; render(); scheduleReconnect(); } };
   sock.onerror = () => {};
 }
-function scheduleReconnect() { clearTimeout(wsTimer); wsTries++; wsTimer = setTimeout(connect, Math.min(8000, 700 * wsTries)); }
+function scheduleReconnect() {
+  clearTimeout(wsTimer); wsTries++;
+  const delay = Math.round(Math.min(15000, 500 * Math.pow(2, wsTries - 1)) * (0.8 + Math.random() * 0.4));
+  nextRetryAt = Date.now() + delay;
+  wsTimer = setTimeout(connect, delay);
+  updateNetBar();
+}
 function goOnline(first) {
   CL.role = 'online'; CL.V = null; CL.seen = false; CL.sel = null; CL.overlay = null; CL.err = ''; CL.pending = first;
   if (first && first.code) CL.code = first.code;
@@ -2400,8 +2446,11 @@ function goOnline(first) {
   render();
 }
 function send(a, x, y) {
-  if (CL.role === 'online') wsSend({ t: 'act', a, x: x == null ? null : x, y: y == null ? null : y });
-  else E.doAction(0, a, x, y);
+  if (CL.role === 'online') {
+    if (!wsConnected()) { netFlash('Offline: action not sent.'); return false; }
+    if (Date.now() < actLock) return false;
+    if (wsSend({ t: 'act', a, x: x == null ? null : x, y: y == null ? null : y })) actLock = Date.now() + 1200;
+  } else E.doAction(0, a, x, y);
 }
 function leaveAll() {
   if (CL.role === 'online') { wsSend({ t: 'leave' }); }

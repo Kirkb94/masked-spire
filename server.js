@@ -17,16 +17,31 @@ const ENDED_MS = 2 * 60 * 1000;     // a finished game with nobody connected is 
 const MAX_ROOMS = 200;
 
 /* ---------- Static files ---------- */
+const SEC_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'referrer-policy': 'no-referrer',
+  'content-security-policy': "frame-ancestors 'self'",
+  'x-frame-options': 'SAMEORIGIN'
+};
+function send(res, code, headers, body) {
+  res.writeHead(code, Object.assign({}, SEC_HEADERS, headers));
+  res.end(body);
+}
 const server = http.createServer((req, res) => {
-  const url = new URL(req.url, 'http://x');
-  if (url.pathname === '/healthz') { res.writeHead(200, { 'content-type': 'text/plain' }); res.end('ok'); return; }
-  let p = url.pathname === '/' ? '/index.html' : url.pathname;
-  const file = path.normalize(path.join(PUBLIC, p));
-  if (!file.startsWith(PUBLIC)) { res.writeHead(403); res.end(); return; }
+  if (req.method !== 'GET' && req.method !== 'HEAD') { send(res, 405, { 'content-type': 'text/plain', allow: 'GET, HEAD' }, 'Method not allowed'); return; }
+  const head = req.method === 'HEAD';
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  } catch (e) { send(res, 400, { 'content-type': 'text/plain' }, 'Bad request'); return; }
+  if (pathname.indexOf('\0') !== -1) { send(res, 400, { 'content-type': 'text/plain' }, 'Bad request'); return; }
+  if (pathname === '/healthz') { send(res, 200, { 'content-type': 'text/plain' }, head ? undefined : 'ok'); return; }
+  const p = pathname === '/' ? '/index.html' : pathname;
+  const file = path.resolve(PUBLIC, '.' + path.sep + p.replace(/^[\/\\]+/, ''));
+  if (file !== PUBLIC && !file.startsWith(PUBLIC + path.sep)) { send(res, 403, { 'content-type': 'text/plain' }, 'Forbidden'); return; }
   fs.readFile(file, (err, data) => {
-    if (err) { res.writeHead(404, { 'content-type': 'text/plain' }); res.end('Not found'); return; }
-    res.writeHead(200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-cache' });
-    res.end(data);
+    if (err) { send(res, 404, { 'content-type': 'text/plain' }, 'Not found'); return; }
+    send(res, 200, { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-cache' }, head ? undefined : data);
   });
 });
 
