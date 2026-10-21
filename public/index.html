@@ -3268,15 +3268,16 @@ const EL_ICON = {
   stone: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l9 7-3 12H6L3 9z"/></svg>'
 };
 function qmOn(V) { const c = V && V.cb, s = c && c.S[V.me]; return !!(s && s.eu >= 4); }
+(function () { var st = document.createElement('style'); st.textContent = '.card.upg{box-shadow:0 0 0 2px #e8c35a inset}.card.upg3{box-shadow:0 0 0 2px #ffd86b inset,0 0 10px 2px #ffd86b}'; document.head.appendChild(st); })();
 function cardHTML(id, act, arg, opts) {
   opts = opts || {};
   const d = CARDS[id];
   const ls = opts.live;
   const live = d.live && ls ? '<span class="live">' + d.live(ls) + '</span>' : '';
   const rar = RAR[id];
-  const el = CARD_EL[id]; const cls = 'card t-' + d.t + (el ? ' elf el-' + el : '') + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '');
+  const el = CARD_EL[id]; const cls = 'card t-' + d.t + (el ? ' elf el-' + el : '') + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '') + (opts.lv ? ' upg upg' + opts.lv : '');
   return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + (opts.rv != null ? ' style="--i:' + opts.rv + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + (el ? EL_NAME[el] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
-    '<span class="cost">' + (d.c < 0 ? '–' : d.c) + '</span>' + (el ? '<span class="elicon" aria-hidden="true">' + EL_ICON[el] + '</span>' : '') + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + '</span><span class="cname">' + esc(d.n) + '</span>' +
+    '<span class="cost">' + (d.c < 0 ? '–' : d.c) + '</span>' + (el ? '<span class="elicon" aria-hidden="true">' + EL_ICON[el] + '</span>' : '') + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + (opts.lv ? ' · upgrade +' + opts.lv : '') + '</span><span class="cname">' + esc(d.n) + '</span>' +
     '<span class="cdesc">' + esc(d.d) + live + '</span>' + (opts.price != null ? '<span class="price">' + opts.price + ' gold</span>' : '') + (opts.kb ? '<span class="kbn" aria-hidden="true">' + opts.kb + '</span>' : '') + '</button>';
 }
 function vName(V, pi) {
@@ -3561,7 +3562,7 @@ function combatHTML(V, prev) {
       : '<div class="big safe">' + ICON.check + 'No attacks at you next turn</div>';
   }
   const ls = liveSide(V);
-  const hand = cb.hand.map(([u, id], i) => cardHTML(id, 'card', u, { u: u, kb: i < 20 ? (i < 10 ? '' : '⇧') + String((i + 1) % 10) : '', sel: CL.sel === u, dim: CARDS[id].c > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
+  const hand = cb.hand.map(([u, id, lv], i) => cardHTML(id, 'card', u, { lv: lv, u: u, kb: i < 20 ? (i < 10 ? '' : '⇧') + String((i + 1) % 10) : '', sel: CL.sel === u, dim: CARDS[id].c > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
   const endLabel = duel ? (myTurn ? 'End turn' : 'Rival’s turn') : waiting ? 'Waiting for partner…' : 'End turn';
   const canEnd = !cb.busy && !s.dn && myTurn;
   const selCard = CL.sel != null ? cb.hand.find(h => h[0] === CL.sel) : null;
@@ -3646,7 +3647,7 @@ function restHTML(V) {
   const healAmt = Math.ceil(me.mx * 0.25);
   return '<section class="panel"><h2>Rest site</h2>' + sceneBanner('rest') + '<p class="muted">A dying campfire in the dark. Choose one.</p>' +
     (me.dn ? '<p>You rested.</p>' : '<div class="choices"><button type="button" class="btn primary" data-act="restheal">Rest: heal ' + healAmt + ' HP</button>' +
-    '<button type="button" class="btn" data-act="restremove"' + (V.deck.length <= 5 ? ' disabled' : '') + '>Meditate: remove a card</button></div>') + waitNote(V) + '</section>';
+    '<button type="button" class="btn" data-act="restremove"' + (V.deck.some(function (k) { return (k[2] || 0) < 3 && CARDS[k[1]].c >= 0 && !CARDS[k[1]].curse; }) ? '' : ' disabled') + '>Smith: upgrade a card (max +3)</button></div>') + waitNote(V) + '</section>';
 }
 function shopHTML(V) {
   const sh = V.shop, me = V.P[V.me];
@@ -3937,10 +3938,10 @@ function lobbyHTML(V) {
 function overlayHTML(V) {
   const o = CL.overlay;
   if (!o) return '';
-  const remove = o.mode === 'remove';
-  return '<div class="overlay" role="dialog" aria-modal="true" aria-label="' + (remove ? 'Remove a card' : 'Your deck') + '"><section class="panel"><div class="row"><h2>' + (remove ? 'Choose a card to remove' : 'Your deck') + '</h2><span class="spacer"></span><button type="button" class="btn" data-act="close">' + (remove ? 'Cancel' : 'Close') + '</button></div>' +
+  const upg = o.mode === 'upgrade'; const remove = o.mode === 'remove' || upg;
+  return '<div class="overlay" role="dialog" aria-modal="true" aria-label="' + (upg ? 'Upgrade a card' : remove ? 'Remove a card' : 'Your deck') + '"><section class="panel"><div class="row"><h2>' + (upg ? 'Choose a card to upgrade' : remove ? 'Choose a card to remove' : 'Your deck') + '</h2><span class="spacer"></span><button type="button" class="btn" data-act="close">' + (remove ? 'Cancel' : 'Close') + '</button></div>' +
     (V.deckCut ? '<p class="muted">Deck list unavailable right now.</p>' : '') +
-    '<div class="cards">' + V.deck.map(([u, id]) => cardHTML(id, remove ? 'remove' : 'noop', u)).join('') + '</div>' +
+    '<div class="cards">' + V.deck.map(([u, id, lv]) => upg ? ((lv || 0) < 3 ? cardHTML(id, 'upgrade', u, { lv: lv }) : cardHTML(id, 'noop', u, { lv: lv, dim: true })) : cardHTML(id, remove ? 'remove' : 'noop', u, { lv: lv })).join('') + '</div>' +
     (remove ? '' : '<h3>Relics</h3><div class="relicrow">' + V.P[V.me].rl.map(r => '<span><b>' + esc(RELICS[r].n) + '</b> · ' + esc(RELICS[r].d) + '</span>').join('') + '</div>') + '</section></div>';
 }
 function shakeScreen(level) {
@@ -4590,7 +4591,7 @@ function updateColdScreen() {
   }
   ov.style.display = show ? 'flex' : 'none';
 }
-const SERVER_ACTS = ['hero', 'start', 'node', 'card', 'enemy', 'end', 'reward', 'bossreward', 'done', 'restheal', 'buy', 'remove', 'evt'];
+const SERVER_ACTS = ['hero', 'start', 'node', 'card', 'enemy', 'end', 'reward', 'bossreward', 'done', 'restheal', 'upgrade', 'buy', 'remove', 'evt'];
 function wsConnected() { return !!(ws && ws.readyState === 1); }
 function retryNow() {
   if (CL.role !== 'online' || wsConnected()) return;
@@ -5017,13 +5018,14 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'done': send('done'); break;
     case 'rematch': send('rematch'); break;
     case 'restheal': send('restheal'); break;
-    case 'restremove': CL.overlay = { mode: 'remove', from: 'rest' }; paint(V); break;
+    case 'restremove': CL.overlay = { mode: 'upgrade', from: 'rest' }; paint(V); break;
     case 'shopremove': CL.overlay = { mode: 'remove', from: 'shop' }; paint(V); break;
     case 'buy': send('buy', Number(arg)); break;
     case 'evt': send('evt', 0); break;
     case 'eventremove': CL.overlay = { mode: 'remove', from: 'event' }; paint(V); break;
     case 'deck': CL.overlay = { mode: 'view' }; paint(V); break;
     case 'pile': pileView(arg, b); break;
+    case 'upgrade': CL.overlay = null; send('upgrade', Number(arg)); if (CL.role === 'online') paint(V); break;
     case 'close': CL.overlay = null; paint(V); break;
     case 'remove': { const from = CL.overlay && CL.overlay.from; CL.overlay = null; send('remove', Number(arg), from); if (CL.role === 'online') paint(V); break; }
     default: break;
@@ -5449,7 +5451,7 @@ function czShow(src) {
     CZ.el = document.createElement('div'); CZ.el.id = 'cardzoom'; CZ.el.setAttribute('aria-hidden', 'true');
     document.body.appendChild(CZ.el);
   }
-  CZ.el.innerHTML = cardHTML(h[1], 'zoom', u, { live: liveSide(V) });
+  CZ.el.innerHTML = cardHTML(h[1], 'zoom', u, { live: liveSide(V), lv: h[2] });
   const b = CZ.el.querySelector('.card'); if (b) b.tabIndex = -1;
   CZ.src = src; CZ.u = u; CZ.pend = null;
   const r = src.getBoundingClientRect(), w = CZ.el.offsetWidth, ht = CZ.el.offsetHeight;

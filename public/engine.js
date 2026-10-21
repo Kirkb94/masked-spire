@@ -499,7 +499,7 @@ function newSide(pi) {
   const p = P(pi);
   return { isP: true, pi, hp: p.hp, max: p.maxHp, block: 0, energy: 3, flow: 0, flowEnd: 0, rage: 0, str: (hasR(pi, 'cinder') ? 1 : 0) + (hasR(pi, 'bonecrown') ? 2 : 0), weak: 0, vuln: 0, frail: 0, drain: 0, hush: 0, hushNow: 0,
     thorns: (hasR(pi, 'thornring') ? 2 : 0) + (hasR(pi, 'ironbark') ? 3 : 0), composure: 0, rhythm: 0, keep: 0, rampart: 0, keepAll: 0, bloodpact: 0, ragegain: 0, stance: hasR(pi, 'hornedmask') ? 'calm' : null, switches: 0, mantra: 0, serenity: 0, ironplus: 0,
-    draw: shuffle(p.deck.map(c => mk(c.id))), hand: [], discard: [], exhaust: [], pwr: [], played: 0, lastAttack: 5, atkTotal: 0, elu: [],
+    draw: shuffle(p.deck.map(c => { const n = mk(c.id); if (c.lv) n.lv = c.lv; return n; })), hand: [], discard: [], exhaust: [], pwr: [], played: 0, lastAttack: 5, atkTotal: 0, elu: [],
     ready: false, down: p.hp <= 0, turnN: 0, animS: 0, animK: '', fwS: 0, fwN: 0, hurtNow: false };
 }
 function startCombat(keys, kind) {
@@ -541,7 +541,7 @@ function startTurnSide(s) {
   const carry = s.keep ? Math.floor((s.flowEnd || 0) / 2) : 0;
   s.flow = s.composure + (first && hasR(pi, 'mask') ? 1 : 0) + carry;
   if (s.ragegain) addRage(s.ragegain);
-  s.played = 0;
+  s.played = 0; s.lastT = null;
   s.switches = 0;
   s.ready = false;
   if (first && hasR(pi, 'quadmask')) {
@@ -569,6 +569,8 @@ const EL_COMBO = { repeatBlock: 2, switchDraw: 1 };
 /* Element-combo helpers for cards: s.elPrev is the last Attack element before the card being played. */
 function elSwitched() { const s = SF(); return !!s.elPrev && !!s.el && s.elPrev !== s.el; }
 function elRepeated() { const s = SF(); return !!s.elPrev && s.elPrev === s.el; }
+/* Card upgrade defaults (tune freely). Lv1: +dmg/+block/power draw. Lv2: refund energy. Lv3: Link bonus when the previous card this turn was a different type. */
+const UPG = { dmg: 2, block: 2, powerDraw: 1, refund: 1, linkDmg: 4, linkBlock: 4, linkDraw: 1, linkEnergy: 1 };
 function gain(n, raw) {
   const s = A;
   if (!raw && s.frail > 0) n = Math.floor(n * 0.75);
@@ -644,7 +646,7 @@ function hit(t, base, times) {
   times = times || 1;
   for (let i = 0; i < times; i++) {
     if (!t || t.dead || t.down || c.over || a.down) break;
-    let d = base + a.str + a.rage + (hasR(a.pi, 'whetstone') ? 1 : 0) + (a.rhythm || 0) * a.flow;
+    let d = base + a.str + a.rage + (hasR(a.pi, 'whetstone') ? 1 : 0) + (a.lvDmg || 0) + (a.rhythm || 0) * a.flow;
     if (a.weak > 0) d -= a.weak;
     if (a.stance === 'fury') d = Math.floor(d * 1.5);
     if (a.stance === 'iron' && !a.ironplus) d = Math.floor(d * 0.75);
@@ -746,7 +748,18 @@ function playCard(pi, uid, tgt) {
   if (d.t === 'attack') anim(s, hk === 'bulwark' ? 'slam' : hk === 'brute' ? 'smash' : hk === 'elementalist' ? 'cast' : 'lunge');
   const o = c.duel ? opp(s) : null;
   if (o) o.hurtNow = false;
+  const lv = card.lv || 0, prevT = s.lastT, link = lv >= 3 && !!prevT && prevT !== d.t; s.lastT = d.t;
+  s.lvDmg = d.t === 'attack' ? (lv >= 1 ? UPG.dmg : 0) + (link ? UPG.linkDmg : 0) : 0;
   if (d.p) d.p(t);
+  s.lvDmg = 0;
+  if (!c.over) {
+    if (lv >= 1 && d.t === 'skill') gain(UPG.block, true);
+    if (lv >= 1 && d.t === 'power') draw(UPG.powerDraw);
+    if (lv >= 2 && d.c >= 1) s.energy += UPG.refund;
+    if (link && d.t === 'skill') { gain(UPG.linkBlock, true); draw(UPG.linkDraw); }
+    if (link && d.t === 'power') s.energy += UPG.linkEnergy;
+    if (link) log(d.n + ' links from ' + prevT + ' (+3 upgrade).');
+  }
   if (d.t !== 'attack') anim(s, s.block > b0 ? 'guard' : 'buff');
   if (c.over) return render();
   if (d.t === 'attack') { if (P(pi).hero === 'elementalist') { A = s; gain(1, true); if (elPrev && s.el) { if (s.el === elPrev) { if (EL_COMBO.repeatBlock > 0) { gain(EL_COMBO.repeatBlock, true); log('Elemental echo: repeated ' + s.el + '.'); } } else if (EL_COMBO.switchDraw > 0) { draw(EL_COMBO.switchDraw); log('Elemental shift: ' + elPrev + ' to ' + s.el + ', draw ' + EL_COMBO.switchDraw + '.'); } } } if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
@@ -1010,6 +1023,11 @@ function doAction(pi, a, x, y) {
     case 'bossreward': if (scr === 'actclear' && p.actclear && !p.actclear.taken && p.actclear.cards[x]) { p.deck.push(mk(p.actclear.cards[x])); p.actclear.taken = true; render(); } break;
     case 'done': if (['reward', 'treasure', 'shop', 'event', 'actclear', 'duelintro'].includes(scr)) { p.done = true; advanceIfDone(); } break;
     case 'restheal': if (scr === 'rest' && !p.done) { p.hp = Math.min(p.maxHp, p.hp + Math.ceil(p.maxHp * 0.25)); p.done = true; advanceIfDone(); } break;
+    case 'upgrade': {
+      const k = p.deck.find(q => q.u === Number(x));
+      if (scr === 'rest' && !p.done && k && (k.lv || 0) < 3 && CARDS[k.id].c >= 0 && !CARDS[k.id].curse) { k.lv = (k.lv || 0) + 1; p.done = true; note(pi, CARDS[k.id].n + ' upgraded to +' + k.lv + '.'); advanceIfDone(); }
+      break;
+    }
     case 'remove': {
       const i = p.deck.findIndex(c => c.u === Number(x));
       if (i < 0 || p.deck.length <= 5) break;
@@ -1168,7 +1186,7 @@ function buildView(me) {
   const V = {
     me, n: G.P.length, mode: G.mode, code: G.code, scr: G.screen, act: G.act, floor: G.floor, tok: p ? p.tok : null, ack: p ? p.ack : 0,
     P: G.P.map(q => ({ h: q.hero, hp: q.hp, mx: q.maxHp, g: q.gold, rl: q.relics, dn: q.done ? 1 : 0, vt: q.vote, on: q.conn ? 1 : 0, k: q.kills })),
-    deck: p ? p.deck.map(x => [x.u, x.id]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff), md: normMods(G.mods), rs: p ? { cp: p.cp || 0, dm: p.dmg || 0, tn: p.tn || 0 } : null
+    deck: p ? p.deck.map(x => [x.u, x.id, x.lv || 0]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff), md: normMods(G.mods), rs: p ? { cp: p.cp || 0, dm: p.dmg || 0, tn: p.tn || 0 } : null
   };
   const c = G.combat;
   if (G.screen === 'map') {
@@ -1192,7 +1210,7 @@ function buildView(me) {
     const guard = s.block + (P(me).hero === 'duelist' ? 2 * s.flow : 0) + 3 * s.rampart + (s.stance === 'iron' ? 4 + s.ironplus : 0);
     V.cb = {
       k: c.kind, t: c.turn, busy: c.busy ? 1 : 0, logs: c.log.slice(0, 5), duel: c.duel ? { a: c.duel.active, r: c.duel.round } : null, toll: c.finalToll ? 1 : 0,
-      en, S: c.S.map(sideView), hand: s.hand.map(x => [x.u, x.id]), piles: [s.draw.length, s.discard.length, s.exhaust.length], pc: [s.draw, s.discard, s.exhaust].map(a => a.map(x => x.id).sort()), pwr: (s.pwr || []).slice().sort(), played: s.played, pl: c.pl || null,
+      en, S: c.S.map(sideView), hand: s.hand.map(x => [x.u, x.id, x.lv || 0]), piles: [s.draw.length, s.discard.length, s.exhaust.length], pc: [s.draw, s.discard, s.exhaust].map(a => a.map(x => x.id).sort()), pwr: (s.pwr || []).slice().sort(), played: s.played, pl: c.pl || null,
       inc: { tot: inc, guard, extra: guard > s.block ? 1 : 0 }
     };
   }
