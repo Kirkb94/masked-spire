@@ -352,6 +352,9 @@ const EN = {
   stag:     { n: 'Hollow Stag', hp: [82, 86], bg: '#1E3E3A', elite: 1, pat: [{ k: 'block', v: 12, l: 'Antler Guard' }, { k: 'atk', dmg: 9, l: 'Gore' }, { k: 'atk', dmg: 20, l: 'CHARGE' }], note: 'The Charge is always telegraphed a turn early.' },
   bell:     { n: 'The Weeping Bellwarden', hp: [180, 180], bg: '#173A44', boss: 1, idle: 'sway', pat: [{ k: 'status', card: 'doombell', v: 2, l: 'Toll' }, { k: 'atk', dmg: 18, l: 'Slam' }, { k: 'atk', dmg: 6, hits: 3, l: 'Peal' }], note: 'At half HP: Final Toll. Each Doom Bell in hand deals 5 damage at end of turn.' },
   toad:     { n: 'Gloam Toad', art: 'leech', hp: [22, 25], bg: '#2A4A2E', pat: [{ k: 'atk', dmg: 4, vuln: 1, l: 'Sticky Tongue' }, { k: 'atk', dmg: 9, l: 'Gulp' }, { k: 'debuff', weak: 1, l: 'Croak' }], note: 'Sticky Tongue leaves you Vulnerable: take 50% more damage.' },
+  wisp:     { n: 'Marsh Wisp', art: 'moth', hp: [14, 16], bg: '#1F5A4E', idle: 'flutter', loop: 1, pat: [{ k: 'buff', ritual: 1, l: 'Glow' }, { k: 'atk', dmg: 4, l: 'Zap' }], note: 'Ritual: gains 1 Strength every turn. Its Zaps grow, so kill it early.' },
+  boar:     { n: 'Thistle Boar', art: 'ogre', hp: [26, 29], bg: '#3C4A26', pat: [{ k: 'buff', str: 2, l: 'Paw Ground' }, { k: 'atk', dmg: 9, l: 'Gore' }, { k: 'atk', dmg: 4, weak: 1, l: 'Snort' }], note: 'Paws the ground for +2 Strength, then gores. Kill it before the Gore lands twice.' },
+  spinner:  { n: 'Veil Spinner', art: 'puppet', hp: [20, 23], bg: '#33304A', pat: [{ k: 'atk', dmg: 3, vuln: 1, l: 'Snare' }, { k: 'atk', dmg: 3, hits: 3, l: 'Fang' }], note: 'Snare leaves you Vulnerable, then Fang bites three times. Block the Fang turn.' },
   /* Act II */
   hound:    { n: 'Scrap Hound', hp: [32, 35], bg: '#8A4A1E', pat: [{ k: 'atk', dmg: 10, l: 'Bite' }, { k: 'atk', dmg: 10, l: 'Bite' }, { k: 'summon', key: 'hound', count: 1, hp: 20, howl: 1, l: 'Howl' }], note: 'Howl: summons a pup if alone, otherwise +2 Strength.' },
   mimic:    { n: 'Coinmouth Mimic', hp: [40, 44], bg: '#7A3A18', pat: [{ k: 'debuff', steal: 15, l: 'Swallow' }, { k: 'atk', dmg: 11, l: 'Chomp' }, { k: 'debuff', steal: 15, l: 'Swallow' }, { k: 'atk', dmg: 11, l: 'Chomp' }, { k: 'flee', l: 'Flee' }], note: 'Flees after 4 turns with your gold. Kill it first for double back.' },
@@ -364,6 +367,9 @@ const EN = {
   ledger:   { n: 'The Ledger', hp: [110, 115], bg: '#3E2E22', elite: 1, pat: [{ k: 'block', v: 8, l: 'Audit' }, { k: 'atk', dmg: 22, tax: 1, l: 'Collect' }], note: 'Tax: if you play 7+ cards in a turn, Collect hits twice.' },
   cog:      { n: 'King Cog, the Hollow Crown', hp: [260, 260], bg: '#5A3414', boss: 1, pat: [{ k: 'atk', dmg: 14, hits: 2, l: 'Grind' }, { k: 'block', v: 15, l: 'Wind Up' }, { k: 'buff', str: 3, l: 'Overclock' }, { k: 'atk', dmg: 32, l: 'Crown Beam' }], note: 'At half HP the gears shatter: he acts twice a turn but takes 25% more damage.' },
   tinker:   { n: 'Tin Tinker', art: 'gear', hp: [30, 34], bg: '#7A5A30', pat: [{ k: 'buff', ally: 2, l: 'Tune Up' }, { k: 'atk', dmg: 7, frail: 1, l: 'Wrench' }], note: 'Tune Up gives every other enemy +2 Strength (itself if alone). Kill it early.' },
+  welder:   { n: 'Spark Welder', art: 'furnace', hp: [34, 38], bg: '#7A3A1A', pat: [{ k: 'atk', dmg: 5, weak: 1, l: 'Arc' }, { k: 'status', card: 'burn', v: 1, discard: 1, l: 'Spark Shower' }, { k: 'atk', dmg: 9, l: 'Weld' }], note: 'Spark Shower adds a Burn to your discard pile.' },
+  hornet:   { n: 'Brass Hornet', art: 'crow', hp: [26, 30], bg: '#8A6A22', pat: [{ k: 'atk', dmg: 2, hits: 4, l: 'Needle Storm' }, { k: 'block', v: 7, l: 'Hover' }], note: 'Four small hits: Block and Thorns punish it. Attack on Hover turns is wasted, so burst on Needle Storm.' },
+  golem:    { n: 'Scrap Golem', art: 'gear', hp: [48, 54], bg: '#5A4A38', pat: [{ k: 'block', v: 10, l: 'Harden' }, { k: 'atk', dmg: 14, frail: 1, l: 'Slam' }, { k: 'buff', str: 2, l: 'Grind' }], note: 'Slow and sturdy. Slam leaves you Frail: Block gives 25% less.' },
   tyrant:   { n: 'Scrapyard Tyrant', art: 'ogre', hp: [100, 106], bg: '#5E3A1C', elite: 1, pat: [{ k: 'summon', key: 'hound', count: 1, hp: 20, l: 'Whistle' }, { k: 'atk', dmg: 16, l: 'Wrecking Swing' }, { k: 'block', v: 12, l: 'Scrap Plating' }, { k: 'atk', dmg: 9, hits: 2, weak: 1, l: 'Crush Down' }], note: 'Whistles up Scrap Pups (max 4 enemies). Area damage clears them fast.' },
   /* Act III */
   lantern:  { n: 'Lantern Warden', art: 'voidsentry', hp: [52, 56], bg: '#2A2050', pat: [{ k: 'block', v: 10, l: 'Shutter' }, { k: 'atk', dmg: 6, hits: 3, l: 'Triple Shot' }], note: 'Shutter turns are your window to attack. Triple Shot punishes low Block.' },
@@ -376,6 +382,9 @@ const EN = {
   unwritten:{ n: 'The Unwritten', hp: [190, 200], bg: '#3A3442', elite: 1, pat: [{ k: 'atk', mimic: 1, l: 'Transcribe' }, { k: 'debuff', erase: 1, block: 12, l: 'Erase' }, { k: 'atk', dmg: 26, l: 'Rewrite' }], note: 'Transcribe copies your last Attack. Erase removes a card from your draw pile for this fight.' },
   choir:    { n: 'Choir Mouth', names: ['Mouth of Hunger', 'Mouth of Spite', 'Mouth of Sorrow'], hp: [62, 66], bg: '#5A1A2A', elite: 1, idle: 'sway', pat: [{ k: 'atk', dmg: 9, harmony: 1, l: 'Bite' }], note: 'Harmony: while all three live, each gains +2 Strength per turn. Break the chord.' },
   eclipse:  { n: 'Eclipse Duelist', hp: [180, 190], bg: '#1A1428', elite: 1, pat: [{ k: 'buff', parry: 1, block: 10, l: 'En Garde' }, { k: 'atk', dmg: 6, hits: 4, l: 'Flurry' }, { k: 'atk', dmg: 26, l: 'Riposte' }], note: 'Parry: fully blocks your first hit next turn. Lead with a cheap one.' },
+  wailer:   { n: 'Hollow Wailer', art: 'seer', hp: [48, 52], bg: '#2A2248', pat: [{ k: 'atk', dmg: 5, hits: 2, weak: 1, l: 'Keen' }, { k: 'debuff', erase: 1, block: 8, l: 'Hollow Note' }, { k: 'atk', dmg: 17, l: 'Dirge' }], note: 'Hollow Note erases a card from your draw pile for this fight. Dirge hits hard.' },
+  stalker:  { n: 'Porcelain Stalker', art: 'mirror', hp: [52, 56], bg: '#4A3A50', pat: [{ k: 'block', v: 6, l: 'Veil' }, { k: 'atk', dmg: 8, hits: 2, vuln: 1, l: 'Rend' }, { k: 'atk', dmg: 8, hits: 2, l: 'Rend' }], note: 'The first Rend leaves you Vulnerable, so the second hurts more. Block the pair.' },
+  tithe:    { n: 'Void Tithe', art: 'nullmask', hp: [56, 60], bg: '#1E1428', pat: [{ k: 'debuff', steal: 10, l: 'Tithe' }, { k: 'atk', dmg: 12, weak: 1, l: 'Rebuke' }, { k: 'atk', dmg: 18, l: 'Condemn' }], note: 'Tithe steals 10 gold (not returned). Condemn is the big hit.' },
   spire:    { n: 'The Faceless Spire', hp: [420, 420], bg: '#24123A', boss: 1, idle: 'sway', pat: [{ k: 'atk', dmg: 6, hits: 4, l: 'Porcelain Flurry' }, { k: 'atk', dmg: 12, block: 25, l: 'Lantern Wall' }, { k: 'atk', dmg: 30, l: 'Horned Crush' }], p2: [{ k: 'atk', dmg: 22, addCard: 'void', selfStr: 2, l: 'Void' }], note: 'Wears each hero’s mask in turn. At 40% HP it unmasks: Void hits grow stronger every turn.' }
 };
 /* Alternate bosses (one per act, 50% chance per run). phase = HP fraction that triggers the p2 pattern. */
@@ -397,16 +406,16 @@ const BOSS_SIZE = { bell: 1, cog: 1, spire: 1, briar: 1, auctioneer: 1, oracle: 
 
 const ACTS = [
   { n: 'The Hollow Wood', stage: '#1F3A3A',
-    easy: [['moth', 'crow'], ['rootling'], ['leech'], ['imp'], ['crow', 'crow'], ['toad']],
-    hard: [['moth', 'moth', 'crow'], ['rootling', 'imp'], ['acolyte', 'crow'], ['leech', 'moth'], ['imp', 'acolyte'], ['rootling', 'leech'], ['toad', 'moth']],
+    easy: [['moth', 'crow'], ['rootling'], ['leech'], ['imp'], ['crow', 'crow'], ['toad'], ['wisp'], ['spinner']],
+    hard: [['moth', 'moth', 'crow'], ['rootling', 'imp'], ['acolyte', 'crow'], ['leech', 'moth'], ['imp', 'acolyte'], ['rootling', 'leech'], ['toad', 'moth'], ['boar'], ['wisp', 'spinner'], ['boar', 'moth']],
     elites: [['ogre'], ['puppet', 'puppet'], ['stag']], boss: 'bell', alt: 'briar' },
   { n: 'The Rust Bazaar', stage: '#3A2414',
-    easy: [['hound', 'hound'], ['mimic'], ['wraith'], ['cultist'], ['tinker']],
-    hard: [['gear'], ['jailer', 'wraith'], ['cultist', 'hound'], ['mimic', 'jailer'], ['gear', 'cultist'], ['hound', 'hound', 'wraith'], ['tinker', 'hound']],
+    easy: [['hound', 'hound'], ['mimic'], ['wraith'], ['cultist'], ['tinker'], ['welder'], ['hornet']],
+    hard: [['gear'], ['jailer', 'wraith'], ['cultist', 'hound'], ['mimic', 'jailer'], ['gear', 'cultist'], ['hound', 'hound', 'wraith'], ['tinker', 'hound'], ['golem'], ['welder', 'hornet'], ['golem', 'hornet']],
     elites: [['furnace'], ['matriarch'], ['ledger'], ['tyrant']], boss: 'cog', alt: 'auctioneer' },
   { n: 'The Faceless Crown', stage: '#2A1840',
-    easy: [['voidsentry', 'voidsentry'], ['mirror'], ['ossuary'], ['seer'], ['lantern']],
-    hard: [['colossus'], ['nullmask', 'seer'], ['mirror', 'ossuary'], ['voidsentry', 'nullmask'], ['colossus', 'seer'], ['lantern', 'mirror']],
+    easy: [['voidsentry', 'voidsentry'], ['mirror'], ['ossuary'], ['seer'], ['lantern'], ['wailer'], ['stalker']],
+    hard: [['colossus'], ['nullmask', 'seer'], ['mirror', 'ossuary'], ['voidsentry', 'nullmask'], ['colossus', 'seer'], ['lantern', 'mirror'], ['tithe'], ['wailer', 'stalker'], ['tithe', 'lantern']],
     elites: [['unwritten'], ['choir', 'choir', 'choir'], ['eclipse']], boss: 'spire', alt: 'oracle' }
 ];
 const curAct = () => ACTS[G.act - 1];
@@ -851,7 +860,13 @@ const POTIONS = {
   prismelixir: { n: 'Prism Elixir', h: 'elementalist', k: 'prism', fx: [['burn', 2], ['chill', 2], ['shock', 2]], p: [35, 50], d: 'Apply 2 Burn, 2 Chill and 2 Shock to ALL enemies.' },
   rhythmelixir: { n: 'Rhythm Elixir', h: 'duelist', k: 'flow', v: 6, fx: [['flow', 6]], p: [30, 45], d: 'Gain 6 Flow.' },
   sunderingdraught: { n: 'Sundering Draught', h: 'duelist', k: 'sunder', fx: [['weak', 1], ['vuln', 2]], p: [35, 50], d: 'Apply 1 Weak and 2 Vulnerable to ALL enemies.' },
-  cleansingtonic: { n: 'Cleansing Tonic', h: 'duelist', k: 'cleanse', fx: [['cleanse', 1], ['flow', 3]], p: [30, 45], d: 'Remove your Frail and Vulnerable. Gain 3 Flow.' }
+  cleansingtonic: { n: 'Cleansing Tonic', h: 'duelist', k: 'cleanse', fx: [['cleanse', 1], ['flow', 3]], p: [30, 45], d: 'Remove your Frail and Vulnerable. Gain 3 Flow.' },
+  bastiondraught: { n: 'Bastion Draught', h: 'bulwark', k: 'block', v: 12, fx: [['block', 12]], p: [30, 45], d: 'Gain 12 Block.' },
+  thornbarktonic: { n: 'Thornbark Tonic', h: 'bulwark', k: 'thorns', v: 4, fx: [['thorns', 4]], p: [30, 45], d: 'Gain 4 Thorns.' },
+  ironhideelixir: { n: 'Ironhide Elixir', h: 'bulwark', k: 'ironhide', fx: [['block', 6], ['thorns', 2]], p: [35, 50], d: 'Gain 6 Block and 2 Thorns.' },
+  wrathtonic: { n: 'Wrath Tonic', h: 'brute', k: 'rage', v: 3, fx: [['rage', 3]], p: [30, 45], d: 'Gain 3 Rage.' },
+  ironblooddraught: { n: 'Ironblood Draught', h: 'brute', k: 'stance', fx: [['stance', 'iron']], p: [30, 45], d: 'Enter Iron stance. Draw 1 card.' },
+  berserkersbrew: { n: 'Berserker’s Brew', h: 'brute', k: 'berserk', fx: [['stance', 'fury'], ['rage', 1]], p: [35, 50], d: 'Enter Fury stance and gain 1 Rage. Draw 1 card.' }
 };
 function potionPick(p) {
   const ids = Object.keys(POTIONS).filter(k => POTIONS[k].h === p.hero);
@@ -875,6 +890,10 @@ function usePotion(pi, i) {
     const kind = f[0], v = f[1];
     if (kind === 'flow') { s.flow += v; float(tagOf(s), '+' + v + ' Flow', 'buff'); }
     else if (kind === 'cleanse') { s.frail = 0; s.vuln = 0; float(tagOf(s), 'Cleansed', 'buff'); }
+    else if (kind === 'block') gain(v, true);
+    else if (kind === 'thorns') { s.thorns = (s.thorns || 0) + v; float(tagOf(s), '+' + v + ' Thorns', 'buff'); }
+    else if (kind === 'rage') addRage(v);
+    else if (kind === 'stance') enterStance(v);
     else foes().forEach(e => debuffEnemy(e, kind, v));
   });
   p.pot = p.pot.filter((q, j) => j !== i);
@@ -1337,8 +1356,11 @@ function describeIntent(e, it, T) {
   if (it.k === 'flee') return { c: 'k-deb', v: '', x: it.l + ': escapes with the stolen gold', tot: 0 };
   return { c: 'k-buf', v: '', x: it.l, tot: 0 };
 }
+/* Preview helpers: mirror gain()'s Frail reduction so previews match what actually lands. */
+function frailed(s, n) { return s.frail > 0 ? Math.floor(n * 0.75) : n; }
+function fwBlock(s) { return P(s.pi).hero === 'duelist' ? frailed(s, 2 * s.flow) : 0; }
 function guardOf(s) {
-  return s.block + (P(s.pi).hero === 'duelist' ? 2 * s.flow : 0) + 3 * s.rampart + (s.stance === 'iron' ? 4 + s.ironplus : 0);
+  return s.block + fwBlock(s) + frailed(s, 3 * s.rampart) + (s.stance === 'iron' ? frailed(s, 4 + s.ironplus) : 0);
 }
 /* Walk living enemies in real act order, tracking Vulnerable applied to each target by earlier attacks (it lands after the hits, like enemyAct). */
 function simIncoming(me) {
@@ -1399,7 +1421,7 @@ function previewCard(id, s, e) {
 function sideView(s) {
   const hero = P(s.pi).hero;
   return {
-    pi: s.pi, hp: s.hp, mx: s.max, block: s.block, gd: guardOf(s), energy: s.energy, flow: s.flow, rage: s.rage,
+    pi: s.pi, hp: s.hp, mx: s.max, block: s.block, gd: guardOf(s) - fwBlock(s), energy: s.energy, flow: s.flow, rage: s.rage,
     st: [s.weak, s.vuln, s.frail, s.hushNow, s.drain, s.thorns, s.composure, s.rhythm, s.keep, s.rampart, s.keepAll, s.bloodpact, s.ragegain],
     sn: s.stance, sw: s.switches, sx: [s.mantra, s.serenity, s.ironplus],
     rdy: s.ready ? 1 : 0, dn: s.down ? 1 : 0, an: [s.animS, s.animK], el: s.el || '', eu: s.elu ? s.elu.length : 0, fw: [s.fwS, s.fwN], hn: s.hand.length,
@@ -1434,7 +1456,7 @@ function buildView(me) {
     });
     const inc = sim.inc;
     const guard = guardOf(s);
-    const parts = { bl: s.block, fw: P(me).hero === 'duelist' ? 2 * s.flow : 0, flow: s.flow, rp: 3 * s.rampart, rpn: s.rampart, ir: s.stance === 'iron' ? 4 + s.ironplus : 0 };
+    const parts = { bl: s.block, fw: fwBlock(s), flow: s.flow, rp: 3 * s.rampart, rpn: s.rampart, ir: s.stance === 'iron' ? 4 + s.ironplus : 0 };
     V.cb = {
       k: c.kind, t: c.turn, busy: c.busy ? 1 : 0, logs: c.log.slice(0, 5), duel: c.duel ? { a: c.duel.active, r: c.duel.round } : null, toll: c.finalToll ? 1 : 0,
       en, S: c.S.map(sideView), hand: s.hand.map(x => [x.u, x.id, x.lv || 0]), piles: [s.draw.length, s.discard.length, s.exhaust.length], pc: [s.draw, s.discard, s.exhaust].map(a => a.map(x => x.id).sort()), pwr: (s.pwr || []).slice().sort(), played: s.played, pl: c.pl || null,

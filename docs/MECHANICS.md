@@ -9,6 +9,12 @@ The full tables (every card, hero, relic, enemy and intent) live in the spreadsh
 - Each act's boss is rolled per run (50% chance each, fixed by the map seed). Alternates: The Briar Regent (Act I, Thorns and self-heal, enrages at 50% HP), The Gilded Auctioneer (Act II, steals gold, Sold! hits twice if you played 7+ cards, Fire Sale at 50% HP), The Veiled Oracle (Act III, permanent Fate curses and hidden Hush, Unwrite and Void Gaze at 40% HP). In co-op both players face the same boss.
 - Solo: beating the Spire wins. Co-op: both players then duel.
 
+## New normal enemies
+Three per act, using existing intent rules (the art is borrowed for now).
+- **Act I:** Marsh Wisp (Glow gives Ritual +1, then Zap forever), Thistle Boar (+2 Strength, Gore 9, Snort 4 with Weak), Veil Spinner (Snare 3 with Vulnerable, Fang 3x3).
+- **Act II:** Spark Welder (Arc 5 with Weak, 1 Burn to discard, Weld 9), Brass Hornet (Needle Storm 2x4, Hover 7 Block), Scrap Golem (Harden 10 Block, Slam 14 with Frail, Grind +2 Strength).
+- **Act III:** Hollow Wailer (Keen 5x2 with Weak, erase a draw-pile card + 8 Block, Dirge 17), Porcelain Stalker (Veil 6 Block, Rend 8x2 with Vulnerable, Rend 8x2), Void Tithe (steals 10 gold, Rebuke 12 with Weak, Condemn 18).
+
 ## A turn
 1. You get 3 Energy and draw 5 cards (hand cap 10). Block resets to 0 (Bulwark keeps half).
 2. Play cards by spending Energy. Attacks hit enemies, Skills are mostly Block or utility, Powers last the whole fight. Exhaust cards are removed until the fight ends.

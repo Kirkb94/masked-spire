@@ -59,6 +59,8 @@ button { font: inherit; color: inherit; }
 .stat { display: flex; align-items: center; gap: 7px; font-variant-numeric: tabular-nums; font-weight: 700; }
 .stat svg { width: 20px; height: 20px; }
 .relics { display: flex; flex-wrap: wrap; gap: 6px; }
+.ico { width: 1.35em; height: 1.35em; vertical-align: -0.32em; margin-right: 5px; flex: none; }
+.belt .pot .ico { margin-right: 4px; }
 .chip { font-size: 14px; padding: 3px 10px; border-radius: 999px; background: var(--panel2); border: 1px solid var(--line); }
 
 /* Cards */
@@ -2719,6 +2721,7 @@ const SND = (function () {
   };
   /* which archetype + pitch each enemy uses */
   const EVOICE = {
+    wisp: ['ghost', 1.6], boar: ['beast', 0.9], spinner: ['insect', 0.7], welder: ['fire', 1.2], hornet: ['insect', 1.4], golem: ['stomp', 1.2], wailer: ['choral', 1.3], stalker: ['glass', 0.8], tithe: ['void', 0.7],
     moth: ['insect', 1], rootling: ['wood', 1], crow: ['bird', 1], leech: ['slime', 1.2], imp: ['imp', 1], acolyte: ['chant', 1.1], ogre: ['beast', 0.7], puppet: ['wood', 1.4], stag: ['beast', 1.25], bell: ['bell', 1],
     hound: ['beast', 1.5], mimic: ['wood', 0.7], wraith: ['ghost', 1], gear: ['mech', 0.9], cultist: ['chant', 0.9], jailer: ['chain', 0.8], furnace: ['fire', 0.7], matriarch: ['chant', 1.5], ledger: ['paper', 1], cog: ['mech', 0.5],
     voidsentry: ['void', 1.1], mirror: ['glass', 1], ossuary: ['bone', 1], seer: ['ghost', 1.5], colossus: ['stomp', 1], nullmask: ['void', 0.8], unwritten: ['paper', 0.7], choir: ['choral', 1.2], eclipse: ['void', 0.6], spire: ['choral', 0.6], briar: ['wood', 0.6], auctioneer: ['paper', 0.8], oracle: ['ghost', 0.7]
@@ -3466,7 +3469,7 @@ function topbar(V) {
     '<span class="stat" title="Health">' + ICON.heart + me.hp + ' / ' + me.mx + '</span>' +
     '<span class="stat" title="Gold">' + ICON.coin + me.g + '</span>' +
     '<span class="stat" title="Act and floor">' + ICON.floor + 'Act ' + ROMAN[V.act - 1] + ' · Floor ' + floorNo(V.floor) + '/' + (ROWS + 1) + '</span>' + partner + modChips(V.md || 0) +
-    '<span class="relics">' + me.rl.map(r => '<span class="chip' + (r === 'quadmask' && qmOn(V) ? ' qmglow' : '') + '" title="' + esc(RELICS[r].d) + '">' + esc(RELICS[r].n) + '</span>').join('') + '</span>' +
+    '<span class="relics">' + me.rl.map(r => '<span class="chip' + (r === 'quadmask' && qmOn(V) ? ' qmglow' : '') + '" title="' + esc(RELICS[r].d) + '">' + relicIcon(r) + esc(RELICS[r].n) + '</span>').join('') + '</span>' +
     '<span class="spacer"></span>' + (V.code ? '<span class="chip code" title="Room code">Room ' + esc(V.code.toUpperCase()) + '</span>' : '') +
     '<button type="button" class="btn snd" data-act="snd" aria-label="Sound settings">' + SND.SPK + ' Sound</button><button type="button" class="btn" data-act="deck">Deck (' + V.deck.length + ')</button></header>';
 }
@@ -3514,7 +3517,8 @@ function barFx(V) {
 }
 function shownBlock(V, s) {
   const cb = V.cb;
-  if (!cb || cb.busy || cb.duel || s.gd == null) return s.block;
+  if (!cb || cb.duel || s.gd == null) return s.block;
+  if (cb.busy && !(s.flow > 0)) return s.block;
   return Math.max(s.block, s.gd);
 }
 function bigShield(n, pop, id) {
@@ -3754,12 +3758,61 @@ function combatHTML(V, prev) {
     beltHTML(V, canEnd) + '<div class="hand" aria-label="Your hand">' + (hand || '<span class="muted">' + (cb.busy ? 'Resolving…' : waiting ? 'Waiting for your partner to end their turn…' : 'Your hand is empty.') + '</span>') + '</div></div>' +
     logPanelHTML() + '</section>';
 }
+/* ---------- Procedural potion / relic icons (32x32 viewBox, no assets) ---------- */
+const ICO_SHAPES = {
+  ring: `<circle cx='16' cy='18' r='8' fill='none' stroke='@F' stroke-width='3'/><path d='M16 5l3.5 5h-7z' fill='@F'/>`,
+  mask: `<path d='M6 9c6-3 14-3 20 0 0 9-4 15-10 15S6 18 6 9z' fill='@F'/><ellipse cx='11.5' cy='14' rx='2.6' ry='1.8' fill='@B'/><ellipse cx='20.5' cy='14' rx='2.6' ry='1.8' fill='@B'/>`,
+  coin: `<circle cx='16' cy='16' r='10' fill='@F'/><circle cx='16' cy='16' r='5.5' fill='none' stroke='@B' stroke-width='2'/>`,
+  bell: `<path d='M16 5c-5 0-7 4-7 9v5l-2 3h18l-2-3v-5c0-5-2-9-7-9z' fill='@F'/><circle cx='16' cy='26' r='2' fill='@F'/>`,
+  feather: `<path d='M7 26C7 13 14 7 26 6c0 11-5 17-14 17z' fill='@F'/><path d='M7 26L20 12' stroke='@B' stroke-width='1.6'/>`,
+  hourglass: `<path d='M9 6h14M9 26h14M10 6c0 6 6 6 6 10s-6 4-6 10M22 6c0 6-6 6-6 10s6 4 6 10' fill='none' stroke='@F' stroke-width='2.6'/>`,
+  shield: `<path d='M16 5l9 3v8c0 5-4 8-9 11-5-3-9-6-9-11V8z' fill='@F'/>`,
+  heart: `<path d='M16 27C5 19 5 9 11.5 8.5 14.5 8.5 16 10.5 16 12c0-1.500 1.500-3.500 4.500-3.500C27 9 27 19 16 27z' fill='@F'/>`,
+  flame: `<path d='M16 4c1 5 8 8 8 15a8 8 0 0 1-16 0c0-3 2-5 3-7 1 2 2 2 2 1 0-3 1-6 3-9z' fill='@F'/>`,
+  spark: `<path d='M16 4l3.500 8.500L28 16l-8.500 3.500L16 28l-3.500-8.500L4 16l8.500-3.500z' fill='@F'/>`,
+  eye: `<path d='M3 16c5-8 21-8 26 0-5 8-21 8-26 0z' fill='@F'/><circle cx='16' cy='16' r='4.500' fill='@B'/>`,
+  crown: `<path d='M5 24V9l7 6 4-8 4 8 7-6v15z' fill='@F'/>`,
+  pouch: `<path d='M11 5h10l-3 5c6 3 9 8 7 15H7c-2-7 1-12 7-15z' fill='@F'/>`,
+  candle: `<rect x='12' y='15' width='8' height='12' rx='1' fill='@F'/><path d='M16 4c4 3.500 4 7 0 9.500-4-2.500-4-6 0-9.500z' fill='@F'/>`,
+  compass: `<circle cx='16' cy='16' r='11' fill='none' stroke='@F' stroke-width='2.600'/><path d='M16 7l3.500 9-3.500 9-3.500-9z' fill='@F'/>`,
+  boot: `<path d='M10 5h9v11l8 4v7H8z' fill='@F'/>`,
+  sword: `<path d='M16 3l3.500 4v13h-7V7z' fill='@F'/><rect x='9' y='20' width='14' height='3' fill='@F'/><rect x='14.500' y='23' width='3' height='6' fill='@F'/>`,
+  thorn: `<path d='M16 3l3 8 8-4-4 8 6 4-8 1 2 8-7-5-7 5 2-8-8-1 6-4-4-8 8 4z' fill='@F'/>`,
+  bolt: `<path d='M19 3L7 18h8l-3 11 13-16h-8z' fill='@F'/>`,
+  cup: `<path d='M7 6h18c0 9-3 14-9 14S7 15 7 6z' fill='@F'/><rect x='14.500' y='20' width='3' height='5' fill='@F'/><rect x='9' y='25' width='14' height='3' fill='@F'/>`,
+  drop: `<path d='M16 4c5 7 9 11 9 16a9 9 0 0 1-18 0c0-5 4-9 9-16z' fill='@F'/>`
+};
+const REL_ART = {
+  mask: ['mask', '#1C6670'], lanternhelm: ['shield', '#B4561B'], hornedmask: ['mask', '#7E1B26'], quadmask: ['spark', '#5B448F'],
+  whetstone: ['sword', '#5b6670'], locket: ['shield', '#7a6a4a'], hourglass: ['hourglass', '#8a6a2a'], ember: ['ring', '#b4432a'],
+  quill: ['feather', '#a8832a'], heartstone: ['heart', '#9a2f45'], thornring: ['ring', '#3d6b32'], bellshard: ['bell', '#4a6a8a'],
+  cinder: ['flame', '#a8431f'], satchel: ['pouch', '#7a5a2a'], tonic: ['drop', '#5a7a3a'], bountypouch: ['pouch', '#8a6a1a'],
+  carrion: ['heart', '#4a2a4a'], thimble: ['drop', '#6a3a8a'], pocket: ['pouch', '#5a4a6a'], spurboots: ['boot', '#6a4a2a'],
+  ribbon: ['spark', '#8a2a6a'], ironbark: ['thorn', '#4a5a2a'], luckycoin: ['coin', '#a8831a'], stormglass: ['bolt', '#3a5a9a'],
+  wardenseal: ['shield', '#2a5a6a'], bonecrown: ['crown', '#6a6a5a'], aegisplate: ['shield', '#3a4a7a'], bloodchalice: ['cup', '#7a1a2a'],
+  tallowcandle: ['candle', '#8a6a3a'], brasscompass: ['compass', '#8a6a2a'], vigilbell: ['bell', '#4a4a6a'], ravenfeather: ['feather', '#2a2a3a'],
+  obsidianeye: ['eye', '#2a1a3a'], phoenixash: ['flame', '#b4531f']
+};
+const POT_COL = {
+  burn: '#e8602c', chill: '#5cc8ea', shock: '#e8d44a', flow: '#2ec4b6', weak: '#9a7bd0', vuln: '#d0506a',
+  prism: '#b07ae8', sunder: '#c8648a', cleanse: '#8fe3a0', block: '#c9a24a', thorns: '#6a9a3a', ironhide: '#8a94a0',
+  rage: '#c82a2a', stance: '#7a8aa0', berserk: '#a01c3a'
+};
+function relicIcon(id) {
+  const a = REL_ART[id] || ['spark', '#555'], boss = RELICS[id] && RELICS[id].boss;
+  const g = ICO_SHAPES[a[0]].split('@F').join('#f4ead2').split('@B').join(a[1]);
+  return `<svg class='ico' viewBox='0 0 32 32' aria-hidden='true' focusable='false'><circle cx='16' cy='16' r='14.500' fill='${a[1]}' stroke='${boss ? '#e6c35c' : '#1b1424'}' stroke-width='${boss ? 2 : 1.500}'/><g transform='translate(4.800 4.800) scale(.7)'>${g}</g></svg>`;
+}
+function potIcon(k) {
+  const c = POT_COL[k] || '#8a8a8a';
+  return `<svg class='ico' viewBox='0 0 32 32' aria-hidden='true' focusable='false'><rect x='12' y='2' width='8' height='4' rx='1' fill='#a8834a'/><path d='M13 6h6v5l6 10c1.500 4-1 8-6 8h-6c-5 0-7.500-4-6-8l6-10z' fill='${c}' stroke='#1b1424' stroke-width='1.500'/><path d='M9 20h14' stroke='#ffffff' stroke-opacity='.45' stroke-width='1.500'/><ellipse cx='13' cy='23' rx='1.500' ry='2.500' fill='#ffffff' fill-opacity='.4'/></svg>`;
+}
 function beltHTML(V, canAct) {
   if (!V.pt || !V.pt.length) return '';
   return '<div class="belt" aria-label="Potion belt"><span class="muted">Potions ' + V.pt.length + '/' + E.POT_MAX + '</span>' + V.pt.map((id, i) => {
     const d = E.POTIONS[id];
     if (!d) return '';
-    return '<button type="button" class="pot" data-k="' + esc(d.k) + '" data-act="potion" data-arg="' + i + '" data-tip="' + esc(d.d) + '" title="' + esc(d.d) + '" aria-label="' + esc(d.n + ': ' + d.d) + '"' + (canAct ? '' : ' disabled') + '>' + esc(d.n) + '</button>';
+    return '<button type="button" class="pot" data-k="' + esc(d.k) + '" data-act="potion" data-arg="' + i + '" data-tip="' + esc(d.d) + '" title="' + esc(d.d) + '" aria-label="' + esc(d.n + ': ' + d.d) + '"' + (canAct ? '' : ' disabled') + '>' + potIcon(d.k) + esc(d.n) + '</button>';
   }).join('') + '</div>';
 }
 function shopPotHTML(V) {
@@ -3768,14 +3821,14 @@ function shopPotHTML(V) {
   const d = E.POTIONS[sp.id], me = V.P[V.me];
   if (!d) return '';
   const full = (V.pt || []).length >= E.POT_MAX;
-  return '<div class="choices"><span class="muted">' + esc(d.n) + ' · ' + esc(d.d) + '</span><button type="button" class="btn" data-act="buypot" data-arg="0"' + (full || sp.price > me.g || me.dn ? ' disabled' : '') + '>Buy potion · ' + sp.price + ' gold' + (full ? ' (belt full)' : '') + '</button></div>';
+  return '<div class="choices"><span class="muted">' + potIcon(d.k) + esc(d.n) + ' · ' + esc(d.d) + '</span><button type="button" class="btn" data-act="buypot" data-arg="0"' + (full || sp.price > me.g || me.dn ? ' disabled' : '') + '>Buy potion · ' + sp.price + ' gold' + (full ? ' (belt full)' : '') + '</button></div>';
 }
 function shopRelicHTML(V) {
   const sr = V.shop && V.shop.relic;
   if (!sr || sr.sold) return '';
   const d = RELICS[sr.id], me = V.P[V.me];
   if (!d) return '';
-  return '<div class="choices"><span class="muted">Relic: ' + esc(d.n) + ' · ' + esc(d.d) + '</span><button type="button" class="btn" data-act="buyrelic" data-arg="0"' + (sr.price > me.g || me.dn ? ' disabled' : '') + '>Buy relic · ' + sr.price + ' gold</button></div>';
+  return '<div class="choices"><span class="muted">' + relicIcon(sr.id) + 'Relic: ' + esc(d.n) + ' · ' + esc(d.d) + '</span><button type="button" class="btn" data-act="buyrelic" data-arg="0"' + (sr.price > me.g || me.dn ? ' disabled' : '') + '>Buy relic · ' + sr.price + ' gold</button></div>';
 }
 function waitNote(V) {
   if (V.n < 2) return '';
@@ -3790,7 +3843,7 @@ function doneBtn(V, label) {
 }
 function rewardHTML(V) {
   const rw = V.rw, st = chestStage(V, rw.relic ? 'iron' : 'wood', rw.relic, 'r:' + V.act + ':' + V.floor, 'chest');
-  const details = '<div class="relicrow"><span><b>+' + rw.gold + ' gold</b></span>' + (rw.pot && E.POTIONS[rw.pot] ? '<span>Potion: <b>' + esc(E.POTIONS[rw.pot].n) + '</b> · ' + esc(E.POTIONS[rw.pot].d) + '</span>' : '') + (rw.relic ? '<span>New relic: <b>' + esc(RELICS[rw.relic].n) + '</b> · ' + esc(RELICS[rw.relic].d) + '</span>' : '') + '</div>' +
+  const details = '<div class="relicrow"><span><b>+' + rw.gold + ' gold</b></span>' + (rw.pot && E.POTIONS[rw.pot] ? '<span>Potion: ' + potIcon(E.POTIONS[rw.pot].k) + '<b>' + esc(E.POTIONS[rw.pot].n) + '</b> · ' + esc(E.POTIONS[rw.pot].d) + '</span>' : '') + (rw.relic ? '<span>New relic: ' + relicIcon(rw.relic) + '<b>' + esc(RELICS[rw.relic].n) + '</b> · ' + esc(RELICS[rw.relic].d) + '</span>' : '') + '</div>' +
     (rw.taken ? '<p>Card added to your deck.</p>' : '<h3>Choose a card to add</h3><div class="cards">' + rw.cards.map((id, i) => cardHTML(id, 'reward', i, { rv: i })).join('') + '</div>') +
     '<div class="row">' + doneBtn(V, rw.taken ? 'Continue' : 'Skip card') + '</div>' + waitNote(V);
   return '<section class="panel victory"><span class="actbanner">Victory</span><h2>The path ahead is clear</h2>' + st.html +
@@ -3995,8 +4048,28 @@ function endTick() {
   });
   if (more) { endTickOn = true; requestAnimationFrame(endTick); }
 }
+const LOSSKEY = 'masked-spire-losses';
+let lossLogged = null, lossMsg = null;
+function lossSetupKey(V) { return V.P[V.me].h + '|' + V.df + '|' + (V.md || 0); }
+function lossGet() { try { const o = JSON.parse(localStorage.getItem(LOSSKEY) || 'null'); return o && typeof o.k === 'string' && o.n > 0 ? o : { k: '', n: 0 }; } catch (e) { return { k: '', n: 0 }; } }
+function lossSet(o) { try { localStorage.setItem(LOSSKEY, JSON.stringify(o)); } catch (e) {} }
+function lossRecord(V, won) {
+  const k = lossSetupKey(V), o = lossGet();
+  if (won) lossSet({ k: '', n: 0 });
+  else lossSet({ k, n: o.k === k ? o.n + 1 : 1 });
+}
+function lossPromptHTML(V, won) {
+  if (won || V.mode !== 'solo' || !E.G || E.G.seed) return '';
+  if (lossMsg && lossMsg.g === E.G) return '<p class="muted" role="status">' + esc(lossMsg.t) + '</p>';
+  if (!(V.df > 0)) return '';
+  const o = lossGet();
+  if (o.k !== lossSetupKey(V) || o.n < 2) return '';
+  const lower = E.DIFFS[V.df - 1];
+  return '<div class="row" role="group" aria-label="Lower difficulty"><span class="muted">' + o.n + ' defeats in a row on ' + esc(E.DIFFS[V.df].n) + '. Try an easier setting?</span><button type="button" class="btn primary" data-act="lowerdiff">Switch to ' + esc(lower.n) + '</button><button type="button" class="btn" data-act="keepdiff">Keep it</button></div>';
+}
 function endHTMLBase(V, won) {
   endFxInit(V);
+  if (V.mode === 'solo' && E.G && !E.G.seed && E.G !== lossLogged) { lossLogged = E.G; lossRecord(V, won); }
   const html = endHTML0(V, won);
   endFxInit(V);
   if (!document.getElementById('endcnt-css')) {
@@ -4017,7 +4090,7 @@ function endHTMLBase(V, won) {
   const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : rematchBtn(V);
   const marker = '<div class="row"><button type="button" class="btn primary" data-act="leave">';
   if (!REDUCE && !endTickOn) { endTickOn = true; requestAnimationFrame(endTick); }
-  return html.replace(marker, () => sum + '<div class="row">' + again + '<button type="button" class="btn' + (again ? '' : ' primary') + '" data-act="leave">');
+  return html.replace(marker, () => sum + lossPromptHTML(V, won) + '<div class="row">' + again + '<button type="button" class="btn' + (again ? '' : ' primary') + '" data-act="leave">');
 }
 function endHTML0(V, won) {
   const me = V.P[V.me];
@@ -4194,7 +4267,7 @@ function overlayHTML(V) {
   return '<div class="overlay" role="dialog" aria-modal="true" aria-label="' + (upg ? 'Upgrade a card' : remove ? 'Remove a card' : 'Your deck') + '"><section class="panel"><div class="row"><h2>' + (upg ? 'Choose a card to upgrade' : remove ? 'Choose a card to remove' : 'Your deck') + '</h2><span class="spacer"></span><button type="button" class="btn" data-act="close">' + (remove ? 'Cancel' : 'Close') + '</button></div>' +
     (V.deckCut ? '<p class="muted">Deck list unavailable right now.</p>' : '') +
     '<div class="cards">' + V.deck.map(([u, id, lv]) => upg ? ((lv || 0) < 3 ? cardHTML(id, 'upgrade', u, { lv: lv }) : cardHTML(id, 'noop', u, { lv: lv, dim: true })) : cardHTML(id, remove ? 'remove' : 'noop', u, { lv: lv })).join('') + '</div>' +
-    (remove ? '' : '<h3>Relics</h3><div class="relicrow">' + V.P[V.me].rl.map(r => '<span><b>' + esc(RELICS[r].n) + '</b> · ' + esc(RELICS[r].d) + '</span>').join('') + '</div>') + '</section></div>';
+    (remove ? '' : '<h3>Relics</h3><div class="relicrow">' + V.P[V.me].rl.map(r => '<span>' + relicIcon(r) + '<b>' + esc(RELICS[r].n) + '</b> · ' + esc(RELICS[r].d) + '</span>').join('') + '</div>') + '</section></div>';
 }
 function shakeScreen(level) {
   if (REDUCE) return;
@@ -5322,6 +5395,8 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'snd': SND.togglePanel(); break;
     case 'keys': kbHelp(); break;
     case 'setdiff': setPrefDiff(Number(arg)); render(); break;
+    case 'lowerdiff': { if (!V || !(V.df > 0)) break; const nd = V.df - 1; setPrefDiff(nd); lossSet({ k: '', n: 0 }); lossMsg = { g: E.G, t: 'Saved. Your next run starts on ' + E.DIFFS[nd].n + '.' }; render(); break; }
+    case 'keepdiff': { if (!V) break; lossSet({ k: '', n: 0 }); lossMsg = { g: E.G, t: 'Keeping ' + (E.DIFFS[V.df] || E.DIFFS[1]).n + '.' }; render(); break; }
     case 'setmod': setPrefMods(prefMods() ^ (1 << Number(arg))); render(); break;
     case 'hostmod': { const nm = ((V && V.md) || 0) ^ (1 << Number(arg)); setPrefMods(nm); send('mods', nm); break; }
     case 'hostdiff': setPrefDiff(Number(arg)); send('diff', Number(arg)); break;
