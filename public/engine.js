@@ -185,6 +185,14 @@ const CARDS = {
   resonant:  { n: 'Resonant Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 7 damage. If you repeated the last element, deal 5 more damage. If you switched element, gain 1 Energy.', p: e => { const rp = elRepeated(), sw = elSwitched(); hit(e, rp ? 12 : 7); if (sw) { SF().energy++; float(tagOf(SF()), '+1 Energy', 'buff'); } } },
   eternalflame:{ n: 'Eternal Flame', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage. Apply 4 Burn. If you repeated the last element, apply 8 Burn instead. If you switched element, draw 2 cards.', p: e => { const rp = elRepeated(), sw = elSwitched(); hit(e, 6); debuffEnemy(e, 'burn', rp ? 8 : 4); if (sw) draw(2); } },
 
+  /* Colorless (any hero) */
+  wayfarer:  { n: 'Wayfarer’s Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage. Draw 1 card.', p: e => { hit(e, 5); draw(1); } },
+  oilcloak:  { n: 'Oilcloth Cloak', c: 1, t: 'skill', tg: 1, d: 'Gain 4 Block. Apply 1 Vulnerable.', p: e => { gain(4); debuffEnemy(e, 'vuln', 1); } },
+  secondspark: { n: 'Second Spark', c: 0, t: 'skill', x: 1, d: 'Gain 1 Energy. Draw 1 card. Exhaust.', p: () => { SF().energy++; float(tagOf(SF()), '+1 Energy', 'buff'); draw(1); } },
+  spiresweep: { n: 'Spire Sweep', c: 2, t: 'attack', d: 'Deal 9 damage to ALL enemies.', p: () => foes().forEach(e => hit(e, 9)) },
+  maskshard: { n: 'Mask Shard', c: 2, t: 'attack', tg: 1, d: 'Deal 12 damage. Apply 1 Weak and 1 Vulnerable.', p: e => { hit(e, 12); debuffEnemy(e, 'weak', 1); debuffEnemy(e, 'vuln', 1); } },
+  hollowreserve: { n: 'Hollow Reserve', c: 2, t: 'skill', x: 1, d: 'Gain 15 Block. Draw 2 cards. Exhaust.', p: () => { gain(15); draw(2); } },
+
   /* Status and curses */
   dazed:     { n: 'Dazed', c: -1, t: 'status', eth: 1, d: 'Unplayable. Exhausts at end of turn.' },
   doombell:  { n: 'Doom Bell', c: 1, t: 'status', x: 1, d: 'Exhaust. After Final Toll, deals 5 damage to you at end of turn while held.', p: () => {} },
@@ -217,11 +225,15 @@ const RAR = {
   tectonic: 'u', resonant: 'u', eternalflame: 'r',
   icelance: 'u', stormcrash: 'u', rimeshroud: 'u',
   shardfall: 'u', thermalshock: 'u', chainbolt: 'u',
-  tempest: 'r', stonemask: 'r', prismsurge: 'r'
+  tempest: 'r', stonemask: 'r', prismsurge: 'r',
+  /* colorless */
+  wayfarer: 'c', oilcloak: 'c', secondspark: 'u', spiresweep: 'u', maskshard: 'u', hollowreserve: 'r'
 };
 const RAR_NAME = { c: 'Common', u: 'Uncommon', r: 'Rare' };
 const RAR_ODDS = { fight: [62, 32, 6], elite: [40, 45, 15], shop: [55, 35, 10], boss: [0, 50, 50] };
 const PRICE = { c: [45, 55], u: [68, 82], r: [130, 150] };
+/* Colorless cards offered to every hero in rewards and shops */
+const NEUTRAL = ['wayfarer', 'oilcloak', 'secondspark', 'spiresweep', 'maskshard', 'hollowreserve'];
 
 
 /* ---------- Heroes ---------- */
@@ -328,21 +340,36 @@ const EN = {
   eclipse:  { n: 'Eclipse Duelist', hp: [180, 190], bg: '#1A1428', elite: 1, pat: [{ k: 'buff', parry: 1, block: 10, l: 'En Garde' }, { k: 'atk', dmg: 6, hits: 4, l: 'Flurry' }, { k: 'atk', dmg: 26, l: 'Riposte' }], note: 'Parry: fully blocks your first hit next turn. Lead with a cheap one.' },
   spire:    { n: 'The Faceless Spire', hp: [420, 420], bg: '#24123A', boss: 1, idle: 'sway', pat: [{ k: 'atk', dmg: 6, hits: 4, l: 'Porcelain Flurry' }, { k: 'atk', dmg: 12, block: 25, l: 'Lantern Wall' }, { k: 'atk', dmg: 30, l: 'Horned Crush' }], p2: [{ k: 'atk', dmg: 22, addCard: 'void', selfStr: 2, l: 'Void' }], note: 'Wears each hero’s mask in turn. At 40% HP it unmasks: Void hits grow stronger every turn.' }
 };
-const BOSS_SIZE = { bell: 1, cog: 1, spire: 1 };
+/* Alternate bosses (one per act, 50% chance per run). phase = HP fraction that triggers the p2 pattern. */
+Object.assign(EN, {
+  briar:      { n: 'The Briar Regent', art: 'stag', hp: [175, 175], bg: '#1C3A24', boss: 1, phase: 0.5, phaseMsg: 'Overgrowth! The Regent bristles with thorns.',
+    pat: [{ k: 'buff', thorns: 2, l: 'Briar Cloak' }, { k: 'atk', dmg: 5, hits: 3, weak: 1, l: 'Thorn Volley' }, { k: 'atk', dmg: 8, heal: 8, l: 'Sap' }, { k: 'atk', dmg: 18, l: 'Bramble Crush' }],
+    p2: [{ k: 'buff', thorns: 3, l: 'Overgrowth' }, { k: 'atk', dmg: 7, hits: 3, vuln: 1, l: 'Barbed Storm' }, { k: 'atk', dmg: 22, l: 'Rampage' }],
+    note: 'Thorns and self-healing. At half HP: Overgrowth, more Thorns and harder hits.' },
+  auctioneer: { n: 'The Gilded Auctioneer', art: 'ledger', hp: [240, 240], bg: '#5A4414', boss: 1, phase: 0.5, phaseMsg: 'Fire Sale! Everything must go.',
+    pat: [{ k: 'debuff', steal: 20, l: 'Going Once' }, { k: 'atk', dmg: 12, hits: 2, frail: 1, l: 'Gavel' }, { k: 'block', v: 14, l: 'Reserve Price' }, { k: 'atk', dmg: 28, tax: 1, l: 'Sold!' }],
+    p2: [{ k: 'status', card: 'burn', v: 2, discard: 1, l: 'Fire Sale' }, { k: 'atk', dmg: 8, hits: 3, vuln: 1, l: 'Bidding War' }, { k: 'atk', dmg: 30, l: 'Final Bid' }],
+    note: 'Steals gold. Sold! hits twice if you play 7+ cards. At half HP: Fire Sale adds 2 Burn to your discard pile.' },
+  oracle:     { n: 'The Veiled Oracle', art: 'seer', hp: [400, 400], bg: '#1A1A48', boss: 1, idle: 'sway', phase: 0.4, phaseMsg: 'Unveiled! The Oracle erases and burns.',
+    pat: [{ k: 'status', card: 'fate', v: 1, perm: 1, l: 'Prophecy' }, { k: 'debuff', hush: 1, hidden: 1, l: 'Hush' }, { k: 'atk', dmg: 8, hits: 3, l: 'Lashing Gaze' }, { k: 'atk', dmg: 12, block: 20, l: 'Shutter' }, { k: 'atk', dmg: 28, vuln: 1, l: 'Eclipse Beam' }],
+    p2: [{ k: 'debuff', erase: 1, block: 15, l: 'Unwrite' }, { k: 'atk', dmg: 24, addCard: 'void', l: 'Void Gaze' }, { k: 'atk', dmg: 8, hits: 4, weak: 1, l: 'Starfall Rain' }],
+    note: 'Hidden Hush and permanent Fate curses. At 40% HP: Unwrite and Void Gaze.' }
+});
+const BOSS_SIZE = { bell: 1, cog: 1, spire: 1, briar: 1, auctioneer: 1, oracle: 1 };
 
 const ACTS = [
   { n: 'The Hollow Wood', stage: '#1F3A3A',
     easy: [['moth', 'crow'], ['rootling'], ['leech'], ['imp'], ['crow', 'crow'], ['toad']],
     hard: [['moth', 'moth', 'crow'], ['rootling', 'imp'], ['acolyte', 'crow'], ['leech', 'moth'], ['imp', 'acolyte'], ['rootling', 'leech'], ['toad', 'moth']],
-    elites: [['ogre'], ['puppet', 'puppet'], ['stag']], boss: 'bell' },
+    elites: [['ogre'], ['puppet', 'puppet'], ['stag']], boss: 'bell', alt: 'briar' },
   { n: 'The Rust Bazaar', stage: '#3A2414',
     easy: [['hound', 'hound'], ['mimic'], ['wraith'], ['cultist'], ['tinker']],
     hard: [['gear'], ['jailer', 'wraith'], ['cultist', 'hound'], ['mimic', 'jailer'], ['gear', 'cultist'], ['hound', 'hound', 'wraith'], ['tinker', 'hound']],
-    elites: [['furnace'], ['matriarch'], ['ledger'], ['tyrant']], boss: 'cog' },
+    elites: [['furnace'], ['matriarch'], ['ledger'], ['tyrant']], boss: 'cog', alt: 'auctioneer' },
   { n: 'The Faceless Crown', stage: '#2A1840',
     easy: [['voidsentry', 'voidsentry'], ['mirror'], ['ossuary'], ['seer'], ['lantern']],
     hard: [['colossus'], ['nullmask', 'seer'], ['mirror', 'ossuary'], ['voidsentry', 'nullmask'], ['colossus', 'seer'], ['lantern', 'mirror']],
-    elites: [['unwritten'], ['choir', 'choir', 'choir'], ['eclipse']], boss: 'spire' }
+    elites: [['unwritten'], ['choir', 'choir', 'choir'], ['eclipse']], boss: 'spire', alt: 'oracle' }
 ];
 const curAct = () => ACTS[G.act - 1];
 
@@ -374,8 +401,10 @@ function genMap(seed, act) {
     if (l > 0 && rng() < 0.45) n.push(l - 1);
     if (l < LANES - 1 && rng() < 0.45) n.push(l + 1);
   }
+  const A = ACTS[(act || 1) - 1];
+  const boss = A.alt && rng() < 0.5 ? A.alt : A.boss;
   seedStream(null);
-  return { rows };
+  return { rows, boss };
 }
 function available() {
   if (!G.pos) return [0, 1, 2, 3].map(l => ({ r: 0, l }));
@@ -390,14 +419,14 @@ function normMods(m) { m = Number(m); return Number.isInteger(m) && m >= 0 ? m &
 function modOn(k, m) { const i = MODS.findIndex(x => x.k === k); if (m === undefined) m = G && G.mods; return i >= 0 && ((normMods(m) >> i) & 1) === 1; }
 function goldMul() { return modOn('gold') ? 2 : 1; }
 /* Map events (defaults for tuning) */
-const EVT = { pactHp: 8, idolCost: 40, idolWin: 120, idolLoss: 10, idolOdds: 0.5, libHp: 6, forgeHp: 12 };
-const EVENT_KEYS = ['pact', 'idol', 'library', 'forge'];
+const EVT = { pactHp: 8, idolCost: 40, idolWin: 120, idolLoss: 10, idolOdds: 0.5, libHp: 6, forgeHp: 12, wellOdds: 0.6, wellHeal: 0.4, wellLoss: 8, boneHp: 10, boneGold: 70, mirrorOdds: 0.5, veinMax: 6, coinGold: 100, omenOdds: 0.5, omenMax: 8, omenLoss: 12 };
+const EVENT_KEYS = ['pact', 'idol', 'library', 'forge', 'well', 'bone', 'mirror', 'vein', 'coin', 'omen'];
 function baseG(mode, diff, mods, seed) {
   seed = mode === 'solo' && typeof seed === 'string' && seed ? seed.slice(0, 32) : null;
   return { v: 3, mode, seed, code: null, screen: mode === 'coop' ? 'lobby' : 'map', act: 1, floor: 0, map: genMap(seed, 1), pos: null, P: [], combat: null, fx: [], fxSeq: 0, duelWinner: null, started: mode !== 'coop', diff: normDiff(diff), mods: normMods(mods) };
 }
 function newPlayer(hero, tok, mods) {
-  const p = { hero: null, tok: tok || null, hp: 0, maxHp: 0, gold: 99, deck: [], relics: [], kills: 0, done: false, vote: null, ack: 0, conn: true, reward: null, shop: null, treasure: null, event: null, actclear: null };
+  const p = { hero: null, tok: tok || null, hp: 0, maxHp: 0, gold: 99, deck: [], relics: [], kills: 0, done: false, vote: null, ack: 0, conn: true, reward: null, shop: null, treasure: null, event: null, actclear: null, pot: [] };
   if (hero) equipHero(p, hero, mods);
   return p;
 }
@@ -416,7 +445,7 @@ function freeRelic(pi, boss) {
 function gainRelic(pi, r) { if (!r) return; const p = P(pi); p.relics.push(r); if (r === 'heartstone') { p.maxHp += 12; p.hp += 12; } if (r === 'satchel') p.gold += 30; if (r === 'tonic') p.hp = Math.min(p.maxHp, p.hp + 15); }
 function rollTier(kind) { const o = RAR_ODDS[kind] || RAR_ODDS.fight, x = rng() * 100; return x < o[0] ? 'c' : x < o[0] + o[1] ? 'u' : 'r'; }
 function cardChoices(pi, n, kind) {
-  const pool = HEROES[P(pi).hero].pool, out = [];
+  const pool = HEROES[P(pi).hero].pool.concat(NEUTRAL), out = [];
   for (let i = 0; i < n; i++) {
     const tier = kind === 'boss' && i === 0 ? 'r' : rollTier(kind);
     let opts = pool.filter(id => RAR[id] === tier && !out.includes(id));
@@ -433,13 +462,13 @@ function enterNode(r, l) {
   G.floor = r + 1;
   resetDone();
   const Act = curAct();
-  if (r === ROWS) return startCombat([Act.boss], 'boss');
+  if (r === ROWS) return startCombat([G.map.boss || Act.boss], 'boss');
   const node = G.map.rows[r][l];
   node.done = true;
   if (node.type === 'fight') startCombat(pick(r < 3 ? Act.easy : Act.hard), 'fight');
   else if (node.type === 'elite') startCombat(pick(Act.elites), 'elite');
   else if (node.type === 'rest') { G.screen = 'rest'; G.P.forEach(p => { p.rested = false; }); render(); }
-  else if (node.type === 'shop') { G.P.forEach((p, pi) => { p.shop = { cards: cardChoices(pi, 4, 'shop').map(id => ({ id, price: rnd(PRICE[RAR[id]][0], PRICE[RAR[id]][1]) + (G.act - 1) * 8, sold: false })), removed: false }; }); G.screen = 'shop'; render(); }
+  else if (node.type === 'shop') { G.P.forEach((p, pi) => { p.shop = { cards: cardChoices(pi, 4, 'shop').map(id => ({ id, price: rnd(PRICE[RAR[id]][0], PRICE[RAR[id]][1]) + (G.act - 1) * 8, sold: false })), removed: false, pot: shopPotion(p) }; }); G.screen = 'shop'; render(); }
   else if (node.type === 'treasure') {
     G.P.forEach((p, pi) => { const gold = (rnd(40, 60) + (G.act - 1) * 10) * goldMul(); p.gold += gold; const relic = freeRelic(pi); gainRelic(pi, relic); p.treasure = { gold, relic }; });
     G.screen = 'treasure'; render();
@@ -452,6 +481,9 @@ function enterNode(r, l) {
       if (k === 'idol') e.win = rng() < EVT.idolOdds;
       else if (k === 'library') { const rare = HEROES[p.hero].pool.filter(id => RAR[id] === 'r'); e.card = rare.length ? pick(rare) : null; }
       else if (k === 'forge') { const un = HEROES[p.hero].pool.filter(id => RAR[id] === 'u'); e.cards = un.length ? [pick(un), pick(un)] : []; }
+      else if (k === 'well') e.win = rng() < EVT.wellOdds;
+      else if (k === 'omen') e.win = rng() < EVT.omenOdds;
+      else if (k === 'mirror') { const ds = p.deck.filter(c => CARDS[c.id].c >= 0 && !CARDS[c.id].curse); e.card = ds.length ? pick(ds).id : null; e.lv = 0; const src = e.card ? ds.find(c => c.id === e.card) : null; e.lv = src && src.lv ? src.lv : 0; e.win = rng() < EVT.mirrorOdds; }
       p.event = e;
     });
     G.screen = 'event'; render();
@@ -630,6 +662,8 @@ function checkPhase(e) {
   if (e.key === 'bell' && !c.finalToll && e.hp * 2 <= e.max) { c.finalToll = true; log('The Bellwarden rings the Final Toll.'); banner('Final Toll! Doom Bells now burn at end of turn.'); }
   if (e.key === 'cog' && !e.p2 && e.hp * 2 <= e.max) { e.p2 = true; e.block = 0; e.fragile = 1.25; log('King Cog’s gears shatter. He acts twice a turn now.'); banner('Gears shattered: King Cog acts twice, but takes 25% more damage.'); }
   if (e.key === 'spire' && !e.p2 && e.hp * 5 <= e.max * 2) { e.p2 = true; e.pi = 0; log('The Faceless Spire casts off its masks.'); banner('Unmasked! The Void grows stronger every turn.'); }
+  const ed = EN[e.key];
+  if (ed.phase && ed.p2 && !e.p2 && e.hp > 0 && e.hp <= e.max * ed.phase) { e.p2 = true; e.pi = 0; log(ed.n + ' enters its second phase.'); banner(ed.phaseMsg || 'Phase two!'); }
   if (e.key === 'ossuary' && !e.split && e.hp * 2 <= e.max) {
     e.split = true;
     const half = Math.max(1, e.hp);
@@ -715,6 +749,50 @@ function sideDown(s) {
 function syncHP() {
   const c = G.combat; if (!c) return;
   c.S.forEach(s => { P(s.pi).hp = Math.max(0, s.hp); });
+}
+/* ---------- Potions ---------- */
+const POT_MAX = 3;
+const POTIONS = {
+  emberflask: { n: 'Ember Flask', h: 'elementalist', k: 'burn', v: 4, p: [30, 45], d: 'Apply 4 Burn to ALL enemies.' },
+  frosttonic: { n: 'Frost Tonic', h: 'elementalist', k: 'chill', v: 2, p: [30, 45], d: 'Apply 2 Chill to ALL enemies.' },
+  stormdraught: { n: 'Storm Draught', h: 'elementalist', k: 'shock', v: 3, p: [30, 45], d: 'Apply 3 Shock to ALL enemies.' },
+  quickstep: { n: 'Quickstep Tonic', h: 'duelist', k: 'flow', v: 3, p: [30, 45], d: 'Gain 3 Flow.' },
+  hexingoil: { n: 'Hexing Oil', h: 'duelist', k: 'weak', v: 2, p: [30, 45], d: 'Apply 2 Weak to ALL enemies.' },
+  breakersbrew: { n: 'Breaker’s Brew', h: 'duelist', k: 'vuln', v: 2, p: [30, 45], d: 'Apply 2 Vulnerable to ALL enemies.' },
+  pyretincture: { n: 'Pyre Tincture', h: 'elementalist', k: 'burn', v: 7, fx: [['burn', 7]], p: [30, 45], d: 'Apply 7 Burn to ALL enemies.' },
+  glaciersalve: { n: 'Glacier Salve', h: 'elementalist', k: 'chill', v: 4, fx: [['chill', 4]], p: [30, 45], d: 'Apply 4 Chill to ALL enemies.' },
+  prismelixir: { n: 'Prism Elixir', h: 'elementalist', k: 'prism', fx: [['burn', 2], ['chill', 2], ['shock', 2]], p: [35, 50], d: 'Apply 2 Burn, 2 Chill and 2 Shock to ALL enemies.' },
+  rhythmelixir: { n: 'Rhythm Elixir', h: 'duelist', k: 'flow', v: 6, fx: [['flow', 6]], p: [30, 45], d: 'Gain 6 Flow.' },
+  sunderingdraught: { n: 'Sundering Draught', h: 'duelist', k: 'sunder', fx: [['weak', 1], ['vuln', 2]], p: [35, 50], d: 'Apply 1 Weak and 2 Vulnerable to ALL enemies.' },
+  cleansingtonic: { n: 'Cleansing Tonic', h: 'duelist', k: 'cleanse', fx: [['cleanse', 1], ['flow', 3]], p: [30, 45], d: 'Remove your Frail and Vulnerable. Gain 3 Flow.' }
+};
+function potionPick(p) {
+  const ids = Object.keys(POTIONS).filter(k => POTIONS[k].h === p.hero);
+  return ids.length ? ids[Math.max(0, Math.min(ids.length - 1, rnd(0, ids.length - 1)))] : null;
+}
+function shopPotion(p) {
+  const id = potionPick(p);
+  if (!id) return null;
+  return { id, price: rnd(POTIONS[id].p[0], POTIONS[id].p[1]) + (G.act - 1) * 5, sold: false };
+}
+function usePotion(pi, i) {
+  const c = C();
+  if (!c || G.screen !== 'combat') return;
+  const s = c.S[pi], p = P(pi);
+  if (c.over || c.busy || !s || s.down || s.ready) return;
+  if (c.duel && c.duel.active !== pi) return note(pi, 'Wait for your turn.');
+  const id = p.pot && p.pot[i], d = POTIONS[id];
+  if (!d) return;
+  A = s;
+  (d.fx || [[d.k, d.v]]).forEach(f => {
+    const kind = f[0], v = f[1];
+    if (kind === 'flow') { s.flow += v; float(tagOf(s), '+' + v + ' Flow', 'buff'); }
+    else if (kind === 'cleanse') { s.frail = 0; s.vuln = 0; float(tagOf(s), 'Cleansed', 'buff'); }
+    else foes().forEach(e => debuffEnemy(e, kind, v));
+  });
+  p.pot = p.pot.filter((q, j) => j !== i);
+  log(heroName(pi) + ' drinks ' + d.n + '.');
+  render();
 }
 function playCard(pi, uid, tgt) {
   const c = C();
@@ -937,7 +1015,7 @@ function win() {
       const relic = freeRelic(pi, true); gainRelic(pi, relic);
       const healed = Math.ceil((p.maxHp - p.hp) * 0.4); p.hp += healed;
       const gold = rnd(60, 80) * goldMul(); p.gold += gold;
-      p.actclear = { act: Act, relic, healed, gold, cards: cardChoices(pi, 3, 'boss'), taken: false };
+      p.actclear = { act: Act, boss: G.map.boss, relic, healed, gold, cards: cardChoices(pi, 3, 'boss'), taken: false };
     });
     seedStream(null);
     G.screen = 'actclear';
@@ -951,6 +1029,8 @@ function win() {
     const relic = elite ? freeRelic(pi) : null;
     gainRelic(pi, relic);
     p.reward = { gold, relic, cards: cardChoices(pi, 3, elite ? 'elite' : 'fight'), taken: false };
+    const rp = (p.pot || []).length < POT_MAX && rnd(1, 100) <= (elite ? 50 : 25) ? potionPick(p) : null;
+    if (rp) { p.pot = (p.pot || []).concat(rp); p.reward.pot = rp; }
   });
   seedStream(null);
   G.screen = 'reward';
@@ -1019,6 +1099,7 @@ function doAction(pi, a, x, y) {
     case 'node': if (scr === 'map') { const [r, l] = String(x).split('-').map(Number); vote(pi, r, l); } break;
     case 'card': playCard(pi, Number(x), y == null ? null : Number(y)); break;
     case 'end': endTurnAction(pi); break;
+    case 'potion': usePotion(pi, Number(x)); break;
     case 'reward': if (scr === 'reward' && p.reward && !p.reward.taken && p.reward.cards[x]) { p.deck.push(mk(p.reward.cards[x])); p.reward.taken = true; render(); } break;
     case 'bossreward': if (scr === 'actclear' && p.actclear && !p.actclear.taken && p.actclear.cards[x]) { p.deck.push(mk(p.actclear.cards[x])); p.actclear.taken = true; render(); } break;
     case 'done': if (['reward', 'treasure', 'shop', 'event', 'actclear', 'duelintro'].includes(scr)) { p.done = true; advanceIfDone(); } break;
@@ -1047,6 +1128,24 @@ function doAction(pi, a, x, y) {
         e.used = true;
       }
       else if (e.k === 'forge' && e.cards && e.cards.length && p.hp > EVT.forgeHp) { p.hp -= EVT.forgeHp; e.cards.forEach(id => p.deck.push(mk(id))); e.msg = 'The forge scalds you and hands over ' + e.cards.map(id => CARDS[id].n).join(' and ') + '.'; e.used = true; }
+      else if (e.k === 'well') {
+        if (e.win) { const h = Math.ceil(p.maxHp * EVT.wellHeal); p.hp = Math.min(p.maxHp, p.hp + h); e.msg = 'The water is warm and sweet. You recover up to ' + h + ' HP.'; }
+        else { p.hp = Math.max(1, p.hp - EVT.wellLoss); e.msg = 'The water is bitter and cold. You lose ' + EVT.wellLoss + ' HP.'; }
+        e.used = true;
+      }
+      else if (e.k === 'vein' && p.maxHp > EVT.veinMax + 24) { p.maxHp -= EVT.veinMax; p.hp = p.maxHp; e.msg = 'The vein runs dry and you are made whole. You lose ' + EVT.veinMax + ' max HP.'; e.used = true; }
+      else if (e.k === 'coin') { const g = EVT.coinGold * goldMul(); p.gold += g; p.deck.push(mk('fate')); e.msg = 'The coins are yours: +' + g + ' gold. A Fate curse follows you.'; e.used = true; }
+      else if (e.k === 'omen') {
+        if (e.win) { p.maxHp += EVT.omenMax; p.hp = Math.min(p.maxHp, p.hp + EVT.omenMax); e.msg = 'The shrine glows. You gain ' + EVT.omenMax + ' max HP.'; }
+        else { p.hp = Math.max(1, p.hp - EVT.omenLoss); e.msg = 'The shrine rejects you. You lose ' + EVT.omenLoss + ' HP.'; }
+        e.used = true;
+      }
+      else if (e.k === 'bone' && p.hp > EVT.boneHp) { const g = EVT.boneGold * goldMul(); p.hp -= EVT.boneHp; p.gold += g; e.msg = 'The merchant takes his due in blood. You gain ' + g + ' gold.'; e.used = true; }
+      else if (e.k === 'mirror' && e.card) {
+        if (e.win) { const n = mk(e.card); if (e.lv) n.lv = e.lv; p.deck.push(n); e.msg = 'The mirror answers. A second ' + CARDS[e.card].n + ' steps out.'; }
+        else { p.deck.push(mk('fate')); e.msg = 'The mirror cracks and a Fate curse slips into your deck.'; }
+        e.used = true;
+      }
       else note(pi, 'You cannot do that.');
       render(); break;
     }
@@ -1056,6 +1155,14 @@ function doAction(pi, a, x, y) {
       if (!s || s.sold) break;
       if (s.price > p.gold) { note(pi, 'Not enough gold.'); render(); break; }
       p.gold -= s.price; s.sold = true; p.deck.push(mk(s.id)); note(pi, CARDS[s.id].n + ' added to your deck.'); render();
+      break;
+    }
+    case 'buypot': {
+      const sp = p.shop && p.shop.pot;
+      if (scr !== 'shop' || !sp || sp.sold) break;
+      if ((p.pot || []).length >= POT_MAX) { note(pi, 'Your potion belt is full.'); render(); break; }
+      if (sp.price > p.gold) { note(pi, 'Not enough gold.'); render(); break; }
+      p.gold -= sp.price; sp.sold = true; p.pot = (p.pot || []).concat(sp.id); note(pi, POTIONS[sp.id].n + ' added to your belt.'); render();
       break;
     }
     case 'rematch':
@@ -1133,11 +1240,33 @@ function describeIntent(e, it, T) {
   if (it.k === 'flee') return { c: 'k-deb', v: '', x: it.l + ': escapes with the stolen gold', tot: 0 };
   return { c: 'k-buf', v: '', x: it.l, tot: 0 };
 }
+function guardOf(s) {
+  return s.block + (P(s.pi).hero === 'duelist' ? 2 * s.flow : 0) + 3 * s.rampart + (s.stance === 'iron' ? 4 + s.ironplus : 0);
+}
+/* Walk living enemies in real act order, tracking Vulnerable applied to each target by earlier attacks (it lands after the hits, like enemyAct). */
+function simIncoming(me) {
+  const c = C();
+  const vul = c.S.map(s => s.vuln > 0);
+  const out = { inc: 0, T: {}, tot: {} };
+  aliveEnemies().forEach(e => {
+    const base = c.S[e.tg];
+    if (!base) { out.tot[e.idx] = 0; return; }
+    const acts = e.key === 'cog' && e.p2 ? 2 : 1;
+    let t = 0;
+    for (let k = 0; k < acts; k++) {
+      const it = intentOf(e, k);
+      const sim = Object.assign({}, base, { vuln: vul[base.pi] ? 1 : 0 });
+      if (k === 0) out.T[e.idx] = sim;
+      t += describeIntent(e, it, sim).tot;
+      if (it.k === 'atk' && it.vuln) vul[base.pi] = true;
+    }
+    out.tot[e.idx] = t;
+    if (e.tg === me) out.inc += t;
+  });
+  return out;
+}
 function enemyTotal(e) {
-  const T = C().S[e.tg];
-  let t = describeIntent(e, intentOf(e), T).tot;
-  if (e.key === 'cog' && e.p2) t += describeIntent(e, intentOf(e, 1), T).tot;
-  return t;
+  return simIncoming(e.tg).tot[e.idx] || 0;
 }
 function previewCard(id, s, e) {
   const f = s.flow || 0, r = s.rage || 0, bl = s.block || 0, sw = s.sw || 0;
@@ -1173,7 +1302,7 @@ function previewCard(id, s, e) {
 function sideView(s) {
   const hero = P(s.pi).hero;
   return {
-    pi: s.pi, hp: s.hp, mx: s.max, block: s.block, energy: s.energy, flow: s.flow, rage: s.rage,
+    pi: s.pi, hp: s.hp, mx: s.max, block: s.block, gd: guardOf(s), energy: s.energy, flow: s.flow, rage: s.rage,
     st: [s.weak, s.vuln, s.frail, s.hushNow, s.drain, s.thorns, s.composure, s.rhythm, s.keep, s.rampart, s.keepAll, s.bloodpact, s.ragegain],
     sn: s.stance, sw: s.switches, sx: [s.mantra, s.serenity, s.ironplus],
     rdy: s.ready ? 1 : 0, dn: s.down ? 1 : 0, an: [s.animS, s.animK], el: s.el || '', eu: s.elu ? s.elu.length : 0, fw: [s.fwS, s.fwN], hn: s.hand.length,
@@ -1186,32 +1315,33 @@ function buildView(me) {
   const V = {
     me, n: G.P.length, mode: G.mode, code: G.code, scr: G.screen, act: G.act, floor: G.floor, tok: p ? p.tok : null, ack: p ? p.ack : 0,
     P: G.P.map(q => ({ h: q.hero, hp: q.hp, mx: q.maxHp, g: q.gold, rl: q.relics, dn: q.done ? 1 : 0, vt: q.vote, on: q.conn ? 1 : 0, k: q.kills })),
-    deck: p ? p.deck.map(x => [x.u, x.id, x.lv || 0]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff), md: normMods(G.mods), rs: p ? { cp: p.cp || 0, dm: p.dmg || 0, tn: p.tn || 0 } : null
+    deck: p ? p.deck.map(x => [x.u, x.id, x.lv || 0]) : [], fx: G.fx.slice(-12), started: G.started ? 1 : 0, df: normDiff(G.diff), md: normMods(G.mods), rs: p ? { cp: p.cp || 0, dm: p.dmg || 0, tn: p.tn || 0 } : null, pt: p ? (p.pot || []) : []
   };
   const c = G.combat;
   if (G.screen === 'map') {
     V.map = G.map.rows.map(r => r.map(n => [n.type, n.next, n.done ? 1 : 0]));
-    V.pos = G.pos; V.av = available().map(a => a.r + '-' + a.l);
+    V.pos = G.pos; V.av = available().map(a => a.r + '-' + a.l); V.bsk = G.map.boss || null;
   }
   if (c && G.screen === 'combat') {
     c.S.forEach(s => { V.P[s.pi].hp = s.hp; });
     const s = c.S[me];
+    const sim = c.duel ? { inc: 0, T: {}, tot: {} } : simIncoming(me);
     const en = c.enemies.filter(e => !e.dead || e.deadS > (G.fxSeq - 14)).map(e => {
-      const T = c.S[e.tg];
+      const T = sim.T[e.idx] || c.S[e.tg];
       const it = e.dead ? null : describeIntent(e, intentOf(e), T);
-      if (it && e.key === 'cog' && e.p2) { it.x += ' · then ' + intentOf(e, 1).l; it.tot = enemyTotal(e); }
+      if (it && e.key === 'cog' && e.p2) { it.x += ' · then ' + intentOf(e, 1).l; it.tot = sim.tot[e.idx] != null ? sim.tot[e.idx] : enemyTotal(e); }
       const nx = intentOf(e, e.key === 'cog' && e.p2 ? 2 : 1);
       return { idx: e.idx, key: e.key, n: e.n, variant: e.variant, hp: e.hp, max: e.max, block: e.block, split: e.split ? 1 : 0, p2: e.p2 ? 1 : 0, dead: e.dead ? 1 : 0,
         st: [e.str, e.ritual, e.weak, e.vuln, e.thorns, e.artifact, e.rooted ? 1 : 0, e.intangible ? 1 : 0, e.reflect ? 1 : 0, e.parry ? 1 : 0, Object.values(e.stolen).reduce((a, b) => a + b, 0), e.burn || 0, e.chill || 0, e.shock || 0],
         it, tg: e.tg, nx: nx.hidden ? '???' : nx.l, hs: e.hitS, ds: e.deadS, ac: e.actS || 0 };
     });
-    let inc = 0;
-    if (!c.duel) aliveEnemies().forEach(e => { if (e.tg === me) inc += enemyTotal(e); });
-    const guard = s.block + (P(me).hero === 'duelist' ? 2 * s.flow : 0) + 3 * s.rampart + (s.stance === 'iron' ? 4 + s.ironplus : 0);
+    const inc = sim.inc;
+    const guard = guardOf(s);
+    const parts = { bl: s.block, fw: P(me).hero === 'duelist' ? 2 * s.flow : 0, flow: s.flow, rp: 3 * s.rampart, rpn: s.rampart, ir: s.stance === 'iron' ? 4 + s.ironplus : 0 };
     V.cb = {
       k: c.kind, t: c.turn, busy: c.busy ? 1 : 0, logs: c.log.slice(0, 5), duel: c.duel ? { a: c.duel.active, r: c.duel.round } : null, toll: c.finalToll ? 1 : 0,
       en, S: c.S.map(sideView), hand: s.hand.map(x => [x.u, x.id, x.lv || 0]), piles: [s.draw.length, s.discard.length, s.exhaust.length], pc: [s.draw, s.discard, s.exhaust].map(a => a.map(x => x.id).sort()), pwr: (s.pwr || []).slice().sort(), played: s.played, pl: c.pl || null,
-      inc: { tot: inc, guard, extra: guard > s.block ? 1 : 0 }
+      inc: { tot: inc, guard, parts, extra: guard > s.block ? 1 : 0 }
     };
   }
   if (G.screen === 'reward') V.rw = p.reward;
@@ -1240,7 +1370,7 @@ return {
   get G() { return G; }, set G(v) { G = v; },
   get uidN() { return uidN; }, set uidN(v) { uidN = v; },
   doAction, buildView, previewCard, newPlayer, baseG, equipHero, startCombat, startDuel, win,
-  DIFFS, MODS, CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES, PRICE
+  DIFFS, MODS, CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES, PRICE, POTIONS, POT_MAX
 };
 }
 if (typeof module !== 'undefined' && module.exports) module.exports = { createEngine };

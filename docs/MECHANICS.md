@@ -6,6 +6,7 @@ The full tables (every card, hero, relic, enemy and intent) live in the spreadsh
 - Pick a hero (Duelist, Bulwark, Brute, Elementalist). You start with 99 gold, a 10-card starter deck and the hero's starting relic.
 - Each act has a 9-row, 4-lane map. Row 1 is a fight, row 5 a treasure, row 9 a rest site; the act boss follows. Other rows are fights, shops, rests and elites.
 - Three acts: The Hollow Wood (Weeping Bellwarden), The Rust Bazaar (King Cog), The Faceless Crown (The Faceless Spire).
+- Each act's boss is rolled per run (50% chance each, fixed by the map seed). Alternates: The Briar Regent (Act I, Thorns and self-heal, enrages at 50% HP), The Gilded Auctioneer (Act II, steals gold, Sold! hits twice if you played 7+ cards, Fire Sale at 50% HP), The Veiled Oracle (Act III, permanent Fate curses and hidden Hush, Unwrite and Void Gaze at 40% HP). In co-op both players face the same boss.
 - Solo: beating the Spire wins. Co-op: both players then duel.
 
 ## A turn
