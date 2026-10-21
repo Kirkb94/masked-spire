@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="151 90 358 430">
+  <defs>
+    <linearGradient id="robe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a5a78"/><stop offset="1" stop-color="#161c2b"/></linearGradient>
+    <linearGradient id="cape" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#26324d"/><stop offset="0.5" stop-color="#3a4a6e"/><stop offset="1" stop-color="#0f1422"/></linearGradient>
+    <linearGradient id="mask" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f5fa"/><stop offset="1" stop-color="#9aa6bd"/></linearGradient>
+    <linearGradient id="shield" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8d9ab5"/><stop offset="1" stop-color="#394560"/></linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <path d="M292 248 Q240 330 215 515 Q250 500 275 518 Q300 502 330 518 Q360 502 385 518 Q410 500 448 515 Q420 330 368 248 Z" fill="url(#cape)"/>
+  <path d="M300 248 L360 248 L392 512 L268 512 Z" fill="url(#robe)"/>
+  <path d="M330 250 L330 512" stroke="#0f1422" stroke-width="3"/>
+  <path d="M290 300 Q330 316 370 300 L376 322 Q330 340 284 322 Z" fill="#8d9ab5"/>
+  <path d="M284 322 Q330 340 376 322" fill="none" stroke="#f5d76e" stroke-width="2"/>
+  <path d="M303 262 Q280 300 262 340" fill="none" stroke="#26324d" stroke-width="24" stroke-linecap="round"/>
+  <path d="M357 262 Q380 300 392 340" fill="none" stroke="#26324d" stroke-width="24" stroke-linecap="round"/>
+  <path d="M180 300 L290 300 L290 400 Q290 450 235 480 Q180 450 180 400 Z" fill="url(#shield)" stroke="#f5d76e" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M235 306 L235 470 M186 360 L286 360" stroke="#f5d76e" stroke-width="3" opacity="0.8"/>
+  <g filter="url(#glow)"><circle cx="235" cy="360" r="14" fill="#f5d76e"/><circle cx="235" cy="360" r="6" fill="#fff3c4"/></g>
+  <path d="M280 246 Q298 226 324 240 L316 270 Q292 272 280 246 Z" fill="url(#mask)" stroke="#394560" stroke-width="2"/>
+  <path d="M380 246 Q362 226 336 240 L344 270 Q368 272 380 246 Z" fill="url(#mask)" stroke="#394560" stroke-width="2"/>
+  <path d="M292 240 Q284 165 330 140 Q376 165 368 240 Q330 256 292 240 Z" fill="#26324d"/>
+  <path d="M300 236 Q296 175 330 155 Q364 175 360 236 Q330 248 300 236 Z" fill="#080b14"/>
+  <path d="M304 178 Q330 162 356 178 L354 222 Q344 240 330 244 Q316 240 306 222 Z" fill="url(#mask)" stroke="#394560" stroke-width="2"/>
+  <path d="M330 166 L330 244" stroke="#394560" stroke-width="3"/>
+  <path d="M310 196 L350 196 L348 206 L312 206 Z" fill="#080b14"/>
+  <g filter="url(#glow)"><path d="M314 199 L326 199 L326 204 L314 204 Z" fill="#ffe08a"/><path d="M334 199 L346 199 L346 204 L334 204 Z" fill="#ffe08a"/></g>
+  <path d="M318 218 L342 218 M320 226 L340 226" stroke="#394560" stroke-width="2"/>
+  <g filter="url(#glow)"><path d="M300 160 Q330 112 360 160 Q330 140 300 160 Z" fill="#f5d76e"/><path d="M330 112 L330 140" stroke="#fff3c4" stroke-width="3"/></g>
+  <g stroke="#8d9ab5" stroke-width="2" fill="none" opacity="0.6"><path d="M410 400 L440 380 L470 400 L470 440 L440 464 L410 440 Z"/></g>
+</svg>

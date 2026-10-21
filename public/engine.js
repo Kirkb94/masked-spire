@@ -184,6 +184,14 @@ const CARDS = {
   tectonic:  { n: 'Tectonic Slam', c: 2, t: 'attack', tg: 1, d: 'Deal 12 damage. If you switched element, gain 8 Block.', p: e => { const sw = elSwitched(); hit(e, 12); if (sw) gain(8); } },
   resonant:  { n: 'Resonant Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 7 damage. If you repeated the last element, deal 5 more damage. If you switched element, gain 1 Energy.', p: e => { const rp = elRepeated(), sw = elSwitched(); hit(e, rp ? 12 : 7); if (sw) { SF().energy++; float(tagOf(SF()), '+1 Energy', 'buff'); } } },
   eternalflame:{ n: 'Eternal Flame', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage. Apply 4 Burn. If you repeated the last element, apply 8 Burn instead. If you switched element, draw 2 cards.', p: e => { const rp = elRepeated(), sw = elSwitched(); hit(e, 6); debuffEnemy(e, 'burn', rp ? 8 : 4); if (sw) draw(2); } },
+  flamewheel:{ n: 'Flame Wheel', c: 1, t: 'attack', tg: 1, d: 'Deal 3 damage twice. Apply 1 Burn. If you repeated the last element, hit 3 times.', p: e => { const n = elRepeated() ? 3 : 2; hit(e, 3, n); debuffEnemy(e, 'burn', 1); } },
+  coldsnap:  { n: 'Cold Snap', c: 0, t: 'attack', tg: 1, d: 'Deal 3 damage. Apply 2 Chill. If you switched element, gain 4 Block.', p: e => { const sw = elSwitched(); hit(e, 3); debuffEnemy(e, 'chill', 2); if (sw) gain(4); } },
+  superconduct:{ n: 'Superconduct', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage. Apply 2 Shock. If the last element was Frost, apply 3 more Shock.', p: e => { hit(e, 6); debuffEnemy(e, 'shock', SF().elPrev === 'frost' ? 5 : 2); } },
+  overload:  { n: 'Overload', c: 1, t: 'attack', tg: 1, d: 'Deal 4 damage. Apply 2 Shock. If you repeated the last element, apply 3 more Shock.', p: e => { hit(e, 4); debuffEnemy(e, 'shock', elRepeated() ? 5 : 2); } },
+  glaciercrush:{ n: 'Glacial Crush', c: 2, t: 'attack', tg: 1, d: 'Deal 10 damage. Apply 2 Chill. If the last element was Fire, deal 8 more damage.', p: e => { hit(e, SF().elPrev === 'fire' ? 18 : 10); debuffEnemy(e, 'chill', 2); } },
+  wildfire:  { n: 'Wildfire', c: 2, t: 'attack', d: 'Deal 5 damage to ALL enemies. Apply 2 Burn to ALL. If you repeated the last element, apply 5 Burn instead.', p: () => { const n = elRepeated() ? 5 : 2; foes().forEach(e => { hit(e, 5); debuffEnemy(e, 'burn', n); }); } },
+  blizzard:  { n: 'Blizzard', c: 2, t: 'attack', d: 'Deal 6 damage to ALL enemies. Apply 2 Chill to ALL. If you switched element, draw 2 cards.', p: () => { const sw = elSwitched(); foes().forEach(e => { hit(e, 6); debuffEnemy(e, 'chill', 2); }); if (sw) draw(2); } },
+  convergence:{ n: 'Convergence', c: 1, t: 'attack', tg: 1, d: 'Deal 4 damage, plus 3 for each different element you have attacked with this combat.', live: s => 'Now: ' + (4 + 3 * ((s.elu || []).length)) + ' damage', p: e => hit(e, 4 + 3 * ((SF().elu || []).length)) },
 
   /* Colorless (any hero) */
   wayfarer:  { n: 'Wayfarer’s Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage. Draw 1 card.', p: e => { hit(e, 5); draw(1); } },
@@ -223,6 +231,7 @@ const RAR = {
   estrike: 'c', sparkjolt: 'c', eguard: 'c', emberlash: 'c', rimespiral: 'c', cinderbolt: 'c', scorch: 'c', frostward: 'c', gust: 'c',
   kindle: 'c', staticedge: 'c', smolder: 'c', hoarfrost: 'c', arcflash: 'c',
   tectonic: 'u', resonant: 'u', eternalflame: 'r',
+  flamewheel: 'c', coldsnap: 'c', superconduct: 'u', overload: 'u', glaciercrush: 'u', wildfire: 'u', blizzard: 'r', convergence: 'r',
   icelance: 'u', stormcrash: 'u', rimeshroud: 'u',
   shardfall: 'u', thermalshock: 'u', chainbolt: 'u',
   tempest: 'r', stonemask: 'r', prismsurge: 'r',
@@ -263,7 +272,7 @@ const HEROES = {
     n: 'The Elementalist', tag: 'Masked · four elements', hp: 80, relic: 'quadmask', color: '#2C1F55', edge: '#5B448F',
     passive: 'Quadrant Mask: each Attack you play gives 1 Block (not reduced by Frail).',
     starter: ['emberlash', 'rimespiral', 'sparkjolt', 'estrike', 'eguard', 'eguard', 'eguard', 'eguard', 'eguard', 'eguard'],
-    pool: ['cinderbolt', 'scorch', 'frostward', 'gust', 'icelance', 'stormcrash', 'rimeshroud', 'tempest', 'stonemask', 'kindle', 'staticedge', 'shardfall', 'thermalshock', 'chainbolt', 'prismsurge', 'smolder', 'hoarfrost', 'arcflash', 'tectonic', 'resonant', 'eternalflame'],
+    pool: ['cinderbolt', 'scorch', 'frostward', 'gust', 'icelance', 'stormcrash', 'rimeshroud', 'tempest', 'stonemask', 'kindle', 'staticedge', 'shardfall', 'thermalshock', 'chainbolt', 'prismsurge', 'smolder', 'hoarfrost', 'arcflash', 'tectonic', 'resonant', 'eternalflame', 'flamewheel', 'coldsnap', 'superconduct', 'overload', 'glaciercrush', 'wildfire', 'blizzard', 'convergence'],
     style: 'Fire, frost, storm and stone. Chain cheap Attacks so the mask turns every swing into Block. Fire burns, frost chills (weaker enemy attacks), storm shocks (bonus damage), stone guards.'
   }
 };
@@ -418,6 +427,16 @@ const MODS = [{ k: 'horde', n: 'Brutal Foes', d: 'Enemies deal 25% more damage.'
 function normMods(m) { m = Number(m); return Number.isInteger(m) && m >= 0 ? m & ((1 << MODS.length) - 1) : 0; }
 function modOn(k, m) { const i = MODS.findIndex(x => x.k === k); if (m === undefined) m = G && G.mods; return i >= 0 && ((normMods(m) >> i) & 1) === 1; }
 function goldMul() { return modOn('gold') ? 2 : 1; }
+/* Daily challenge: date string -> fixed hero, one modifier, shared seed. Pure function of the date. */
+function dailyChallenge(date) {
+  const s = String(date || '').slice(0, 32);
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
+  const heroes = ['duelist', 'bulwark', 'brute', 'elementalist'];
+  const mi = (h >>> 8) % MODS.length;
+  return { seed: s, hero: heroes[h % heroes.length], mods: 1 << mi, modKey: MODS[mi].k, modName: MODS[mi].n, modDesc: MODS[mi].d, diff: 1 };
+}
 /* Map events (defaults for tuning) */
 const EVT = { pactHp: 8, idolCost: 40, idolWin: 120, idolLoss: 10, idolOdds: 0.5, libHp: 6, forgeHp: 12, wellOdds: 0.6, wellHeal: 0.4, wellLoss: 8, boneHp: 10, boneGold: 70, mirrorOdds: 0.5, veinMax: 6, coinGold: 100, omenOdds: 0.5, omenMax: 8, omenLoss: 12 };
 const EVENT_KEYS = ['pact', 'idol', 'library', 'forge', 'well', 'bone', 'mirror', 'vein', 'coin', 'omen'];
@@ -821,7 +840,7 @@ function playCard(pi, uid, tgt) {
   log(heroName(pi) + ' plays ' + d.n + (t ? ' on ' + nameOf(t) : '') + '.');
   const b0 = s.block, hk = P(pi).hero;
   const elPrev = s.el; s.elPrev = elPrev;
-  if (d.t === 'attack' && hk === 'elementalist') s.el = ({ emberlash: 'fire', cinderbolt: 'fire', scorch: 'fire', rimespiral: 'frost', icelance: 'frost', stormcrash: 'storm', tempest: 'storm', sparkjolt: 'storm', kindle: 'fire', thermalshock: 'fire', staticedge: 'storm', chainbolt: 'storm', smolder: 'fire', eternalflame: 'fire', hoarfrost: 'frost', arcflash: 'storm' })[card.id] || 'stone';
+  if (d.t === 'attack' && hk === 'elementalist') s.el = ({ emberlash: 'fire', cinderbolt: 'fire', scorch: 'fire', rimespiral: 'frost', icelance: 'frost', stormcrash: 'storm', tempest: 'storm', sparkjolt: 'storm', kindle: 'fire', thermalshock: 'fire', staticedge: 'storm', chainbolt: 'storm', smolder: 'fire', eternalflame: 'fire', hoarfrost: 'frost', arcflash: 'storm', flamewheel: 'fire', wildfire: 'fire', coldsnap: 'frost', glaciercrush: 'frost', blizzard: 'frost', superconduct: 'storm', overload: 'storm' })[card.id] || 'stone';
   if (d.t === 'attack' && hk === 'elementalist' && s.el) { s.elu = s.elu || []; if (!s.elu.includes(s.el)) s.elu.push(s.el); }
   if (d.t === 'attack') anim(s, hk === 'bulwark' ? 'slam' : hk === 'brute' ? 'smash' : hk === 'elementalist' ? 'cast' : 'lunge');
   const o = c.duel ? opp(s) : null;
@@ -1369,7 +1388,7 @@ function fitView(V) {
 return {
   get G() { return G; }, set G(v) { G = v; },
   get uidN() { return uidN; }, set uidN(v) { uidN = v; },
-  doAction, buildView, previewCard, newPlayer, baseG, equipHero, startCombat, startDuel, win,
+  dailyChallenge, doAction, buildView, previewCard, newPlayer, baseG, equipHero, startCombat, startDuel, win,
   DIFFS, MODS, CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES, PRICE, POTIONS, POT_MAX
 };
 }

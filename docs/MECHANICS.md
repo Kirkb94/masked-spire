@@ -27,7 +27,8 @@ Strength, Weak, Vulnerable, Frail, Thorns, Artifact, Rooted, Intangible, Reflect
 - **Duelist:** Attacks give Flow; at end of turn each Flow becomes 2 Block. Many cards scale with Flow.
 - **Bulwark:** keeps half its Block each turn and turns Block into damage.
 - **Brute:** three stances (Fury, Iron, Calm). Every switch draws a card; leaving Calm gives 2 Energy. Rage adds damage to every hit.
-- **Elementalist:** each Attack gives 1 Block (ignores Frail). Quadrant Mask gives 5 Block on the first turn. The last Attack's element is tracked but has no effect yet.
+- **Elementalist:** each Attack gives 1 Block (ignores Frail). Quadrant Mask gives 5 Block on the first turn. The last Attack's element (fire, frost, storm or stone) is tracked. Echo: repeating the element gives 2 raw Block; shift: switching element draws 1 card. Many cards read this ("repeated" / "switched").
+  - **Element cards (all Attacks):** Flame Wheel (1, C, fire): 3 dmg x2, 1 Burn, x3 hits if repeated. Cold Snap (0, C, frost): 3 dmg, 2 Chill, +4 Block if switched. Superconduct (1, U, storm): 6 dmg, 2 Shock, 5 Shock if last was Frost. Overload (1, U, storm): 4 dmg, 2 Shock, 5 Shock if repeated. Glacial Crush (2, U, frost): 10 dmg, 2 Chill, 18 dmg if last was Fire. Wildfire (2, U, fire): 5 dmg + 2 Burn to ALL, 5 Burn if repeated. Blizzard (2, R, frost): 6 dmg + 2 Chill to ALL, draw 2 if switched. Convergence (1, R, stone): 4 dmg + 3 per different element attacked with this combat.
 
 ## Rewards and economy
 - After fights: gold, a choice of 3 cards (elites also drop a relic). Bosses give a boss relic, a 40% heal of missing HP, gold and 3 cards (the first is Rare).

@@ -3868,12 +3868,22 @@ function rematchBtn(V) {
   if (me.dn) return '<button type="button" class="btn" disabled>Waiting for partner…</button>';
   return '<button type="button" class="btn primary" data-act="rematch">Play again' + (o && o.dn ? ' (partner ready)' : '') + '</button>';
 }
+function duelSumHTML(V) {
+  const rs = V.rs || { cp: 0, dm: 0, tn: 0 }, me = V.P[V.me], deck = V.deck || [];
+  const counts = {};
+  deck.forEach(d => { const c = CARDS[d[1]]; if (c) counts[c.n] = (counts[c.n] || 0) + 1; });
+  const chips = Object.keys(counts).sort().map(n => '<span class="dchip">' + esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '') + '</span>').join('');
+  const rl = (me.rl || []).filter(r => RELICS[r]).map(r => '<span class="dchip" title="' + esc(RELICS[r].d) + '">' + esc(RELICS[r].n) + '</span>').join('');
+  return '<div class="runsum"><p><b>Run summary</b></p><ul class="rules"><li>Turns: <b>' + (Number(rs.tn) || 0) + '</b></li><li>Cards played: <b>' + (Number(rs.cp) || 0) + '</b></li><li>Enemy damage: <b>' + (Number(rs.dm) || 0) + '</b></li><li>Gold: <b>' + (Number(me.g) || 0) + '</b></li></ul>' +
+    '<p class="muted">Relics (' + (me.rl || []).length + ')</p><div class="dchips">' + rl + '</div>' +
+    '<p class="muted">Final deck (' + deck.length + ')</p><div class="dchips">' + chips + '</div></div>';
+}
 function duelEndHTML(V) {
   const won = V.win === V.me;
   return '<section class="panel"><span class="actbanner">Duel over</span><h2>' + (won ? 'You wear the last mask' : 'Your mask shatters') + '</h2>' +
     '<div class="vstage solo tier-gold" style="--ce:0s"><div class="vheroes">' + portraitHTML(V.P[V.win].h, 'vp', true, undefined, 'cheer') + '</div>' + confettiHTML(true) + '</div>' +
     '<p>' + esc(vName(V, V.win)) + ' wins the duel and leaves the Masked Spire alone.</p>' +
-    '<p class="muted">Enemies defeated: you ' + V.P[V.me].k + ', rival ' + V.P[1 - V.me].k + '.</p>' +
+    '<p class="muted">Enemies defeated: you ' + V.P[V.me].k + ', rival ' + V.P[1 - V.me].k + '.</p>' + duelSumHTML(V) +
     '<div class="row">' + rematchBtn(V) + '<button type="button" class="btn" data-act="leave">Back to title</button></div></section>';
 }
 let ENDFX = null; /* { key, t } start time of the current end-screen effect, so re-renders don't replay it */
@@ -3949,7 +3959,7 @@ function dailyBest() { try { return JSON.parse(localStorage.getItem('ms_daily_be
 function dailyRecord(seed, score) { try { const b = dailyBest(); if (!b || b.date !== seed || score > b.score) localStorage.setItem('ms_daily_best', JSON.stringify({ date: seed, score })); } catch (e) {} }
 function titleHTML() {
   const saved = loadSave();
-  const db = dailyBest(), dToday = dailySeed();
+  const db = dailyBest(), dToday = dailySeed(), dc = E.dailyChallenge(dToday);
   const sg = saved && saved.G && saved.G.mode === 'solo' && saved.G.P && saved.G.P[0] && saved.G.P[0].hero ? saved.G : null;
   const rooms = CL.roomOK;
   return '<section class="panel title"><div class="trio">' + ['duelist', 'bulwark', 'brute', 'elementalist'].map(k => portraitHTML(k, '', true)).join('') + '</div><div style="display:flex;flex-direction:column;gap:16px;min-width:0">' +
@@ -3957,7 +3967,7 @@ function titleHTML() {
     '<p>Climb through the Hollow Wood, the Rust Bazaar and the Faceless Crown. In co-op you fight side by side, and after the final boss the two of you duel for the last mask.</p>' +
     '<ul class="rules"><li><b>Energy:</b> 3 each turn. Cards cost Energy to play.</li><li><b>Block</b> absorbs damage. Each enemy shows its next move and, in co-op, who it is aiming at.</li><li>In co-op you both play at the same time; enemies act once you have both pressed End turn.</li></ul>' +
     '<div class="row"><button type="button" class="btn primary" data-act="solo">Solo run</button>' +
-    '<button type="button" class="btn" data-act="daily">Daily run · ' + dToday + '</button>' +
+    '<button type="button" class="btn" data-act="daily" title="' + esc(dc.modDesc) + '">Daily run · ' + dToday + ' · ' + esc(HEROES[dc.hero].n) + ', ' + esc(dc.modName) + '</button>' +
     '<button type="button" class="btn" data-act="host"' + (rooms === false ? ' disabled' : '') + '>Host co-op</button></div>' +
     '<form class="row joinrow" data-form="join"><label for="joincode">Join with code</label><input id="joincode" class="codein" maxlength="5" autocomplete="off" spellcheck="false" placeholder="ABCDE" value="' + esc(CL.joinCode) + '"' + (rooms === false ? ' disabled' : '') + '><button type="submit" class="btn"' + (rooms === false ? ' disabled' : '') + '>Join</button></form>' +
     
@@ -3972,7 +3982,7 @@ function heroPickCards(act, chosen, other) {
     const h = HEROES[k];
     const counts = {};
     h.starter.forEach(id => { counts[CARDS[id].n] = (counts[CARDS[id].n] || 0) + 1; });
-    return '<div class="hcard' + (chosen === k ? ' chosen' : '') + (other === k ? ' theirs' : '') + '">' + (other === k ? '<span class="ptag ready hbadge">Partner</span>' : '') + portraitHTML(k, '', true) + '<h3>' + esc(h.n) + '</h3><span class="muted">' + esc(h.tag) + ' · ' + h.hp + ' HP</span>' +
+    return '<div class="hcard' + (chosen === k ? ' chosen' : '') + (other === k ? ' theirs' : '') + '">' + (other === k ? '<span class="ptag ready hbadge">Partner</span>' : '') + (k === 'elementalist' ? portraitHTML(k, '', true) : '<div class="portrait" style="background:' + h.color + ';border-color:' + h.edge + '"><img src="art/mask-' + k + '.svg" alt="' + esc(h.n) + '" style="width:100%;height:100%;object-fit:cover;display:block"></div>') + '<h3>' + esc(h.n) + '</h3><span class="muted">' + esc(h.tag) + ' · ' + h.hp + ' HP</span>' +
       '<p style="margin:0"><b>' + esc(h.passive.split(':')[0]) + ':</b>' + esc(h.passive.slice(h.passive.indexOf(':') + 1)) + '</p>' +
       '<p class="muted" style="margin:0">' + esc(h.style) + '</p>' +
       '<ul>' + Object.keys(counts).map(n => '<li>' + esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '') + '</li>').join('') + '</ul>' +
@@ -4280,7 +4290,8 @@ function flushFx(V, prev) {
   });
   if (V.cb) V.cb.S.forEach(s => { if (s.fw[0] > prev && s.fw[1] > 0) footworkAnim(s.pi, s.fw[1]); });
   if (V.cb && V.scr === 'combat' && prev > 0 && V.cb.en.some(e => e.ds > prev)) {
-    shakeScreen(1); buzz([40, 40, 80]);
+    const bossDown = V.cb.k === 'boss' && !V.cb.duel && V.cb.en.every(e => e.dead || e.ds > prev);
+    shakeScreen(bossDown ? 2 : 1); buzz(bossDown ? [60, 40, 120, 40, 160] : [40, 40, 80]);
     try { SND.fire('deathpop'); } catch (e) {}
     V.cb.en.forEach(e => { if (e.ds > prev) particlesAt(document.querySelector('[data-float="e' + e.idx + '"]'), { color: FXCOL.death, n: 14, d: 70, s: 6, t: 600, g: 30 }); });
   }
@@ -5187,8 +5198,8 @@ document.getElementById('app').addEventListener('click', ev => {
   switch (act) {
     case 'ach': ACH.open(); break;
     case 'solo': CL.daily = false; CL.role = 'pick'; E.G = null; render(); break;
-    case 'daily': CL.daily = true; CL.role = 'pick'; E.G = null; render(); break;
-    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const sd = E.G && E.G.seed ? E.G.seed : null; const G = E.baseG('solo', prefDiff(), prefMods(), sd); G.P = [E.newPlayer(h, CL.tok, G.mods)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; ENDFX = null; render(); saveSolo(); break; }
+    case 'daily': { CL.daily = true; const dc = E.dailyChallenge(dailySeed()); const G = E.baseG('solo', dc.diff, dc.mods, dc.seed); G.P = [E.newPlayer(dc.hero, CL.tok, G.mods)]; E.G = G; CL.role = 'solo'; CL.sel = null; CL.overlay = null; CL.seen = false; render(); saveSolo(); break; }
+    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const sd = E.G && E.G.seed ? E.G.seed : null; const dc = sd ? E.dailyChallenge(sd) : null; const G = dc ? E.baseG('solo', dc.diff, dc.mods, dc.seed) : E.baseG('solo', prefDiff(), prefMods(), sd); G.P = [E.newPlayer(h, CL.tok, G.mods)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; ENDFX = null; render(); saveSolo(); break; }
     case 'solohero': { const G = E.baseG('solo', prefDiff(), prefMods(), CL.daily ? dailySeed() : null); G.P = [E.newPlayer(arg, CL.tok, G.mods)]; E.G = G; CL.role = 'solo'; CL.seen = false; render(); saveSolo(); break; }
     case 'host': CL.err = ''; goOnline({ t: 'create', tok: CL.tok, diff: prefDiff(), mods: prefMods() }); break;
     case 'continue': {
