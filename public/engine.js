@@ -20,6 +20,19 @@ const rnd = (a, b) => a + Math.floor(rng() * (b - a + 1));
 const pick = a => a[Math.floor(rng() * a.length)];
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 const wait = ms => new Promise(r => setTimeout(r, isReduce() ? Math.min(ms, 120) : ms));
+/* Enemy-turn pacing (ms). footwork/footwork2: Duelist Flow->Block pauses; phase: after end turn;
+   telegraph: enemy highlights before acting; after: lets damage numbers and bar drain finish;
+   gap: beat between enemies; win: delay before the win screen. */
+const PACE = {
+  fast:   { footwork: 500,  footwork2: 200, phase: 200, telegraph: 250, after: 300, gap: 80,  win: 400 },
+  normal: { footwork: 900,  footwork2: 350, phase: 350, telegraph: 450, after: 550, gap: 200, win: 650 },
+  slow:   { footwork: 1300, footwork2: 500, phase: 500, telegraph: 650, after: 800, gap: 300, win: 900 }
+};
+function paceRow() {
+  let k = typeof hooks.pace === 'function' ? hooks.pace() : hooks.pace;
+  if (!PACE[k]) { try { k = typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem('ms_pace') : null; } catch (e) { k = null; } }
+  return PACE[k] || PACE.normal;
+}
 let uidN = 1;
 const mk = id => ({ u: uidN++, id });
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
@@ -118,6 +131,10 @@ const CARDS = {
   unyielding: { n: 'Unyielding', c: 1, t: 'skill', d: 'Gain 5 Block, plus 1 for every 4 Block you have.', live: s => 'Now: ' + (5 + Math.floor(s.block / 4)) + ' Block', p: () => gain(5 + Math.floor(SF().block / 4)) },
   fortresscrush:{ n: 'Fortress Crush', c: 2, t: 'attack', tg: 1, x: 1, d: 'Deal damage equal to your Block. Exhaust.', live: s => 'Now: ' + s.block + ' damage', p: e => hit(e, SF().block) },
   immovable:  { n: 'Immovable', c: 2, t: 'power', d: 'At the end of your turn, gain 6 Block.', p: () => { SF().rampart += 2; } },
+  shoulderchk:{ n: 'Shoulder Check', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage. Apply 1 Vulnerable.', p: e => { hit(e, 5); debuffEnemy(e, 'vuln', 1); } },
+  holdline:   { n: 'Hold the Line', c: 1, t: 'skill', d: 'Gain 8 Block. If you already have 10+ Block, gain 4 more.', live: s => s.block >= 10 ? 'Now: 12 Block' : 'Now: 8 Block', p: () => { const b = SF().block; gain(8); if (b >= 10) gain(4); } },
+  siegeslam:  { n: 'Siege Slam', c: 2, t: 'attack', tg: 1, d: 'Deal 8 damage, plus 1 for every 4 Block you have.', live: s => 'Now: ' + (8 + Math.floor(s.block / 4)) + ' base', p: e => hit(e, 8 + Math.floor(SF().block / 4)) },
+  spikedbulwark:{ n: 'Spiked Bulwark', c: 1, t: 'skill', d: 'Gain 6 Block. Gain 3 Thorns.', p: () => { gain(6); SF().thorns += 3; } },
 
   /* Brute */
   rstrike:   { n: 'Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 7 damage.', p: e => hit(e, 7) },
@@ -137,6 +154,10 @@ const CARDS = {
   intimidate:{ n: 'Intimidate', c: 0, t: 'skill', x: 1, d: 'ALL enemies lose 1 Strength. Exhaust.', p: () => foes().forEach(e => { e.str -= 1; float(tagOf(e), '−1 Strength', 'buff'); }) },
   feast:     { n: 'Feast', c: 2, t: 'attack', tg: 1, x: 1, d: 'Deal 18 damage. If this kills, heal 8 HP. Exhaust.', p: e => { hit(e, 18); if (e.dead || e.down) heal(8); } },
   braceimpact:{ n: 'Brace for Impact', c: 1, t: 'skill', d: 'Gain 6 Block, plus 1 for each Rage.', live: s => 'Now: ' + (6 + s.rage) + ' Block', p: () => gain(6 + SF().rage) },
+  ragejab:   { n: 'Rage Jab', c: 0, t: 'attack', tg: 1, d: 'Deal 4 damage. Gain 1 Rage.', p: e => { hit(e, 4); addRage(1); } },
+  battleroar:{ n: 'Battle Roar', c: 1, t: 'skill', d: 'Gain 2 Rage. Gain 4 Block.', p: () => { addRage(2); gain(4); } },
+  crushblow: { n: 'Crushing Blow', c: 2, t: 'attack', tg: 1, d: 'Deal 8 damage, plus 2 for each Rage.', live: s => 'Now: ' + (8 + 2 * s.rage) + ' base', p: e => hit(e, 8 + 2 * SF().rage) },
+  shiftguard:{ n: 'Shifting Guard', c: 1, t: 'skill', d: 'Gain 4 Block, plus 3 for each stance switch this turn.', live: s => 'Now: ' + (4 + 3 * (s.sw || 0)) + ' Block', p: () => gain(4 + 3 * SF().switches) },
 
   /* Brute: stances */
   eruption:  { n: 'Eruption', c: 2, t: 'attack', tg: 1, d: 'Deal 9 damage. Enter Fury.', p: e => { hit(e, 9); enterStance('fury'); } },
@@ -221,6 +242,8 @@ const RAR = {
   ironwall: 'u', spikes: 'u', ironresolve: 'u', rampart: 'u',
   reinforce: 'r', bulldoze: 'r', bastion: 'r',
   barbedguard: 'c', steelnerves: 'c', towershield: 'u', unyielding: 'u', fortresscrush: 'r', immovable: 'r',
+  shoulderchk: 'c', holdline: 'c', siegeslam: 'u', spikedbulwark: 'u',
+  ragejab: 'c', battleroar: 'c', crushblow: 'u', shiftguard: 'u',
   cleave: 'c', headbutt: 'c', ironhide: 'c', frenzy: 'c', reckless: 'c', braceimpact: 'c',
   uppercut: 'u', warcry: 'u', intimidate: 'u', feast: 'u',
   rampage: 'r', bloodpact: 'r', unstoppable: 'r',
@@ -258,14 +281,14 @@ const HEROES = {
     n: 'The Bulwark', tag: 'Heavy · block & endure', hp: 95, relic: 'lanternhelm', color: '#B4561B', edge: '#D07228',
     passive: 'Iron Shell: at the start of your turn, keep half your Block instead of losing it.',
     starter: ['bstrike', 'bstrike', 'bstrike', 'bstrike', 'defend', 'defend', 'defend', 'defend', 'bash', 'brace'],
-    pool: ['ironwall', 'rampart', 'reinforce', 'counter', 'bulldoze', 'spikes', 'taunt', 'flare', 'bastion', 'chainlock', 'heavyswing', 'endure', 'ironresolve', 'barbedguard', 'steelnerves', 'towershield', 'unyielding', 'fortresscrush', 'immovable'],
+    pool: ['ironwall', 'rampart', 'reinforce', 'counter', 'bulldoze', 'spikes', 'taunt', 'flare', 'bastion', 'chainlock', 'heavyswing', 'endure', 'ironresolve', 'barbedguard', 'steelnerves', 'towershield', 'unyielding', 'fortresscrush', 'immovable', 'shoulderchk', 'holdline', 'siegeslam', 'spikedbulwark'],
     style: 'Stack Block that carries over between turns. Shield Bash turns half of it into damage, so you need a big wall first.'
   },
   brute: {
     n: 'The Brute', tag: 'Muscular · stances', hp: 90, relic: 'hornedmask', color: '#7E1B26', edge: '#B53A44',
     passive: 'Warrior Forms: switch between three stances. Fury: Attacks deal 50% more, you take 25% more. Iron: +4 Block at end of turn, Attacks deal 25% less. Calm: leaving it gives +2 Energy. Every switch draws a card.',
     starter: ['rstrike', 'rstrike', 'rstrike', 'rstrike', 'rdefend', 'rdefend', 'rdefend', 'rdefend', 'eruption', 'innerpeace'],
-    pool: ['cleave', 'frenzy', 'ironhide', 'reckless', 'ironform', 'wildswing', 'breathe', 'uppercut', 'intimidate', 'feast', 'formbreak', 'tidal', 'avalanche', 'mantra', 'serenity', 'bastionform', 'pivotstrike', 'footwork', 'risingfury', 'guardrotation', 'shatterform', 'fullcycle'],
+    pool: ['cleave', 'frenzy', 'ironhide', 'reckless', 'ironform', 'wildswing', 'breathe', 'uppercut', 'intimidate', 'feast', 'formbreak', 'tidal', 'avalanche', 'mantra', 'serenity', 'bastionform', 'pivotstrike', 'footwork', 'risingfury', 'guardrotation', 'shatterform', 'fullcycle', 'ragejab', 'battleroar', 'crushblow', 'shiftguard'],
     style: 'Bank Energy in Calm, cash it out in Fury, and drop into Iron before the big hits land.'
   },
   elementalist: {
@@ -306,7 +329,13 @@ const RELICS = {
   wardenseal:  { n: 'Warden\'s Seal', d: 'Boss relic. Start each combat with 12 Block.', boss: 1 },
   bonecrown:   { n: 'Bone Crown', d: 'Boss relic. Start each combat with 2 Strength.', boss: 1 },
   aegisplate:  { n: 'Aegis Plate', d: 'Boss relic. Gain 8 Block at the start of every turn.', boss: 1 },
-  bloodchalice:{ n: 'Blood Chalice', d: 'Boss relic. Heal 8 extra HP after each combat.', boss: 1 }
+  bloodchalice:{ n: 'Blood Chalice', d: 'Boss relic. Heal 8 extra HP after each combat.', boss: 1 },
+  tallowcandle:{ n: 'Tallow Candle', d: 'Heal 3 HP at the start of each combat.' },
+  brasscompass:{ n: 'Brass Compass', d: 'On your first turn, draw 1 extra card and gain 3 Block.' },
+  vigilbell:   { n: 'Vigil Bell', d: 'Gain 4 Block at the start of every turn after the first.' },
+  ravenfeather:{ n: 'Raven Feather', d: 'Gain 1 Strength on your first turn against an Elite or Boss.' },
+  obsidianeye: { n: 'Obsidian Eye', d: 'Boss relic. Enemies start each combat with 2 Vulnerable and 1 Weak.', boss: 1 },
+  phoenixash:  { n: 'Phoenix Ash', d: 'Boss relic. Heal 3 HP at the start of every turn.', boss: 1 }
 };
 
 /* ---------- Enemies ---------- */
@@ -438,7 +467,7 @@ function dailyChallenge(date) {
   return { seed: s, hero: heroes[h % heroes.length], mods: 1 << mi, modKey: MODS[mi].k, modName: MODS[mi].n, modDesc: MODS[mi].d, diff: 1 };
 }
 /* Map events (defaults for tuning) */
-const EVT = { pactHp: 8, idolCost: 40, idolWin: 120, idolLoss: 10, idolOdds: 0.5, libHp: 6, forgeHp: 12, wellOdds: 0.6, wellHeal: 0.4, wellLoss: 8, boneHp: 10, boneGold: 70, mirrorOdds: 0.5, veinMax: 6, coinGold: 100, omenOdds: 0.5, omenMax: 8, omenLoss: 12 };
+const EVT = { pactHp: 8, idolCost: 40, idolWin: 120, idolLoss: 10, idolOdds: 0.5, libHp: 6, forgeHp: 12, wellOdds: 0.6, wellHeal: 0.4, wellLoss: 8, boneHp: 10, boneGold: 70, mirrorOdds: 0.5, veinMax: 6, coinGold: 100, omenOdds: 0.5, omenMax: 8, omenLoss: 12, altGold: 35, altHeal: 8, altForgeHp: 6, altHurt: 3, omenPay: 25, omenAlt: 3, bonePay: 35, boneHeal: 15 };
 const EVENT_KEYS = ['pact', 'idol', 'library', 'forge', 'well', 'bone', 'mirror', 'vein', 'coin', 'omen'];
 function baseG(mode, diff, mods, seed) {
   seed = mode === 'solo' && typeof seed === 'string' && seed ? seed.slice(0, 32) : null;
@@ -462,6 +491,11 @@ function freeRelic(pi, boss) {
   return left.length ? pick(left) : null;
 }
 function gainRelic(pi, r) { if (!r) return; const p = P(pi); p.relics.push(r); if (r === 'heartstone') { p.maxHp += 12; p.hp += 12; } if (r === 'satchel') p.gold += 30; if (r === 'tonic') p.hp = Math.min(p.maxHp, p.hp + 15); }
+function shopRelic(pi) {
+  const free = Object.keys(RELICS).filter(k => !RELICS[k].start && !RELICS[k].boss && !hasR(pi, k));
+  if (!free.length) return null;
+  return { id: pick(free), price: rnd(150, 180) + (G.act - 1) * 8, sold: false };
+}
 function rollTier(kind) { const o = RAR_ODDS[kind] || RAR_ODDS.fight, x = rng() * 100; return x < o[0] ? 'c' : x < o[0] + o[1] ? 'u' : 'r'; }
 function cardChoices(pi, n, kind) {
   const pool = HEROES[P(pi).hero].pool.concat(NEUTRAL), out = [];
@@ -487,7 +521,7 @@ function enterNode(r, l) {
   if (node.type === 'fight') startCombat(pick(r < 3 ? Act.easy : Act.hard), 'fight');
   else if (node.type === 'elite') startCombat(pick(Act.elites), 'elite');
   else if (node.type === 'rest') { G.screen = 'rest'; G.P.forEach(p => { p.rested = false; }); render(); }
-  else if (node.type === 'shop') { G.P.forEach((p, pi) => { p.shop = { cards: cardChoices(pi, 4, 'shop').map(id => ({ id, price: rnd(PRICE[RAR[id]][0], PRICE[RAR[id]][1]) + (G.act - 1) * 8, sold: false })), removed: false, pot: shopPotion(p) }; }); G.screen = 'shop'; render(); }
+  else if (node.type === 'shop') { G.P.forEach((p, pi) => { p.shop = { cards: cardChoices(pi, 4, 'shop').map(id => ({ id, price: rnd(PRICE[RAR[id]][0], PRICE[RAR[id]][1]) + (G.act - 1) * 8, sold: false })), removed: false, pot: shopPotion(p), relic: shopRelic(pi) }; }); G.screen = 'shop'; render(); }
   else if (node.type === 'treasure') {
     G.P.forEach((p, pi) => { const gold = (rnd(40, 60) + (G.act - 1) * 10) * goldMul(); p.gold += gold; const relic = freeRelic(pi); gainRelic(pi, relic); p.treasure = { gold, relic }; });
     G.screen = 'treasure'; render();
@@ -507,6 +541,33 @@ function enterNode(r, l) {
     });
     G.screen = 'event'; render();
   }
+}
+/* Event choice 1: the alternate option for each event kind. Validated here, so clients cannot bypass costs. */
+function evtAlt(pi, p, e, ch) {
+  if (ch !== 1) return note(pi, 'You cannot do that.');
+  const g = Math.round(EVT.altGold * goldMul()), heal = n => { const h0 = p.hp; p.hp = Math.min(p.maxHp, p.hp + n); return p.hp - h0; };
+  const hurt = () => { p.hp = Math.max(1, p.hp - EVT.altHurt); };
+  if (e.k === 'pact') { p.gold += g; e.msg = 'You pry loose a few gems and leave the mask hungry. +' + g + ' gold.'; }
+  else if (e.k === 'idol') { p.gold += g; hurt(); e.msg = 'You smash the idol and its teeth bite back. +' + g + ' gold, and a little blood is lost.'; }
+  else if (e.k === 'library') { const h = heal(EVT.altHeal); e.msg = 'You rest among the shelves in peace. You recover ' + h + ' HP.'; }
+  else if (e.k === 'forge') {
+    if (!e.cards || !e.cards.length || p.hp <= EVT.altForgeHp) return note(pi, 'You cannot do that.');
+    p.hp -= EVT.altForgeHp; p.deck.push(mk(e.cards[0])); e.msg = 'You take only one piece from the forge: ' + CARDS[e.cards[0]].n + '.';
+  }
+  else if (e.k === 'well') { const h = heal(EVT.altHeal); e.msg = 'You wash your wounds at the rim. You recover ' + h + ' HP.'; }
+  else if (e.k === 'vein') { const h = heal(EVT.altHeal); e.msg = 'You take a careful sip. You recover ' + h + ' HP.'; }
+  else if (e.k === 'coin') { p.gold += g; e.msg = 'You take a few coins and leave the rest. +' + g + ' gold.'; }
+  else if (e.k === 'omen') {
+    if (p.gold < EVT.omenPay) return note(pi, 'Not enough gold.');
+    p.gold -= EVT.omenPay; p.maxHp += EVT.omenAlt; p.hp = Math.min(p.maxHp, p.hp + EVT.omenAlt); e.msg = 'Your offering is accepted. You gain ' + EVT.omenAlt + ' max HP.';
+  }
+  else if (e.k === 'bone') {
+    if (p.gold < EVT.bonePay) return note(pi, 'Not enough gold.');
+    p.gold -= EVT.bonePay; const h = heal(EVT.boneHeal); e.msg = 'The trader sells you a bitter tonic. You recover ' + h + ' HP.';
+  }
+  else if (e.k === 'mirror') { p.gold += g; hurt(); e.msg = 'You smash the mirror and collect the shards. +' + g + ' gold, and a little blood is lost.'; }
+  else return note(pi, 'You cannot do that.');
+  e.used = true;
 }
 function vote(pi, r, l) {
   if (!available().some(a => a.r === r && a.l === l)) return;
@@ -537,6 +598,7 @@ const DIFF = 1.5; // extra difficulty on top of the base 1.15: enemy HP and dama
 const DIFFS = [{ k: 'easy', n: 'Easy', m: 0.8 }, { k: 'normal', n: 'Normal', m: 1 }, { k: 'hard', n: 'Hard', m: 1.2 }]; // G.diff indexes this; Normal = unchanged balance
 function normDiff(d) { d = d == null || d === '' ? NaN : Number(d); return Number.isInteger(d) && d >= 0 && d < DIFFS.length ? d : 1; }
 function diffMult() { return DIFFS[normDiff(G && G.diff)].m; }
+function potDropChance(elite) { const hard = normDiff(G && G.diff) === 2; return hard ? (elite ? 25 : 10) : (elite ? 50 : 25); } // Hard = fewer potions
 const MAX_LOG_LINES = 18, MAX_LOG_CHARS = 200;
 function log(s) { const c = G.combat; if (!c) return; s = String(s); if (s.length > MAX_LOG_CHARS) s = s.slice(0, MAX_LOG_CHARS); c.log.unshift(s); if (c.log.length > MAX_LOG_LINES) c.log.length = MAX_LOG_LINES; }
 function makeEnemy(key, idx, dup, hpOverride, raw) {
@@ -562,6 +624,8 @@ function startCombat(keys, kind) {
   if (G.P.some((p, i) => hasR(i, 'bellshard'))) C().enemies.forEach(e => { e.vuln = 1; });
   if (G.P.some((p, i) => hasR(i, 'thimble'))) C().enemies.forEach(e => { e.weak = Math.max(e.weak, 1); });
   if (G.P.some((p, i) => hasR(i, 'stormglass'))) C().enemies.forEach(e => { e.shock = Math.max(e.shock, 1); });
+  if (G.P.some((p, i) => hasR(i, 'obsidianeye'))) C().enemies.forEach(e => { e.vuln = Math.max(e.vuln, 2); e.weak = Math.max(e.weak, 1); });
+  G.P.forEach((p, i) => { const s = C().S[i]; if (s && !s.down && hasR(i, 'tallowcandle')) s.hp = Math.min(s.max, s.hp + 3); });
   log(kind === 'boss' ? EN[keys[0]].n + ' looms over you.' : 'Enemies appear: ' + C().enemies.map(e => e.n).join(', ') + '.');
   G.screen = 'combat';
   startRound();
@@ -601,9 +665,13 @@ function startTurnSide(s) {
     const BASIC = { fire: 'emberlash', frost: 'rimespiral', storm: 'sparkjolt', stone: 'estrike' };
     ['fire', 'frost', 'storm', 'stone'].forEach(el => { const j = s.draw.findIndex(c => elOf(c.id) === el); if (j >= 0) s.draw.push(s.draw.splice(j, 1)[0]); else s.draw.push(mk(BASIC[el])); });
   }
-  draw(5 + (first && hasR(pi, 'hourglass') ? 2 : 0) + (hasR(pi, 'ribbon') ? 1 : 0));
+  draw(5 + (first && hasR(pi, 'hourglass') ? 2 : 0) + (first && hasR(pi, 'brasscompass') ? 1 : 0) + (hasR(pi, 'ribbon') ? 1 : 0));
   if (hasR(pi, 'pocket')) gain(4, true);
   if (hasR(pi, 'aegisplate')) gain(8, true);
+  if (first && hasR(pi, 'brasscompass')) gain(3, true);
+  if (!first && hasR(pi, 'vigilbell')) gain(4, true);
+  if (first && hasR(pi, 'ravenfeather') && C() && (C().kind === 'elite' || C().kind === 'boss')) s.str += 1;
+  if (hasR(pi, 'phoenixash')) s.hp = Math.min(s.max, s.hp + 3);
 }
 function draw(n) {
   const s = A;
@@ -862,7 +930,7 @@ function playCard(pi, uid, tgt) {
   if (d.t === 'attack') { if (P(pi).hero === 'elementalist') { A = s; gain(1, true); if (elPrev && s.el) { if (s.el === elPrev) { if (EL_COMBO.repeatBlock > 0) { gain(EL_COMBO.repeatBlock, true); log('Elemental echo: repeated ' + s.el + '.'); } } else if (EL_COMBO.switchDraw > 0) { draw(EL_COMBO.switchDraw); log('Elemental shift: ' + elPrev + ' to ' + s.el + ', draw ' + EL_COMBO.switchDraw + '.'); } } } if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
   if (d.t === 'skill' && !c.duel) aliveEnemies().filter(x => x.key === 'ogre').forEach(og => { og.str += 2; float(tagOf(og), '+2 Strength', 'buff'); log('The Ogre enrages: +2 Strength.'); });
   if (d.t !== 'power') (d.x ? s.exhaust : s.discard).push(card); else (s.pwr || (s.pwr = [])).push(card.id);
-  if (!c.duel && !aliveEnemies().length) { c.busy = true; render(); setTimeout(win, isReduce() ? 100 : 650); return; }
+  if (!c.duel && !aliveEnemies().length) { c.busy = true; render(); setTimeout(win, isReduce() ? 100 : paceRow().win); return; }
   render();
 }
 function endTurnAction(pi) {
@@ -881,11 +949,11 @@ async function endSides(sides) {
   if (fw.length) {
     fw.forEach(s => { G.fxSeq++; s.fwS = G.fxSeq; s.fwN = s.flow; });
     render();
-    await wait(1000);
+    await wait(paceRow().footwork);
     if (G.combat !== c) return;
     fw.forEach(s => { A = s; gain(2 * s.flow); log('Footwork: ' + heroName(s.pi) + '’s ' + s.flow + ' Flow became ' + 2 * s.flow + ' Block.'); s.flow = 0; });
     render();
-    await wait(400);
+    await wait(paceRow().footwork2);
     if (G.combat !== c) return;
   }
   for (const s of sides) {
@@ -909,7 +977,7 @@ async function enemyPhase() {
   if (G.combat !== c) return;
   if (c.over) return render();
   render();
-  await wait(300);
+  await wait(paceRow().phase);
   const actors = aliveEnemies().slice();
   for (const e of actors) {
     if (e.dead) continue;
@@ -928,7 +996,7 @@ async function enemyPhase() {
       let T = c.S[e.tg];
       if (!T || T.down) { const al = aliveSides(); if (!al.length) break; T = pick(al); e.tg = T.pi; }
       e.acting = true; e.actS = fx(tagOf(e), '', 'miss'); render();
-      await wait(420);
+      await wait(paceRow().telegraph);
       if (G.combat !== c) return;
       c.S.forEach(s => { s.hurtNow = false; });
       enemyAct(e, T);
@@ -936,9 +1004,10 @@ async function enemyPhase() {
       if (c.over) return render();
       e.pi++;
       render();
-      await wait(420);
+      await wait(paceRow().after);
       if (G.combat !== c) return;
     }
+    if (actors.indexOf(e) < actors.length - 1) { await wait(paceRow().gap); if (G.combat !== c) return; }
     if (e.weak > 0) e.weak--;
     if (e.chill > 0) e.chill--;
     if (e.vuln > 0) e.vuln--;
@@ -1048,7 +1117,7 @@ function win() {
     const relic = elite ? freeRelic(pi) : null;
     gainRelic(pi, relic);
     p.reward = { gold, relic, cards: cardChoices(pi, 3, elite ? 'elite' : 'fight'), taken: false };
-    const rp = (p.pot || []).length < POT_MAX && rnd(1, 100) <= (elite ? 50 : 25) ? potionPick(p) : null;
+    const rp = (p.pot || []).length < POT_MAX && rnd(1, 100) <= potDropChance(elite) ? potionPick(p) : null;
     if (rp) { p.pot = (p.pot || []).concat(rp); p.reward.pot = rp; }
   });
   seedStream(null);
@@ -1139,6 +1208,8 @@ function doAction(pi, a, x, y) {
     case 'evt': {
       const e = p.event;
       if (scr !== 'event' || !e || e.used || p.done) break;
+      const ch = Number(x) || 0;
+      if (ch) { evtAlt(pi, p, e, ch); render(); break; }
       if (e.k === 'pact' && e.relic && p.hp > EVT.pactHp) { p.hp -= EVT.pactHp; gainRelic(pi, e.relic); e.msg = 'The mask drinks deep. You gain ' + RELICS[e.relic].n + '.'; e.used = true; }
       else if (e.k === 'idol' && p.gold >= EVT.idolCost) {
         p.gold -= EVT.idolCost;
@@ -1174,6 +1245,13 @@ function doAction(pi, a, x, y) {
       if (!s || s.sold) break;
       if (s.price > p.gold) { note(pi, 'Not enough gold.'); render(); break; }
       p.gold -= s.price; s.sold = true; p.deck.push(mk(s.id)); note(pi, CARDS[s.id].n + ' added to your deck.'); render();
+      break;
+    }
+    case 'buyrelic': {
+      const sr = p.shop && p.shop.relic;
+      if (scr !== 'shop' || !sr || sr.sold || !RELICS[sr.id] || hasR(pi, sr.id)) break;
+      if (sr.price > p.gold) { note(pi, 'Not enough gold.'); render(); break; }
+      p.gold -= sr.price; sr.sold = true; gainRelic(pi, sr.id); note(pi, RELICS[sr.id].n + ' acquired.'); render();
       break;
     }
     case 'buypot': {

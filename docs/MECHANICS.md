@@ -27,14 +27,26 @@ Strength, Weak, Vulnerable, Frail, Thorns, Artifact, Rooted, Intangible, Reflect
 - **Duelist:** Attacks give Flow; at end of turn each Flow becomes 2 Block. Many cards scale with Flow.
 - **Bulwark:** keeps half its Block each turn and turns Block into damage.
 - **Brute:** three stances (Fury, Iron, Calm). Every switch draws a card; leaving Calm gives 2 Energy. Rage adds damage to every hit.
+  - **Bulwark cards:** Shoulder Check (1, C, Attack): 5 dmg, 1 Vulnerable. Hold the Line (1, C, Skill): 8 Block, +4 if you already had 10+ Block. Siege Slam (2, U, Attack): 8 dmg + 1 per 4 Block. Spiked Bulwark (1, U, Skill): 6 Block, 3 Thorns.
+  - **Brute cards:** Rage Jab (0, C, Attack): 4 dmg, 1 Rage. Battle Roar (1, C, Skill): 2 Rage, 4 Block. Crushing Blow (2, U, Attack): 8 dmg + 2 per Rage. Shifting Guard (1, U, Skill): 4 Block + 3 per stance switch this turn.
 - **Elementalist:** each Attack gives 1 Block (ignores Frail). Quadrant Mask gives 5 Block on the first turn. The last Attack's element (fire, frost, storm or stone) is tracked. Echo: repeating the element gives 2 raw Block; shift: switching element draws 1 card. Many cards read this ("repeated" / "switched").
   - **Element cards (all Attacks):** Flame Wheel (1, C, fire): 3 dmg x2, 1 Burn, x3 hits if repeated. Cold Snap (0, C, frost): 3 dmg, 2 Chill, +4 Block if switched. Superconduct (1, U, storm): 6 dmg, 2 Shock, 5 Shock if last was Frost. Overload (1, U, storm): 4 dmg, 2 Shock, 5 Shock if repeated. Glacial Crush (2, U, frost): 10 dmg, 2 Chill, 18 dmg if last was Fire. Wildfire (2, U, fire): 5 dmg + 2 Burn to ALL, 5 Burn if repeated. Blizzard (2, R, frost): 6 dmg + 2 Chill to ALL, draw 2 if switched. Convergence (1, R, stone): 4 dmg + 3 per different element attacked with this combat.
 
 ## Rewards and economy
 - After fights: gold, a choice of 3 cards (elites also drop a relic). Bosses give a boss relic, a 40% heal of missing HP, gold and 3 cards (the first is Rare).
 - Shops: 4 cards (Common 45-55, Uncommon 68-82, Rare 130-150, +8 per act) and card removal for 60 gold.
-- Rest: heal 25% of max HP, or remove a card (deck must stay above 5).
+- Rest: heal 25% of max HP, or Smith: upgrade one card (max +3 per card; curses and unplayable cards cannot be upgraded). Lv1: +2 damage on attacks, +2 block on skills, powers draw 1. Lv2: refunds 1 energy on cards that cost 1 or more. Lv3: Link bonus when the previous card played this turn was a different type.
 - After each fight everyone heals 2 HP (Ember Ring +5).
+- Shops also sell one non-boss relic you do not own (150-180 gold, +8 per act).
+
+## New relics
+- **Tallow Candle:** heal 3 HP at the start of each combat.
+- **Brass Compass:** first turn of a combat, draw 1 extra card and gain 3 Block.
+- **Vigil Bell:** gain 4 Block at the start of every turn after the first.
+- **Raven Feather:** gain 1 Strength on your first turn against an Elite or Boss.
+- **Obsidian Eye (boss relic):** enemies start each combat with 2 Vulnerable and 1 Weak.
+- **Phoenix Ash (boss relic):** heal 3 HP at the start of every turn.
+- Normal relics drop from elites, treasure rooms and Blood Pact; boss relics only from act bosses.
 
 ## Co-op and the duel
 - Both players vote on the same map node. Each enemy targets a random living hero. A downed hero returns after the fight at 25% HP; if both fall, the run ends.

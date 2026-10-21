@@ -82,6 +82,17 @@ button { font: inherit; color: inherit; }
 @keyframes cardart-slash { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
 @keyframes cardart-glow { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
 html.rm .card::after { animation: none !important; transition: none; }
+/* Hero card tints: static, so Reduce motion needs no special case */
+.card.hh-duelist { background-image: linear-gradient(170deg, rgba(224,74,94,.20), rgba(224,74,94,0) 65%); }
+.card.hh-bulwark { background-image: linear-gradient(170deg, rgba(110,150,200,.24), rgba(110,150,200,0) 65%); }
+.card.hh-brute { background-image: linear-gradient(170deg, rgba(240,140,50,.22), rgba(240,140,50,0) 65%); }
+.card.hh-elementalist { background-image: linear-gradient(170deg, rgba(70,200,190,.18), rgba(70,200,190,0) 65%); }
+.card.hh-duelist::before { box-shadow: inset 0 -2px 0 #E04A5E; }
+.card.hh-bulwark::before { box-shadow: inset 0 -2px 0 #6E96C8; }
+.card.hh-brute::before { box-shadow: inset 0 -2px 0 #F08C32; }
+.card.hh-elementalist::before { box-shadow: inset 0 -2px 0 #46C8BE; }
+html.hc .card[class*="hh-"] { background-image: none; }
+html.hc .card[class*="hh-"]::before { box-shadow: none; }
 html.hc .card::after { display: none; }
 #cardzoom { position: fixed; left: 0; top: 0; z-index: 70; padding: 14px; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .12s ease, visibility 0s linear .12s; }
 #cardzoom.on { opacity: 1; visibility: visible; transition: opacity .12s ease; }
@@ -1086,6 +1097,19 @@ html.rm .me-lit.me-draw, html.rm .legend .lg-ring { animation: none; }
 .me-hot { filter: drop-shadow(0 0 4px #E8BE52); }
 html.rm .me-hot { animation: none; }
 @media (prefers-reduced-motion: reduce) { html:not(.rm-off) .me-hot { animation: none; } }
+/* Act-themed gradient wash + animated path glow */
+.mapfx::before { content: ''; position: absolute; inset: 0; background-size: 100% 220%; background-position: 0 0; mix-blend-mode: screen; opacity: .55; animation: mapwash 14s ease-in-out infinite alternate; }
+.act1 .mapfx::before { background-image: linear-gradient(to top, #1F6B5A 0%, #0F3A3A 35%, #0A1E2A 65%, #12304A 100%), radial-gradient(circle at 50% 100%, #3FD0A055, transparent 60%); }
+.act2 .mapfx::before { background-image: linear-gradient(to top, #B5652A 0%, #6A2E14 35%, #2E1208 65%, #5A2A18 100%), radial-gradient(circle at 50% 100%, #FFB05A55, transparent 60%); }
+.act3 .mapfx::before { background-image: linear-gradient(to top, #5A2AA8 0%, #2E1460 35%, #120A2E 65%, #3A1A6A 100%), radial-gradient(circle at 50% 100%, #B07AFF55, transparent 60%); }
+@keyframes mapwash { from { background-position: 0 0; opacity: .4; } to { background-position: 0 100%; opacity: .62; } }
+.me-lit:not(.me-draw) { animation: me-glow-t 2.8s ease-in-out infinite; }
+.me-hot { animation: me-flow 1s linear infinite, me-glow-g 1.5s ease-in-out infinite; }
+@keyframes me-glow-t { 0%, 100% { filter: drop-shadow(0 0 3px #5FE6E2); } 50% { filter: drop-shadow(0 0 9px #5FE6E2); } }
+@keyframes me-glow-g { 0%, 100% { filter: drop-shadow(0 0 3px #E8BE52); } 50% { filter: drop-shadow(0 0 10px #FFD670); } }
+html.rm .mapfx::before { animation: none; opacity: .5; }
+html.rm .me-lit:not(.me-draw), html.rm .me-hot { animation: none; }
+@media (prefers-reduced-motion: reduce) { html:not(.rm-off) .mapfx::before { animation: none; opacity: .5; } html:not(.rm-off) .me-lit:not(.me-draw), html:not(.rm-off) .me-hot { animation: none; } }
 .mapcard .node { z-index: 3; width: 54px; height: 54px; border-width: 3px; background: radial-gradient(circle at 35% 30%, #4A3E5E, #1F1830 75%); box-shadow: 0 3px 8px #000A, inset 0 0 0 2px #0006; color: var(--ink); }
 .mapcard .node svg { width: 33px; height: 33px; }
 .node.t-fight { background: radial-gradient(circle at 35% 30%, #8A3440, #3A141C 78%); border-color: #C4646E; }
@@ -1466,6 +1490,20 @@ var css = '.mstip{position:fixed;z-index:60;max-width:min(260px,86vw);background
  + '.mstut{position:fixed;inset:0;z-index:70;background:#000C;display:flex;align-items:center;justify-content:center;padding:14px}.mstut.sp{background:transparent}.mstut .spot{position:fixed;z-index:0;border:2px solid var(--gold,#e0b84a);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.8),0 0 14px 2px var(--gold,#e0b84a);pointer-events:none}.mstut .card{position:relative;z-index:1;box-sizing:border-box;overflow-wrap:anywhere}.mstut.anch .card{position:absolute;margin:0;width:min(380px,calc(100vw - 20px));max-height:calc(100vh - 20px)}.mstut .card{background:var(--panel,#1c1626);border:1px solid var(--gold,#e0b84a);border-radius:12px;max-width:440px;width:100%;max-height:92vh;overflow:auto;padding:18px 20px;box-shadow:0 12px 40px #000;color:#fff}.mstut h2{margin:0 0 8px;color:var(--gold,#e0b84a);font-size:22px}.mstut p{margin:0 0 14px;font-size:17px;line-height:1.45}.mstut .row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.mstut .step{opacity:.7;font-size:14px}.mstut .btns{display:flex;gap:8px;flex-wrap:wrap}.mstut button{min-height:44px;min-width:44px}.mstut button:focus-visible{outline:3px solid var(--gold,#e0b84a);outline-offset:2px}';
 var sty = document.createElement('style'); sty.textContent = css; document.head.appendChild(sty);
 
+/* ----- shared hold times (ms). Scaled kinds: base + per * text length, clamped to [min, max]. ----- */
+window.MS_HOLD = {
+  tip:   { base: 900,  per: 35, min: 1600, max: 3600 },
+  toast: { base: 1400, per: 45, min: 2200, max: 6000 },
+  ach:   { base: 2600, per: 30, min: 3200, max: 5500 },
+  turnBanner: 1000, turnBannerRM: 900,
+  bossBanner: 2400, bossBannerRM: 2200,
+  copied: 2500,
+  hold: function (kind, text) {
+    var k = window.MS_HOLD[kind], n = String(text == null ? '' : text).length;
+    return Math.max(k.min, Math.min(k.max, k.base + k.per * n));
+  }
+};
+
 /* ----- tooltips ----- */
 var T = {
   energy: ['Energy', 'Spent to play cards. It refills at the start of each of your turns.'],
@@ -1550,8 +1588,9 @@ document.addEventListener('focusout', hide);
 document.addEventListener('pointerdown', function (e) {
   if (e.pointerType !== 'touch') return;
   var el = find(e.target); if (!el) { hide(); return; }
-  show(el); clearTimeout(hideT); hideT = setTimeout(hide, 3000);
+  show(el); clearTimeout(hideT); hideT = setTimeout(hide, window.MS_HOLD.hold('tip', tip.textContent));
 }, { passive: true });
+document.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'touch' && !tip.hidden) hide(); }, { passive: true });
 window.addEventListener('scroll', hide, true);
 window.addEventListener('resize', hide);
 
@@ -3358,7 +3397,7 @@ function bossIntro(V) {
   b.innerHTML = '<small>' + (boss ? 'Boss' : 'Elite') + '</small><b>' + esc(e.n || e.key) + '</b>' + (note ? '<i>' + esc(note) + '</i>' : '');
   document.body.appendChild(b);
   try { SND.stinger(boss ? 'intro' : 'elite'); } catch (err) {}
-  setTimeout(() => { if (b.parentNode) b.remove(); }, REDUCE ? 2200 : 2400);
+  setTimeout(() => { if (b.parentNode) b.remove(); }, REDUCE ? MS_HOLD.bossBannerRM : MS_HOLD.bossBanner);
 }
 
 function turnBanner(txt, enemy) {
@@ -3368,14 +3407,14 @@ function turnBanner(txt, enemy) {
   b.id = 'tbanner'; b.className = 'tbanner' + (enemy ? ' en' : '');
   b.setAttribute('aria-hidden', 'true'); b.textContent = txt;
   document.body.appendChild(b);
-  setTimeout(() => { if (b.parentNode) b.remove(); }, REDUCE ? 900 : 1000);
+  setTimeout(() => { if (b.parentNode) b.remove(); }, REDUCE ? MS_HOLD.turnBannerRM : MS_HOLD.turnBanner);
 }
 
 function toast(msg) {
   let t = document.getElementById('toast');
   if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
   t.textContent = msg; t.hidden = false;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2300);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, MS_HOLD.hold('toast', msg));
 }
 
 /* ---------- Render helpers ---------- */
@@ -3390,13 +3429,14 @@ const EL_ICON = {
 };
 function qmOn(V) { const c = V && V.cb, s = c && c.S[V.me]; return !!(s && s.eu >= 4); }
 (function () { var st = document.createElement('style'); st.textContent = '.card.upg{box-shadow:0 0 0 2px #e8c35a inset}.card.upg3{box-shadow:0 0 0 2px #ffd86b inset,0 0 10px 2px #ffd86b}'; document.head.appendChild(st); })();
+const CARD_HERO = (() => { const m = {}; Object.keys(HEROES).forEach(k => { (HEROES[k].starter || []).concat(HEROES[k].pool || []).forEach(c => { if (!m[c]) m[c] = k; }); }); return m; })();
 function cardHTML(id, act, arg, opts) {
   opts = opts || {};
   const d = CARDS[id];
   const ls = opts.live;
   const live = d.live && ls ? '<span class="live">' + d.live(ls) + '</span>' : '';
   const rar = RAR[id];
-  const el = CARD_EL[id]; const cls = 'card t-' + d.t + (el ? ' elf el-' + el : '') + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '') + (opts.lv ? ' upg upg' + opts.lv : '');
+  const el = CARD_EL[id]; const cls = 'card t-' + d.t + (CARD_HERO[id] ? ' hh-' + CARD_HERO[id] : '') + (el ? ' elf el-' + el : '') + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '') + (opts.lv ? ' upg upg' + opts.lv : '');
   return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + (opts.rv != null ? ' style="--i:' + opts.rv + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + (el ? EL_NAME[el] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
     '<span class="cost">' + (d.c < 0 ? '–' : d.c) + '</span>' + (el ? '<span class="elicon" aria-hidden="true">' + EL_ICON[el] + '</span>' : '') + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + (opts.lv ? ' · upgrade +' + opts.lv : '') + '</span><span class="cname">' + esc(d.n) + '</span>' +
     '<span class="cdesc">' + esc(d.d) + live + '</span>' + (opts.price != null ? '<span class="price">' + opts.price + ' gold</span>' : '') + (opts.kb ? '<span class="kbn" aria-hidden="true">' + opts.kb + '</span>' : '') + '</button>';
@@ -3730,6 +3770,13 @@ function shopPotHTML(V) {
   const full = (V.pt || []).length >= E.POT_MAX;
   return '<div class="choices"><span class="muted">' + esc(d.n) + ' · ' + esc(d.d) + '</span><button type="button" class="btn" data-act="buypot" data-arg="0"' + (full || sp.price > me.g || me.dn ? ' disabled' : '') + '>Buy potion · ' + sp.price + ' gold' + (full ? ' (belt full)' : '') + '</button></div>';
 }
+function shopRelicHTML(V) {
+  const sr = V.shop && V.shop.relic;
+  if (!sr || sr.sold) return '';
+  const d = RELICS[sr.id], me = V.P[V.me];
+  if (!d) return '';
+  return '<div class="choices"><span class="muted">Relic: ' + esc(d.n) + ' · ' + esc(d.d) + '</span><button type="button" class="btn" data-act="buyrelic" data-arg="0"' + (sr.price > me.g || me.dn ? ' disabled' : '') + '>Buy relic · ' + sr.price + ' gold</button></div>';
+}
 function waitNote(V) {
   if (V.n < 2) return '';
   const me = V.P[V.me], o = V.P[1 - V.me];
@@ -3804,7 +3851,7 @@ function shopHTML(V) {
   const sh = V.shop, me = V.P[V.me];
   return '<section class="panel shoppanel"><h2>The Merchant</h2>' + sceneBanner('shop') + '<p class="muted">A masked trader with a cart of whispering cards. Rare cards cost more.</p>' +
     '<div class="cards">' + sh.cards.map((s, i) => s.sold ? '' : cardHTML(s.id, 'buy', i, { price: s.price, dim: s.price > me.g })).join('') + '</div>' +
-    shopPotHTML(V) + '<div class="choices"><button type="button" class="btn" data-act="shopremove"' + (sh.removed || me.g < 60 || V.deck.length <= 5 || me.dn ? ' disabled' : '') + '>Remove a card · 60 gold</button>' +
+    shopPotHTML(V) + shopRelicHTML(V) + '<div class="choices"><button type="button" class="btn" data-act="shopremove"' + (sh.removed || me.g < 60 || V.deck.length <= 5 || me.dn ? ' disabled' : '') + '>Remove a card · 60 gold</button>' +
     doneBtn(V, 'Leave') + '</div>' + waitNote(V) + '</section>';
 }
 function treasureHTML(V) {
@@ -3815,6 +3862,31 @@ function treasureHTML(V) {
   return '<section class="panel victory"><h2>Treasure</h2>' + sceneBanner('treasure') + st.html + (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's">' + details + '</div>' : '<p class="muted center">A dusty chest sits in the dark. Open it.</p>') + '</section>';
 }
 function eventHTML(V) {
+  const e = V.ev, me = V.P[V.me];
+  if (!e) return eventHTMLLegacy(V);
+  const c = e.c, used = e.used || me.dn;
+  const card = e.card ? '<div class="cards">' + cardHTML(e.card, 'noop', 0, {}) + '</div>' : '';
+  // [title, vague text, extra html, primary [act, label, disabled], alt [label, disabled]]
+  const D = {
+    pact: ['Blood Pact', 'A mask on an altar offers a relic, and wants blood for it.' + (e.relic ? ' <b>' + esc(RELICS[e.relic].n) + '</b> · ' + esc(RELICS[e.relic].d) : ''), '', ['evt', 'Pay in blood for the relic', !e.relic || me.hp <= c.pactHp], ['Pry gems from the mask', false]],
+    idol: ["Gambler's Idol", 'A grinning idol takes bets. Fortune may smile, or the idol may bite.', '', ['evt', 'Bet some gold', me.g < c.idolCost], ['Smash the idol', false]],
+    library: ['Cursed Library', 'The shelves offer a rare card, but they want a card and a piece of your vitality.', card, ['eventremove', 'Trade a card and some max HP', !e.card || V.deck.length <= 5 || me.mx <= c.libHp], ['Rest among the shelves', false]],
+    well: ['Hollow Well', 'Dark water glimmers below. It may heal you, or it may not.', '', ['evt', 'Drink from the well', false], ['Wash your wounds', false]],
+    vein: ['Crimson Vein', 'A glowing vein in the wall. Drinking deep will mend you, at a lasting price.', '', ['evt', 'Drink deep', me.mx <= c.veinMax + 24], ['Take a small sip', false]],
+    coin: ['Cursed Coin', 'A pile of old coins hums on a pedestal. Greed has a cost.', '', ['evt', 'Take it all', false], ['Take a few coins', false]],
+    omen: ['Shrine of Omens', 'A quiet shrine. The omens may bless you or turn on you, though it will not kill you.', '', ['evt', 'Kneel and pray', false], ['Leave an offering', me.g < c.omenPay]],
+    bone: ['Bone Merchant', 'A hooded trader sells gold for blood, or a tonic for gold.', '', ['evt', 'Sell some blood', me.hp <= c.boneHp], ['Buy a restorative', me.g < c.bonePay]],
+    mirror: ['Mirror of Echoes', 'The mirror shows this card. It might echo it, or it might answer with something worse.', card, ['evt', 'Touch the mirror', !e.card], ['Smash it for shards', false]],
+    forge: ['Fevered Forge', 'The forge burns hot. It hands over cards, and it wants your flesh in return.', '', ['evt', 'Take the full set', !e.cards || !e.cards.length || me.hp <= c.forgeHp], ['Take only one piece', !e.cards || !e.cards.length || me.hp <= c.altForgeHp]]
+  };
+  const d = D[e.k] || D.forge;
+  return '<section class="panel"><h2>' + esc(d[0]) + '</h2><p class="muted">' + d[1] + '</p>' + d[2] +
+    (e.msg ? '<p>' + esc(e.msg) + '</p>' : '') +
+    '<div class="choices"><button type="button" class="btn primary" data-act="' + d[3][0] + '" data-arg="0"' + (used || d[3][2] ? ' disabled' : '') + '>' + esc(d[3][1]) + '</button>' +
+    '<button type="button" class="btn" data-act="evt" data-arg="1"' + (used || d[4][1] ? ' disabled' : '') + '>' + esc(d[4][0]) + '</button>' +
+    doneBtn(V, e.used ? 'Continue' : 'Leave') + '</div>' + waitNote(V) + '</section>';
+}
+function eventHTMLLegacy(V) {
   const e = V.ev, me = V.P[V.me];
   if (!e) return '<section class="panel"><h2>Event</h2><div class="row">' + doneBtn(V, 'Continue') + '</div>' + waitNote(V) + '</section>';
   const c = e.c, used = e.used || me.dn;
@@ -4480,7 +4552,7 @@ const ACH = (function () {
     t.innerHTML = '\ud83c\udfc6 Achievement unlocked<br><b>' + esc(a.n) + '</b><small>' + esc(a.d) + '</small>';
     void t.offsetWidth;
     t.classList.add('on');
-    setTimeout(() => { t.classList.remove('on'); setTimeout(() => { showing = false; pump(); }, 350); }, 3200);
+    setTimeout(() => { t.classList.remove('on'); setTimeout(() => { showing = false; pump(); }, 350); }, MS_HOLD.hold('ach', (a.n || '') + (a.d || '')));
   }
   function unlock(id) {
     if (store.u[id]) return;
@@ -5135,7 +5207,7 @@ function lobbyNote(msg) {
   CL.copied = msg; render();
   toast(msg);
   clearTimeout(copiedTimer);
-  copiedTimer = setTimeout(() => { CL.copied = ''; render(); }, 2500);
+  copiedTimer = setTimeout(() => { CL.copied = ''; render(); }, MS_HOLD.copied);
 }
 function lobbyCopy(text, okMsg) {
   const done = lobbyNote;
@@ -5190,6 +5262,37 @@ function selNeedsTarget(V) {
   return !!h && !!CARDS[h[1]].tg && V.cb.en.filter(e => !e.dead).length > 1;
 }
 function curView() { return CL.role === 'online' ? CL.V : soloView(); }
+/* Card reward: fly a clone of the picked card to the Deck button. Visual only; skipped under Reduce motion. */
+function flyCardToDeck(src) {
+  try {
+    if (REDUCE || !src || !src.animate) return;
+    const dk = document.querySelector('#app [data-act="deck"]');
+    if (!dk) return;
+    const a = src.getBoundingClientRect(), d = dk.getBoundingClientRect();
+    if (!a.width || !a.height) return;
+    const ghost = src.cloneNode(true);
+    ghost.removeAttribute('data-act'); ghost.removeAttribute('data-arg'); ghost.removeAttribute('id');
+    ghost.setAttribute('aria-hidden', 'true'); ghost.tabIndex = -1;
+    ghost.style.cssText = 'position:fixed;left:' + a.left + 'px;top:' + a.top + 'px;width:' + a.width + 'px;height:' + a.height + 'px;margin:0;z-index:9999;pointer-events:none;transform-origin:center center;will-change:transform,opacity;';
+    document.body.appendChild(ghost);
+    const dx = d.left + d.width / 2 - (a.left + a.width / 2), dy = d.top + d.height / 2 - (a.top + a.height / 2);
+    const s = Math.max(0.1, Math.min(0.25, d.width / a.width));
+    const done = () => {
+      ghost.remove();
+      try {
+        const nd = document.querySelector('#app [data-act="deck"]');
+        if (nd && nd.animate) nd.animate([{ transform: 'scale(1)', boxShadow: '0 0 0 0 #E8BE5200' }, { transform: 'scale(1.18)', boxShadow: '0 0 12px 4px #E8BE52AA', offset: 0.4 }, { transform: 'scale(1)', boxShadow: '0 0 0 0 #E8BE5200' }], { duration: 360, easing: 'ease-out' });
+      } catch (e) { /* cosmetic only */ }
+    };
+    const an = ghost.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1, offset: 0 },
+      { transform: 'translate(' + (dx * 0.45) + 'px,' + (dy * 0.45 - 70) + 'px) scale(' + (0.6 + s * 0.4) + ')', opacity: 1, offset: 0.5 },
+      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + s + ')', opacity: 0.1, offset: 1 }
+    ], { duration: 600, easing: 'cubic-bezier(.4,.1,.6,1)', fill: 'forwards' });
+    an.onfinish = done; an.oncancel = () => ghost.remove();
+    setTimeout(() => { if (ghost.isConnected) ghost.remove(); }, 1500);
+  } catch (e) { /* never block the pick */ }
+}
 document.getElementById('app').addEventListener('click', ev => {
   const b = ev.target.closest('[data-act]');
   if (!b || b.disabled) return;
@@ -5267,8 +5370,8 @@ document.getElementById('app').addEventListener('click', ev => {
         render();
       }
       break;
-    case 'reward': send('reward', Number(arg)); break;
-    case 'bossreward': send('bossreward', Number(arg)); break;
+    case 'reward': flyCardToDeck(b); send('reward', Number(arg)); break;
+    case 'bossreward': flyCardToDeck(b); send('bossreward', Number(arg)); break;
     case 'done': send('done'); break;
     case 'rematch': send('rematch'); break;
     case 'restheal': send('restheal'); break;
@@ -5276,8 +5379,9 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'shopremove': CL.overlay = { mode: 'remove', from: 'shop' }; paint(V); break;
     case 'buy': send('buy', Number(arg)); break;
     case 'buypot': send('buypot', 0); break;
+    case 'buyrelic': send('buyrelic', 0); break;
     case 'potion': send('potion', Number(arg)); break;
-    case 'evt': send('evt', 0); break;
+    case 'evt': send('evt', Number(arg) || 0); break;
     case 'eventremove': CL.overlay = { mode: 'remove', from: 'event' }; paint(V); break;
     case 'deck': CL.overlay = { mode: 'view' }; paint(V); break;
     case 'pile': pileView(arg, b); break;
