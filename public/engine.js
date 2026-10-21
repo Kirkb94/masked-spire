@@ -7,7 +7,15 @@ function createEngine(hooks) {
 hooks = hooks || {};
 const isReduce = () => !!hooks.reduce;
 
-const rng = typeof hooks.rng === 'function' ? hooks.rng : Math.random;
+const baseRng = typeof hooks.rng === 'function' ? hooks.rng : Math.random;
+let stream = null;
+const rng = () => (stream ? stream() : baseRng());
+function hashStr(s) { let h = 1779033703 ^ s.length; for (let i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } return h >>> 0; }
+function seedStream(key) {
+  if (!key) { stream = null; return; }
+  let a = hashStr(String(key));
+  stream = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
 const rnd = (a, b) => a + Math.floor(rng() * (b - a + 1));
 const pick = a => a[Math.floor(rng() * a.length)];
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
@@ -79,6 +87,12 @@ const CARDS = {
   finale:    { n: 'Grand Finale', c: 1, t: 'attack', d: 'Spend all Flow. Deal 5 damage to ALL enemies for each Flow spent.', live: s => 'Now: ' + 5 * s.flow + ' to all', p: () => { const f = SF().flow; SF().flow = 0; if (f) foes().forEach(e => hit(e, 5 * f)); } },
   rhythm:    { n: 'Perfect Rhythm', c: 2, t: 'power', d: 'Your Attacks deal +1 damage for each Flow you have.', p: () => { SF().rhythm++; } },
   unbroken:  { n: 'Unbroken Stance', c: 1, t: 'power', d: 'At the start of your turn, keep half your Flow instead of losing it.', p: () => { SF().keep = 1; } },
+  jab:       { n: 'Jab', c: 0, t: 'attack', tg: 1, d: 'Deal 4 damage. If you have 2+ Flow, draw 1 card.', live: s => s.flow >= 2 ? 'Draws a card now' : 'Needs ' + (2 - s.flow) + ' more Flow', p: e => { hit(e, 4); if (SF().flow >= 2) draw(1); } },
+  sidestep:  { n: 'Sidestep', c: 1, t: 'skill', d: 'Gain 5 Block. Gain 1 Flow.', p: () => { gain(5); SF().flow++; float(tagOf(SF()), '+1 Flow', 'buff'); } },
+  doublestrike: { n: 'Double Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage twice. Gain 1 extra Flow.', p: e => { hit(e, 5, 2); SF().flow++; } },
+  chainthrust:  { n: 'Chain Thrust', c: 1, t: 'attack', tg: 1, d: 'Deal 4 damage, plus 2 for each Flow.', live: s => 'Now: ' + (4 + 2 * s.flow) + ' damage', p: e => hit(e, 4 + 2 * SF().flow) },
+  adrenaline:   { n: 'Adrenaline', c: 0, t: 'skill', x: 1, d: 'Gain 2 Flow. Gain 1 Energy. Exhaust.', p: () => { SF().flow += 2; SF().energy++; float(tagOf(SF()), '+2 Flow', 'buff'); } },
+  thousandcuts: { n: 'Thousand Cuts', c: 2, t: 'attack', tg: 1, d: 'Deal 3 damage 3 times, plus once per Flow. Gain 2 Flow.', live: s => 'Now: ' + (3 + s.flow) + ' hits', p: e => { hit(e, 3, 3 + SF().flow); SF().flow += 2; } },
 
   /* Bulwark */
   bstrike:   { n: 'Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage.', p: e => hit(e, 6) },
@@ -98,6 +112,12 @@ const CARDS = {
   heavyswing:{ n: 'Heavy Swing', c: 2, t: 'attack', tg: 1, d: 'Deal 16 damage.', p: e => hit(e, 16) },
   endure:    { n: 'Endure', c: 1, t: 'skill', d: 'Gain 5 Block. Draw 1 card.', p: () => { gain(5); draw(1); } },
   ironresolve:{ n: 'Iron Resolve', c: 0, t: 'skill', x: 1, d: 'Gain 1 Energy. Gain 3 Block. Exhaust.', p: () => { SF().energy++; gain(3); } },
+  barbedguard:{ n: 'Barbed Guard', c: 1, t: 'skill', d: 'Gain 5 Block. Gain 2 Thorns.', p: () => { gain(5); SF().thorns += 2; } },
+  steelnerves:{ n: 'Steel Nerves', c: 0, t: 'skill', x: 1, d: 'Gain 4 Block. Draw 1 card. Exhaust.', p: () => { gain(4); draw(1); } },
+  towershield:{ n: 'Tower Shield', c: 2, t: 'skill', d: 'Gain 10 Block. Apply 1 Weak to ALL enemies.', p: () => { gain(10); foes().forEach(e => debuffEnemy(e, 'weak', 1)); } },
+  unyielding: { n: 'Unyielding', c: 1, t: 'skill', d: 'Gain 5 Block, plus 1 for every 4 Block you have.', live: s => 'Now: ' + (5 + Math.floor(s.block / 4)) + ' Block', p: () => gain(5 + Math.floor(SF().block / 4)) },
+  fortresscrush:{ n: 'Fortress Crush', c: 2, t: 'attack', tg: 1, x: 1, d: 'Deal damage equal to your Block. Exhaust.', live: s => 'Now: ' + s.block + ' damage', p: e => hit(e, SF().block) },
+  immovable:  { n: 'Immovable', c: 2, t: 'power', d: 'At the end of your turn, gain 6 Block.', p: () => { SF().rampart += 2; } },
 
   /* Brute */
   rstrike:   { n: 'Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 7 damage.', p: e => hit(e, 7) },
@@ -130,6 +150,12 @@ const CARDS = {
   mantra:    { n: 'Mantra of War', c: 1, t: 'power', d: 'Whenever you switch stance, deal 4 damage to ALL enemies.', p: () => { SF().mantra += 4; } },
   serenity:  { n: 'Serenity', c: 1, t: 'power', d: 'Whenever you leave Calm, also draw 2 cards.', p: () => { SF().serenity += 2; } },
   bastionform:{ n: 'Unbreakable', c: 2, t: 'power', d: 'Iron gives 4 more Block each turn, and no longer lowers your Attack damage.', p: () => { SF().ironplus += 4; } },
+  pivotstrike:{ n: 'Pivot Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage. If you switched stance this turn, deal 12 instead.', live: s => 'Now: ' + ((s.sw || 0) > 0 ? 12 : 6) + ' base', p: e => hit(e, SF().switches > 0 ? 12 : 6) },
+  footwork:  { n: 'Footwork', c: 0, t: 'skill', d: 'Gain 3 Block. Enter Iron.', p: () => { gain(3); enterStance('iron'); } },
+  risingfury:{ n: 'Rising Fury', c: 1, t: 'skill', d: 'Gain 2 Rage. Enter Fury.', p: () => { addRage(2); enterStance('fury'); } },
+  guardrotation:{ n: 'Guard Rotation', c: 1, t: 'skill', d: 'Gain 6 Block. If you switched stance this turn, gain 12 instead. Enter Iron.', live: s => 'Now: ' + ((s.sw || 0) > 0 ? 12 : 6) + ' Block', p: () => { gain(SF().switches > 0 ? 12 : 6); enterStance('iron'); } },
+  shatterform:{ n: 'Shatter Form', c: 2, t: 'attack', tg: 1, d: 'Deal 10 damage. If you are in Fury, gain 8 Block and enter Iron.', p: e => { const f = SF().stance === 'fury'; hit(e, 10); if (f) { gain(8); enterStance('iron'); } } },
+  fullcycle: { n: 'Full Cycle', c: 1, t: 'skill', x: 1, d: 'Enter Fury, then Iron, then Calm. Exhaust.', p: () => { enterStance('fury'); enterStance('iron'); enterStance('calm'); } },
 
   /* Elementalist */
   estrike:   { n: 'Stone Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage.', p: e => hit(e, 6) },
@@ -146,6 +172,18 @@ const CARDS = {
   rimeshroud:{ n: 'Rime Shroud', c: 1, t: 'skill', d: 'Gain 8 Block. Apply 2 Chill to ALL enemies.', p: () => { foes().forEach(e => { debuffEnemy(e, 'chill', 2); }); gain(8); } },
   tempest:   { n: 'Tempest', c: 2, t: 'attack', d: 'Apply 2 Shock to ALL enemies, then deal 6 damage to ALL enemies twice.', p: () => foes().forEach(e => { debuffEnemy(e, 'shock', 2); hit(e, 6, 2); }) },
   stonemask: { n: 'Stonebound Mask', c: 1, t: 'power', d: 'At the end of your turn, gain 3 Block.', p: () => { SF().rampart++; } },
+  kindle:    { n: 'Kindle', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage. Apply 2 Burn. If you switched element, apply 3 more Burn.', p: e => { hit(e, 5); debuffEnemy(e, 'burn', elSwitched() ? 5 : 2); } },
+  staticedge:{ n: 'Static Edge', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage. Apply 1 Shock. If you repeated the last element, deal 5 more damage.', p: e => { hit(e, elRepeated() ? 10 : 5); debuffEnemy(e, 'shock', 1); } },
+  shardfall: { n: 'Shardfall', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage. If you switched element, gain 5 Block.', p: e => { hit(e, 6); if (elSwitched()) gain(5); } },
+  thermalshock:{ n: 'Thermal Shock', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage. Apply 3 Burn. If the last element was Frost, deal 8 more damage.', p: e => { hit(e, SF().elPrev === 'frost' ? 14 : 6); debuffEnemy(e, 'burn', 3); } },
+  chainbolt: { n: 'Chain Lightning', c: 1, t: 'attack', d: 'Deal 4 damage to ALL enemies. Apply 1 Shock to ALL. If you repeated the last element, hit twice.', p: () => { const n = elRepeated() ? 2 : 1; foes().forEach(e => { debuffEnemy(e, 'shock', 1); hit(e, 4, n); }); } },
+  prismsurge:{ n: 'Prismatic Surge', c: 2, t: 'attack', d: 'Deal 8 damage to ALL enemies. If you switched element, gain 1 Energy and draw 1 card.', p: () => { const sw = elSwitched(); foes().forEach(e => hit(e, 8)); if (sw) { SF().energy++; float(tagOf(SF()), '+1 Energy', 'buff'); draw(1); } } },
+  smolder:   { n: 'Smolder', c: 1, t: 'attack', tg: 1, d: 'Deal 4 damage. Apply 2 Burn. If you repeated the last element, apply 3 more Burn.', p: e => { hit(e, 4); debuffEnemy(e, 'burn', elRepeated() ? 5 : 2); } },
+  hoarfrost: { n: 'Hoarfrost', c: 1, t: 'attack', tg: 1, d: 'Deal 5 damage. Apply 2 Chill. If you repeated the last element, gain 4 Block.', p: e => { const rp = elRepeated(); hit(e, 5); debuffEnemy(e, 'chill', 2); if (rp) gain(4); } },
+  arcflash:  { n: 'Arc Flash', c: 0, t: 'attack', tg: 1, d: 'Deal 3 damage. Apply 1 Shock. If you switched element, draw 1 card.', p: e => { const sw = elSwitched(); hit(e, 3); debuffEnemy(e, 'shock', 1); if (sw) draw(1); } },
+  tectonic:  { n: 'Tectonic Slam', c: 2, t: 'attack', tg: 1, d: 'Deal 12 damage. If you switched element, gain 8 Block.', p: e => { const sw = elSwitched(); hit(e, 12); if (sw) gain(8); } },
+  resonant:  { n: 'Resonant Strike', c: 1, t: 'attack', tg: 1, d: 'Deal 7 damage. If you repeated the last element, deal 5 more damage. If you switched element, gain 1 Energy.', p: e => { const rp = elRepeated(), sw = elSwitched(); hit(e, rp ? 12 : 7); if (sw) { SF().energy++; float(tagOf(SF()), '+1 Energy', 'buff'); } } },
+  eternalflame:{ n: 'Eternal Flame', c: 1, t: 'attack', tg: 1, d: 'Deal 6 damage. Apply 4 Burn. If you repeated the last element, apply 8 Burn instead. If you switched element, draw 2 cards.', p: e => { const rp = elRepeated(), sw = elSwitched(); hit(e, 6); debuffEnemy(e, 'burn', rp ? 8 : 4); if (sw) draw(2); } },
 
   /* Status and curses */
   dazed:     { n: 'Dazed', c: -1, t: 'status', eth: 1, d: 'Unplayable. Exhausts at end of turn.' },
@@ -162,18 +200,24 @@ const RAR = {
   flurry: 'c', needle: 'c', feint: 'c', pinpoint: 'c', hamstring: 'c', quickstep: 'c', secondwind: 'c',
   whirl: 'u', coup: 'u', shadowstep: 'u', tempo: 'u', disarm: 'u', momentum: 'u', flowguard: 'u', ebb: 'u', cascade: 'u', crescendo: 'u', bladedance: 'u',
   composure: 'r', rhythm: 'r', unbroken: 'r', finale: 'r',
+  jab: 'c', sidestep: 'c', doublestrike: 'u', chainthrust: 'u', adrenaline: 'u', thousandcuts: 'r',
   counter: 'c', taunt: 'c', heavyswing: 'c', endure: 'c', chainlock: 'c', flare: 'c',
   ironwall: 'u', spikes: 'u', ironresolve: 'u', rampart: 'u',
   reinforce: 'r', bulldoze: 'r', bastion: 'r',
+  barbedguard: 'c', steelnerves: 'c', towershield: 'u', unyielding: 'u', fortresscrush: 'r', immovable: 'r',
   cleave: 'c', headbutt: 'c', ironhide: 'c', frenzy: 'c', reckless: 'c', braceimpact: 'c',
   uppercut: 'u', warcry: 'u', intimidate: 'u', feast: 'u',
   rampage: 'r', bloodpact: 'r', unstoppable: 'r',
   eruption: 'c', innerpeace: 'c', ironform: 'c', wildswing: 'c', breathe: 'c',
   formbreak: 'u', tidal: 'u',
   avalanche: 'r', mantra: 'r', serenity: 'r', bastionform: 'r',
+  pivotstrike: 'c', footwork: 'c', risingfury: 'c', guardrotation: 'u', shatterform: 'u', fullcycle: 'r',
   estrike: 'c', sparkjolt: 'c', eguard: 'c', emberlash: 'c', rimespiral: 'c', cinderbolt: 'c', scorch: 'c', frostward: 'c', gust: 'c',
+  kindle: 'c', staticedge: 'c', smolder: 'c', hoarfrost: 'c', arcflash: 'c',
+  tectonic: 'u', resonant: 'u', eternalflame: 'r',
   icelance: 'u', stormcrash: 'u', rimeshroud: 'u',
-  tempest: 'r', stonemask: 'r'
+  shardfall: 'u', thermalshock: 'u', chainbolt: 'u',
+  tempest: 'r', stonemask: 'r', prismsurge: 'r'
 };
 const RAR_NAME = { c: 'Common', u: 'Uncommon', r: 'Rare' };
 const RAR_ODDS = { fight: [62, 32, 6], elite: [40, 45, 15], shop: [55, 35, 10], boss: [0, 50, 50] };
@@ -186,28 +230,28 @@ const HEROES = {
     n: 'The Duelist', tag: 'Slim · speed & combos', hp: 85, relic: 'mask', color: '#1C6670', edge: '#2E8E99',
     passive: 'Footwork: each Attack you play gives 1 Flow. At end of turn, each Flow becomes 2 Block.',
     starter: ['strike', 'strike', 'strike', 'strike', 'parry', 'parry', 'parry', 'parry', 'lunge', 'riposte'],
-    pool: ['flurry', 'needle', 'feint', 'crescendo', 'bladedance', 'pinpoint', 'hamstring', 'whirl', 'coup', 'quickstep', 'secondwind', 'shadowstep', 'tempo', 'disarm', 'composure', 'momentum', 'flowguard', 'ebb', 'cascade', 'finale', 'rhythm', 'unbroken'],
+    pool: ['flurry', 'needle', 'feint', 'crescendo', 'bladedance', 'pinpoint', 'hamstring', 'whirl', 'coup', 'quickstep', 'secondwind', 'shadowstep', 'tempo', 'disarm', 'composure', 'momentum', 'flowguard', 'ebb', 'cascade', 'finale', 'rhythm', 'unbroken', 'jab', 'sidestep', 'doublestrike', 'chainthrust', 'adrenaline', 'thousandcuts'],
     style: 'Chain cheap Attacks to build Flow, then cash it in or let Footwork turn it into Block.'
   },
   bulwark: {
     n: 'The Bulwark', tag: 'Heavy · block & endure', hp: 95, relic: 'lanternhelm', color: '#B4561B', edge: '#D07228',
     passive: 'Iron Shell: at the start of your turn, keep half your Block instead of losing it.',
     starter: ['bstrike', 'bstrike', 'bstrike', 'bstrike', 'defend', 'defend', 'defend', 'defend', 'bash', 'brace'],
-    pool: ['ironwall', 'rampart', 'reinforce', 'counter', 'bulldoze', 'spikes', 'taunt', 'flare', 'bastion', 'chainlock', 'heavyswing', 'endure', 'ironresolve'],
+    pool: ['ironwall', 'rampart', 'reinforce', 'counter', 'bulldoze', 'spikes', 'taunt', 'flare', 'bastion', 'chainlock', 'heavyswing', 'endure', 'ironresolve', 'barbedguard', 'steelnerves', 'towershield', 'unyielding', 'fortresscrush', 'immovable'],
     style: 'Stack Block that carries over between turns. Shield Bash turns half of it into damage, so you need a big wall first.'
   },
   brute: {
     n: 'The Brute', tag: 'Muscular · stances', hp: 90, relic: 'hornedmask', color: '#7E1B26', edge: '#B53A44',
     passive: 'Warrior Forms: switch between three stances. Fury: Attacks deal 50% more, you take 25% more. Iron: +4 Block at end of turn, Attacks deal 25% less. Calm: leaving it gives +2 Energy. Every switch draws a card.',
     starter: ['rstrike', 'rstrike', 'rstrike', 'rstrike', 'rdefend', 'rdefend', 'rdefend', 'rdefend', 'eruption', 'innerpeace'],
-    pool: ['cleave', 'frenzy', 'ironhide', 'reckless', 'ironform', 'wildswing', 'breathe', 'uppercut', 'intimidate', 'feast', 'formbreak', 'tidal', 'avalanche', 'mantra', 'serenity', 'bastionform'],
+    pool: ['cleave', 'frenzy', 'ironhide', 'reckless', 'ironform', 'wildswing', 'breathe', 'uppercut', 'intimidate', 'feast', 'formbreak', 'tidal', 'avalanche', 'mantra', 'serenity', 'bastionform', 'pivotstrike', 'footwork', 'risingfury', 'guardrotation', 'shatterform', 'fullcycle'],
     style: 'Bank Energy in Calm, cash it out in Fury, and drop into Iron before the big hits land.'
   },
   elementalist: {
     n: 'The Elementalist', tag: 'Masked · four elements', hp: 80, relic: 'quadmask', color: '#2C1F55', edge: '#5B448F',
     passive: 'Quadrant Mask: each Attack you play gives 1 Block (not reduced by Frail).',
     starter: ['emberlash', 'rimespiral', 'sparkjolt', 'estrike', 'eguard', 'eguard', 'eguard', 'eguard', 'eguard', 'eguard'],
-    pool: ['cinderbolt', 'scorch', 'frostward', 'gust', 'icelance', 'stormcrash', 'rimeshroud', 'tempest', 'stonemask'],
+    pool: ['cinderbolt', 'scorch', 'frostward', 'gust', 'icelance', 'stormcrash', 'rimeshroud', 'tempest', 'stonemask', 'kindle', 'staticedge', 'shardfall', 'thermalshock', 'chainbolt', 'prismsurge', 'smolder', 'hoarfrost', 'arcflash', 'tectonic', 'resonant', 'eternalflame'],
     style: 'Fire, frost, storm and stone. Chain cheap Attacks so the mask turns every swing into Block. Fire burns, frost chills (weaker enemy attacks), storm shocks (bonus damage), stone guards.'
   }
 };
@@ -235,7 +279,13 @@ const RELICS = {
   pocket:      { n: 'Stitched Pocket', d: 'Gain 4 Block after drawing your hand at the start of each turn.' },
   spurboots:   { n: 'Spurred Boots', d: 'Gain 1 extra Energy on your first turn against an Elite or Boss.' },
   ribbon:      { n: 'Silk Ribbon', d: 'Boss relic. Draw 1 extra card every turn.', boss: 1 },
-  wardenseal:  { n: 'Warden\'s Seal', d: 'Boss relic. Start each combat with 12 Block.', boss: 1 }
+  ironbark:    { n: 'Ironbark Charm', d: 'Start each combat with 3 Thorns.' },
+  luckycoin:   { n: 'Lucky Coin', d: 'Gain 10 gold after each combat.' },
+  stormglass:  { n: 'Stormglass', d: 'Enemies start each combat with 1 Shock.' },
+  wardenseal:  { n: 'Warden\'s Seal', d: 'Boss relic. Start each combat with 12 Block.', boss: 1 },
+  bonecrown:   { n: 'Bone Crown', d: 'Boss relic. Start each combat with 2 Strength.', boss: 1 },
+  aegisplate:  { n: 'Aegis Plate', d: 'Boss relic. Gain 8 Block at the start of every turn.', boss: 1 },
+  bloodchalice:{ n: 'Blood Chalice', d: 'Boss relic. Heal 8 extra HP after each combat.', boss: 1 }
 };
 
 /* ---------- Enemies ---------- */
@@ -251,6 +301,7 @@ const EN = {
   puppet:   { n: 'Puppeteer', names: ['Puppeteer of Mirth', 'Puppeteer of Sorrow'], hp: [33, 35], bg: '#3A3050', elite: 1, idle: 'sway', pat: [{ k: 'atk', mimic: 1, l: 'Mimic' }, { k: 'atk', dmg: 6, hits: 2, l: 'Cut' }], note: 'Mimic copies your last Attack. Kill one and the other gains 5 Strength.' },
   stag:     { n: 'Hollow Stag', hp: [82, 86], bg: '#1E3E3A', elite: 1, pat: [{ k: 'block', v: 12, l: 'Antler Guard' }, { k: 'atk', dmg: 9, l: 'Gore' }, { k: 'atk', dmg: 20, l: 'CHARGE' }], note: 'The Charge is always telegraphed a turn early.' },
   bell:     { n: 'The Weeping Bellwarden', hp: [180, 180], bg: '#173A44', boss: 1, idle: 'sway', pat: [{ k: 'status', card: 'doombell', v: 2, l: 'Toll' }, { k: 'atk', dmg: 18, l: 'Slam' }, { k: 'atk', dmg: 6, hits: 3, l: 'Peal' }], note: 'At half HP: Final Toll. Each Doom Bell in hand deals 5 damage at end of turn.' },
+  toad:     { n: 'Gloam Toad', art: 'leech', hp: [22, 25], bg: '#2A4A2E', pat: [{ k: 'atk', dmg: 4, vuln: 1, l: 'Sticky Tongue' }, { k: 'atk', dmg: 9, l: 'Gulp' }, { k: 'debuff', weak: 1, l: 'Croak' }], note: 'Sticky Tongue leaves you Vulnerable: take 50% more damage.' },
   /* Act II */
   hound:    { n: 'Scrap Hound', hp: [32, 35], bg: '#8A4A1E', pat: [{ k: 'atk', dmg: 10, l: 'Bite' }, { k: 'atk', dmg: 10, l: 'Bite' }, { k: 'summon', key: 'hound', count: 1, hp: 20, howl: 1, l: 'Howl' }], note: 'Howl: summons a pup if alone, otherwise +2 Strength.' },
   mimic:    { n: 'Coinmouth Mimic', hp: [40, 44], bg: '#7A3A18', pat: [{ k: 'debuff', steal: 15, l: 'Swallow' }, { k: 'atk', dmg: 11, l: 'Chomp' }, { k: 'debuff', steal: 15, l: 'Swallow' }, { k: 'atk', dmg: 11, l: 'Chomp' }, { k: 'flee', l: 'Flee' }], note: 'Flees after 4 turns with your gold. Kill it first for double back.' },
@@ -262,7 +313,10 @@ const EN = {
   matriarch:{ n: 'Brass Matriarch', hp: [115, 120], bg: '#7A5A1E', elite: 1, pat: [{ k: 'summon', key: 'hound', count: 2, hp: 20, l: 'Assemble' }, { k: 'buff', ally: 3, l: 'Command' }, { k: 'atk', dmg: 18, l: 'Crush' }], note: 'Summons Scrap Hounds and empowers them. Area damage helps.' },
   ledger:   { n: 'The Ledger', hp: [110, 115], bg: '#3E2E22', elite: 1, pat: [{ k: 'block', v: 8, l: 'Audit' }, { k: 'atk', dmg: 22, tax: 1, l: 'Collect' }], note: 'Tax: if you play 7+ cards in a turn, Collect hits twice.' },
   cog:      { n: 'King Cog, the Hollow Crown', hp: [260, 260], bg: '#5A3414', boss: 1, pat: [{ k: 'atk', dmg: 14, hits: 2, l: 'Grind' }, { k: 'block', v: 15, l: 'Wind Up' }, { k: 'buff', str: 3, l: 'Overclock' }, { k: 'atk', dmg: 32, l: 'Crown Beam' }], note: 'At half HP the gears shatter: he acts twice a turn but takes 25% more damage.' },
+  tinker:   { n: 'Tin Tinker', art: 'gear', hp: [30, 34], bg: '#7A5A30', pat: [{ k: 'buff', ally: 2, l: 'Tune Up' }, { k: 'atk', dmg: 7, frail: 1, l: 'Wrench' }], note: 'Tune Up gives every other enemy +2 Strength (itself if alone). Kill it early.' },
+  tyrant:   { n: 'Scrapyard Tyrant', art: 'ogre', hp: [100, 106], bg: '#5E3A1C', elite: 1, pat: [{ k: 'summon', key: 'hound', count: 1, hp: 20, l: 'Whistle' }, { k: 'atk', dmg: 16, l: 'Wrecking Swing' }, { k: 'block', v: 12, l: 'Scrap Plating' }, { k: 'atk', dmg: 9, hits: 2, weak: 1, l: 'Crush Down' }], note: 'Whistles up Scrap Pups (max 4 enemies). Area damage clears them fast.' },
   /* Act III */
+  lantern:  { n: 'Lantern Warden', art: 'voidsentry', hp: [52, 56], bg: '#2A2050', pat: [{ k: 'block', v: 10, l: 'Shutter' }, { k: 'atk', dmg: 6, hits: 3, l: 'Triple Shot' }], note: 'Shutter turns are your window to attack. Triple Shot punishes low Block.' },
   voidsentry:{ n: 'Void Sentry', hp: [58, 62], bg: '#2E1E4A', pat: [{ k: 'block', v: 8, l: 'Scan' }, { k: 'atk', dmg: 15, vuln: 2, l: 'Beam' }], note: 'Pairs alternate so a Beam lands every turn. Vulnerable: you take 50% more.' },
   mirror:   { n: 'Mirror Saint', hp: [54, 57], bg: '#4A2A4E', pat: [{ k: 'buff', reflect: 1, block: 12, l: 'Reflect' }, { k: 'atk', dmg: 13, l: 'Glare' }], note: 'While reflecting, half your Attack damage bounces back. Hit it on Glare turns.' },
   ossuary:  { n: 'Ossuary Swarm', hp: [50, 54], bg: '#3E1E2A', pat: [{ k: 'atk', dmg: 4, hits: 4, l: 'Bone Storm' }], note: 'At half HP it splits into two swarms. Block and Thorns shred it.' },
@@ -278,23 +332,24 @@ const BOSS_SIZE = { bell: 1, cog: 1, spire: 1 };
 
 const ACTS = [
   { n: 'The Hollow Wood', stage: '#1F3A3A',
-    easy: [['moth', 'crow'], ['rootling'], ['leech'], ['imp'], ['crow', 'crow']],
-    hard: [['moth', 'moth', 'crow'], ['rootling', 'imp'], ['acolyte', 'crow'], ['leech', 'moth'], ['imp', 'acolyte'], ['rootling', 'leech']],
+    easy: [['moth', 'crow'], ['rootling'], ['leech'], ['imp'], ['crow', 'crow'], ['toad']],
+    hard: [['moth', 'moth', 'crow'], ['rootling', 'imp'], ['acolyte', 'crow'], ['leech', 'moth'], ['imp', 'acolyte'], ['rootling', 'leech'], ['toad', 'moth']],
     elites: [['ogre'], ['puppet', 'puppet'], ['stag']], boss: 'bell' },
   { n: 'The Rust Bazaar', stage: '#3A2414',
-    easy: [['hound', 'hound'], ['mimic'], ['wraith'], ['cultist']],
-    hard: [['gear'], ['jailer', 'wraith'], ['cultist', 'hound'], ['mimic', 'jailer'], ['gear', 'cultist'], ['hound', 'hound', 'wraith']],
-    elites: [['furnace'], ['matriarch'], ['ledger']], boss: 'cog' },
+    easy: [['hound', 'hound'], ['mimic'], ['wraith'], ['cultist'], ['tinker']],
+    hard: [['gear'], ['jailer', 'wraith'], ['cultist', 'hound'], ['mimic', 'jailer'], ['gear', 'cultist'], ['hound', 'hound', 'wraith'], ['tinker', 'hound']],
+    elites: [['furnace'], ['matriarch'], ['ledger'], ['tyrant']], boss: 'cog' },
   { n: 'The Faceless Crown', stage: '#2A1840',
-    easy: [['voidsentry', 'voidsentry'], ['mirror'], ['ossuary'], ['seer']],
-    hard: [['colossus'], ['nullmask', 'seer'], ['mirror', 'ossuary'], ['voidsentry', 'nullmask'], ['colossus', 'seer']],
+    easy: [['voidsentry', 'voidsentry'], ['mirror'], ['ossuary'], ['seer'], ['lantern']],
+    hard: [['colossus'], ['nullmask', 'seer'], ['mirror', 'ossuary'], ['voidsentry', 'nullmask'], ['colossus', 'seer'], ['lantern', 'mirror']],
     elites: [['unwritten'], ['choir', 'choir', 'choir'], ['eclipse']], boss: 'spire' }
 ];
 const curAct = () => ACTS[G.act - 1];
 
 /* ---------- Map ---------- */
 const ROWS = 9, LANES = 4;
-function genMap() {
+function genMap(seed, act) {
+  seedStream(seed ? seed + '|map|' + (act || 1) : null);
   const rows = [];
   for (let r = 0; r < ROWS; r++) {
     const row = [];
@@ -307,6 +362,7 @@ function genMap() {
         const bag = ['fight', 'fight', 'fight', 'fight', 'fight', 'shop'];
         if (r >= 2 && r !== 7) bag.push('rest');
         if (r >= 3) bag.push('elite', 'elite');
+        if (r <= 6) bag.push('event', 'event');
         type = pick(bag);
       }
       row.push({ type, next: [], done: false });
@@ -318,6 +374,7 @@ function genMap() {
     if (l > 0 && rng() < 0.45) n.push(l - 1);
     if (l < LANES - 1 && rng() < 0.45) n.push(l + 1);
   }
+  seedStream(null);
   return { rows };
 }
 function available() {
@@ -328,15 +385,19 @@ function available() {
 }
 
 /* ---------- Run setup ---------- */
-const MODS = [{ k: 'horde', n: 'Faster Horde', d: 'Enemies hit 25% harder.' }, { k: 'fragile', n: 'Fragile Heroes', d: 'Heroes start with 75% max HP.' }, { k: 'gold', n: 'Double Gold', d: 'All gold rewards are doubled.' }, { k: 'curse', n: 'Curse Start', d: 'Each hero starts with a Fate curse in their deck.' }];
+const MODS = [{ k: 'horde', n: 'Brutal Foes', d: 'Enemies deal 25% more damage.', dc: 'Enemies deal 25% more damage to the whole party (the final duel is unaffected).' }, { k: 'fragile', n: 'Fragile Heroes', d: 'Your hero starts with 75% max HP.', dc: 'Each hero in the party starts with 75% max HP, including in the duel.' }, { k: 'gold', n: 'Double Gold', d: 'All gold you earn is doubled.', dc: 'Each hero earns double gold from every reward.' }, { k: 'curse', n: 'Curse Start', d: 'Your deck starts with a Fate curse (an unplayable dead card).', dc: 'Each hero starts with a Fate curse (an unplayable dead card) in their deck; it carries into the duel.' }];
 function normMods(m) { m = Number(m); return Number.isInteger(m) && m >= 0 ? m & ((1 << MODS.length) - 1) : 0; }
 function modOn(k, m) { const i = MODS.findIndex(x => x.k === k); if (m === undefined) m = G && G.mods; return i >= 0 && ((normMods(m) >> i) & 1) === 1; }
 function goldMul() { return modOn('gold') ? 2 : 1; }
-function baseG(mode, diff, mods) {
-  return { v: 3, mode, code: null, screen: mode === 'coop' ? 'lobby' : 'map', act: 1, floor: 0, map: genMap(), pos: null, P: [], combat: null, fx: [], fxSeq: 0, duelWinner: null, started: mode !== 'coop', diff: normDiff(diff), mods: normMods(mods) };
+/* Map events (defaults for tuning) */
+const EVT = { pactHp: 8, idolCost: 40, idolWin: 120, idolLoss: 10, idolOdds: 0.5, libHp: 6, forgeHp: 12 };
+const EVENT_KEYS = ['pact', 'idol', 'library', 'forge'];
+function baseG(mode, diff, mods, seed) {
+  seed = mode === 'solo' && typeof seed === 'string' && seed ? seed.slice(0, 32) : null;
+  return { v: 3, mode, seed, code: null, screen: mode === 'coop' ? 'lobby' : 'map', act: 1, floor: 0, map: genMap(seed, 1), pos: null, P: [], combat: null, fx: [], fxSeq: 0, duelWinner: null, started: mode !== 'coop', diff: normDiff(diff), mods: normMods(mods) };
 }
 function newPlayer(hero, tok, mods) {
-  const p = { hero: null, tok: tok || null, hp: 0, maxHp: 0, gold: 99, deck: [], relics: [], kills: 0, done: false, vote: null, ack: 0, conn: true, reward: null, shop: null, treasure: null, actclear: null };
+  const p = { hero: null, tok: tok || null, hp: 0, maxHp: 0, gold: 99, deck: [], relics: [], kills: 0, done: false, vote: null, ack: 0, conn: true, reward: null, shop: null, treasure: null, event: null, actclear: null };
   if (hero) equipHero(p, hero, mods);
   return p;
 }
@@ -367,6 +428,7 @@ function cardChoices(pi, n, kind) {
 function resetDone() { G.P.forEach(p => { p.done = false; p.vote = null; }); }
 function allDone() { return G.P.every(p => p.done); }
 function enterNode(r, l) {
+  seedStream(G.seed ? G.seed + '|node|' + G.act + '|' + r + '|' + l : null);
   G.pos = { r, l };
   G.floor = r + 1;
   resetDone();
@@ -381,6 +443,18 @@ function enterNode(r, l) {
   else if (node.type === 'treasure') {
     G.P.forEach((p, pi) => { const gold = (rnd(40, 60) + (G.act - 1) * 10) * goldMul(); p.gold += gold; const relic = freeRelic(pi); gainRelic(pi, relic); p.treasure = { gold, relic }; });
     G.screen = 'treasure'; render();
+  }
+  else if (node.type === 'event') {
+    const k0 = pick(EVENT_KEYS);
+    G.P.forEach((p, pi) => {
+      let k = k0; const e = { k, used: false, msg: '' };
+      if (k === 'pact') { e.relic = freeRelic(pi); if (!e.relic) k = e.k = 'idol'; }
+      if (k === 'idol') e.win = rng() < EVT.idolOdds;
+      else if (k === 'library') { const rare = HEROES[p.hero].pool.filter(id => RAR[id] === 'r'); e.card = rare.length ? pick(rare) : null; }
+      else if (k === 'forge') { const un = HEROES[p.hero].pool.filter(id => RAR[id] === 'u'); e.cards = un.length ? [pick(un), pick(un)] : []; }
+      p.event = e;
+    });
+    G.screen = 'event'; render();
   }
 }
 function vote(pi, r, l) {
@@ -397,11 +471,11 @@ function vote(pi, r, l) {
   log('Coin flip: the party follows ' + (G.P[wi].hero || 'Player ' + (wi + 1)) + '\'s path.');
   render();
 }
-function toMap() { G.screen = 'map'; G.combat = null; G.P.forEach(p => { p.reward = null; p.shop = null; p.treasure = null; }); resetDone(); render(); }
-function nextAct() { G.act++; G.map = genMap(); G.pos = null; G.floor = 0; G.P.forEach(p => { p.actclear = null; }); G.screen = 'map'; G.combat = null; resetDone(); render(); }
+function toMap() { seedStream(null); G.screen = 'map'; G.combat = null; G.P.forEach(p => { p.reward = null; p.shop = null; p.treasure = null; p.event = null; }); resetDone(); render(); }
+function nextAct() { seedStream(null); G.act++; G.map = genMap(G.seed, G.act); G.pos = null; G.floor = 0; G.P.forEach(p => { p.actclear = null; }); G.screen = 'map'; G.combat = null; resetDone(); render(); }
 function advanceIfDone() {
   if (!allDone()) return render();
-  if (['reward', 'treasure', 'rest', 'shop'].includes(G.screen)) toMap();
+  if (['reward', 'treasure', 'rest', 'shop', 'event'].includes(G.screen)) toMap();
   else if (G.screen === 'actclear') nextAct();
   else if (G.screen === 'duelintro') startDuel();
   else render();
@@ -423,9 +497,9 @@ function makeEnemy(key, idx, dup, hpOverride, raw) {
 }
 function newSide(pi) {
   const p = P(pi);
-  return { isP: true, pi, hp: p.hp, max: p.maxHp, block: 0, energy: 3, flow: 0, flowEnd: 0, rage: 0, str: hasR(pi, 'cinder') ? 1 : 0, weak: 0, vuln: 0, frail: 0, drain: 0, hush: 0, hushNow: 0,
-    thorns: hasR(pi, 'thornring') ? 2 : 0, composure: 0, rhythm: 0, keep: 0, rampart: 0, keepAll: 0, bloodpact: 0, ragegain: 0, stance: hasR(pi, 'hornedmask') ? 'calm' : null, switches: 0, mantra: 0, serenity: 0, ironplus: 0,
-    draw: shuffle(p.deck.map(c => mk(c.id))), hand: [], discard: [], exhaust: [], pwr: [], played: 0, lastAttack: 5, atkTotal: 0,
+  return { isP: true, pi, hp: p.hp, max: p.maxHp, block: 0, energy: 3, flow: 0, flowEnd: 0, rage: 0, str: (hasR(pi, 'cinder') ? 1 : 0) + (hasR(pi, 'bonecrown') ? 2 : 0), weak: 0, vuln: 0, frail: 0, drain: 0, hush: 0, hushNow: 0,
+    thorns: (hasR(pi, 'thornring') ? 2 : 0) + (hasR(pi, 'ironbark') ? 3 : 0), composure: 0, rhythm: 0, keep: 0, rampart: 0, keepAll: 0, bloodpact: 0, ragegain: 0, stance: hasR(pi, 'hornedmask') ? 'calm' : null, switches: 0, mantra: 0, serenity: 0, ironplus: 0,
+    draw: shuffle(p.deck.map(c => mk(c.id))), hand: [], discard: [], exhaust: [], pwr: [], played: 0, lastAttack: 5, atkTotal: 0, elu: [],
     ready: false, down: p.hp <= 0, turnN: 0, animS: 0, animK: '', fwS: 0, fwN: 0, hurtNow: false };
 }
 function startCombat(keys, kind) {
@@ -436,6 +510,7 @@ function startCombat(keys, kind) {
   };
   if (G.P.some((p, i) => hasR(i, 'bellshard'))) C().enemies.forEach(e => { e.vuln = 1; });
   if (G.P.some((p, i) => hasR(i, 'thimble'))) C().enemies.forEach(e => { e.weak = Math.max(e.weak, 1); });
+  if (G.P.some((p, i) => hasR(i, 'stormglass'))) C().enemies.forEach(e => { e.shock = Math.max(e.shock, 1); });
   log(kind === 'boss' ? EN[keys[0]].n + ' looms over you.' : 'Enemies appear: ' + C().enemies.map(e => e.n).join(', ') + '.');
   G.screen = 'combat';
   startRound();
@@ -477,6 +552,7 @@ function startTurnSide(s) {
   }
   draw(5 + (first && hasR(pi, 'hourglass') ? 2 : 0) + (hasR(pi, 'ribbon') ? 1 : 0));
   if (hasR(pi, 'pocket')) gain(4, true);
+  if (hasR(pi, 'aegisplate')) gain(8, true);
 }
 function draw(n) {
   const s = A;
@@ -488,6 +564,11 @@ function draw(n) {
     if (card.id === 'void') { s.energy = Math.max(0, s.energy - 1); float(tagOf(s), 'Void: −1 Energy', 'buff'); }
   }
 }
+/* Elementalist element combo defaults (tune here): same element as last Attack -> raw Block; different element -> draw cards. */
+const EL_COMBO = { repeatBlock: 2, switchDraw: 1 };
+/* Element-combo helpers for cards: s.elPrev is the last Attack element before the card being played. */
+function elSwitched() { const s = SF(); return !!s.elPrev && !!s.el && s.elPrev !== s.el; }
+function elRepeated() { const s = SF(); return !!s.elPrev && s.elPrev === s.el; }
 function gain(n, raw) {
   const s = A;
   if (!raw && s.frail > 0) n = Math.floor(n * 0.75);
@@ -659,14 +740,16 @@ function playCard(pi, uid, tgt) {
   s.energy -= d.c; s.hand.splice(i, 1); s.atkTotal = 0; s.played++; P(pi).cp = (P(pi).cp || 0) + 1;
   log(heroName(pi) + ' plays ' + d.n + (t ? ' on ' + nameOf(t) : '') + '.');
   const b0 = s.block, hk = P(pi).hero;
-  if (d.t === 'attack' && hk === 'elementalist') s.el = ({ emberlash: 'fire', cinderbolt: 'fire', scorch: 'fire', rimespiral: 'frost', icelance: 'frost', stormcrash: 'storm', tempest: 'storm', sparkjolt: 'storm' })[card.id] || 'stone';
+  const elPrev = s.el; s.elPrev = elPrev;
+  if (d.t === 'attack' && hk === 'elementalist') s.el = ({ emberlash: 'fire', cinderbolt: 'fire', scorch: 'fire', rimespiral: 'frost', icelance: 'frost', stormcrash: 'storm', tempest: 'storm', sparkjolt: 'storm', kindle: 'fire', thermalshock: 'fire', staticedge: 'storm', chainbolt: 'storm', smolder: 'fire', eternalflame: 'fire', hoarfrost: 'frost', arcflash: 'storm' })[card.id] || 'stone';
+  if (d.t === 'attack' && hk === 'elementalist' && s.el) { s.elu = s.elu || []; if (!s.elu.includes(s.el)) s.elu.push(s.el); }
   if (d.t === 'attack') anim(s, hk === 'bulwark' ? 'slam' : hk === 'brute' ? 'smash' : hk === 'elementalist' ? 'cast' : 'lunge');
   const o = c.duel ? opp(s) : null;
   if (o) o.hurtNow = false;
   if (d.p) d.p(t);
   if (d.t !== 'attack') anim(s, s.block > b0 ? 'guard' : 'buff');
   if (c.over) return render();
-  if (d.t === 'attack') { if (P(pi).hero === 'elementalist') { A = s; gain(1, true); } if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
+  if (d.t === 'attack') { if (P(pi).hero === 'elementalist') { A = s; gain(1, true); if (elPrev && s.el) { if (s.el === elPrev) { if (EL_COMBO.repeatBlock > 0) { gain(EL_COMBO.repeatBlock, true); log('Elemental echo: repeated ' + s.el + '.'); } } else if (EL_COMBO.switchDraw > 0) { draw(EL_COMBO.switchDraw); log('Elemental shift: ' + elPrev + ' to ' + s.el + ', draw ' + EL_COMBO.switchDraw + '.'); } } } if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
   if (d.t === 'skill' && !c.duel) aliveEnemies().filter(x => x.key === 'ogre').forEach(og => { og.str += 2; float(tagOf(og), '+2 Strength', 'buff'); log('The Ogre enrages: +2 Strength.'); });
   if (d.t !== 'power') (d.x ? s.exhaust : s.discard).push(card); else (s.pwr || (s.pwr = [])).push(card.id);
   if (!c.duel && !aliveEnemies().length) { c.busy = true; render(); setTimeout(win, isReduce() ? 100 : 650); return; }
@@ -826,8 +909,9 @@ function win() {
   const c = C();
   if (!c || c.over) return;
   c.over = true;
+  seedStream(null);
   c.S.forEach(s => { P(s.pi).hp = s.down ? Math.ceil(s.max * 0.25) : Math.max(1, s.hp); });
-  G.P.forEach((p, pi) => { p.hp = Math.min(p.maxHp, p.hp + 2 + (hasR(pi, 'ember') ? 5 : 0)); });
+  G.P.forEach((p, pi) => { p.hp = Math.min(p.maxHp, p.hp + 2 + (hasR(pi, 'ember') ? 5 : 0) + (hasR(pi, 'bloodchalice') ? 8 : 0)); if (hasR(pi, 'luckycoin')) p.gold += 10; });
   resetDone();
   const Act = G.act;
   if (c.kind === 'boss') {
@@ -836,22 +920,26 @@ function win() {
       G.screen = 'victory'; clearSave(); return render();
     }
     G.P.forEach((p, pi) => {
+      seedStream(G.seed ? G.seed + '|boss|' + Act + '|' + pi : null);
       const relic = freeRelic(pi, true); gainRelic(pi, relic);
       const healed = Math.ceil((p.maxHp - p.hp) * 0.4); p.hp += healed;
       const gold = rnd(60, 80) * goldMul(); p.gold += gold;
       p.actclear = { act: Act, relic, healed, gold, cards: cardChoices(pi, 3, 'boss'), taken: false };
     });
+    seedStream(null);
     G.screen = 'actclear';
     return render();
   }
   const elite = c.kind === 'elite';
   G.P.forEach((p, pi) => {
+    seedStream(G.seed ? G.seed + '|rw|' + Act + '|' + G.floor + '|' + pi : null);
     const gold = ((elite ? rnd(28, 36) : rnd(12, 20)) + (Act - 1) * 6) * goldMul();
     p.gold += gold;
     const relic = elite ? freeRelic(pi) : null;
     gainRelic(pi, relic);
     p.reward = { gold, relic, cards: cardChoices(pi, 3, elite ? 'elite' : 'fight'), taken: false };
   });
+  seedStream(null);
   G.screen = 'reward';
   render();
 }
@@ -920,14 +1008,29 @@ function doAction(pi, a, x, y) {
     case 'end': endTurnAction(pi); break;
     case 'reward': if (scr === 'reward' && p.reward && !p.reward.taken && p.reward.cards[x]) { p.deck.push(mk(p.reward.cards[x])); p.reward.taken = true; render(); } break;
     case 'bossreward': if (scr === 'actclear' && p.actclear && !p.actclear.taken && p.actclear.cards[x]) { p.deck.push(mk(p.actclear.cards[x])); p.actclear.taken = true; render(); } break;
-    case 'done': if (['reward', 'treasure', 'shop', 'actclear', 'duelintro'].includes(scr)) { p.done = true; advanceIfDone(); } break;
+    case 'done': if (['reward', 'treasure', 'shop', 'event', 'actclear', 'duelintro'].includes(scr)) { p.done = true; advanceIfDone(); } break;
     case 'restheal': if (scr === 'rest' && !p.done) { p.hp = Math.min(p.maxHp, p.hp + Math.ceil(p.maxHp * 0.25)); p.done = true; advanceIfDone(); } break;
     case 'remove': {
       const i = p.deck.findIndex(c => c.u === Number(x));
       if (i < 0 || p.deck.length <= 5) break;
       if (scr === 'rest' && !p.done && y === 'rest') { p.deck.splice(i, 1); p.done = true; advanceIfDone(); }
       else if (scr === 'shop' && y === 'shop' && p.shop && !p.shop.removed && p.gold >= 60) { p.deck.splice(i, 1); p.gold -= 60; p.shop.removed = true; render(); }
+      else if (scr === 'event' && y === 'event' && p.event && p.event.k === 'library' && p.event.card && !p.event.used && !p.done && p.maxHp > EVT.libHp) { const rc = p.event.card; p.deck.splice(i, 1); p.deck.push(mk(rc)); p.maxHp -= EVT.libHp; p.hp = Math.min(p.hp, p.maxHp); p.event.used = true; p.event.msg = 'The library takes a page from you and a piece of your health. You gain ' + CARDS[rc].n + '.'; render(); }
       break;
+    }
+    case 'evt': {
+      const e = p.event;
+      if (scr !== 'event' || !e || e.used || p.done) break;
+      if (e.k === 'pact' && e.relic && p.hp > EVT.pactHp) { p.hp -= EVT.pactHp; gainRelic(pi, e.relic); e.msg = 'The mask drinks deep. You gain ' + RELICS[e.relic].n + '.'; e.used = true; }
+      else if (e.k === 'idol' && p.gold >= EVT.idolCost) {
+        p.gold -= EVT.idolCost;
+        if (e.win) { const g = EVT.idolWin * goldMul(); p.gold += g; e.msg = 'The idol smiles. You win ' + g + ' gold.'; }
+        else { p.hp = Math.max(1, p.hp - EVT.idolLoss); e.msg = 'The idol laughs. You lose ' + EVT.idolLoss + ' HP.'; }
+        e.used = true;
+      }
+      else if (e.k === 'forge' && e.cards && e.cards.length && p.hp > EVT.forgeHp) { p.hp -= EVT.forgeHp; e.cards.forEach(id => p.deck.push(mk(id))); e.msg = 'The forge scalds you and hands over ' + e.cards.map(id => CARDS[id].n).join(' and ') + '.'; e.used = true; }
+      else note(pi, 'You cannot do that.');
+      render(); break;
     }
     case 'buy': {
       if (scr !== 'shop' || !p.shop) break;
@@ -1055,7 +1158,7 @@ function sideView(s) {
     pi: s.pi, hp: s.hp, mx: s.max, block: s.block, energy: s.energy, flow: s.flow, rage: s.rage,
     st: [s.weak, s.vuln, s.frail, s.hushNow, s.drain, s.thorns, s.composure, s.rhythm, s.keep, s.rampart, s.keepAll, s.bloodpact, s.ragegain],
     sn: s.stance, sw: s.switches, sx: [s.mantra, s.serenity, s.ironplus],
-    rdy: s.ready ? 1 : 0, dn: s.down ? 1 : 0, an: [s.animS, s.animK], el: s.el || '', fw: [s.fwS, s.fwN], hn: s.hand.length,
+    rdy: s.ready ? 1 : 0, dn: s.down ? 1 : 0, an: [s.animS, s.animK], el: s.el || '', eu: s.elu ? s.elu.length : 0, fw: [s.fwS, s.fwN], hn: s.hand.length,
     kb: hero === 'bulwark' ? (s.keepAll ? s.block : Math.floor(s.block / 2)) : 0,
     sr: s.str || 0, wh: hasR(s.pi, 'whetstone') ? 1 : 0
   };
@@ -1096,6 +1199,7 @@ function buildView(me) {
   if (G.screen === 'reward') V.rw = p.reward;
   if (G.screen === 'shop') V.shop = p.shop;
   if (G.screen === 'treasure') V.tr = p.treasure;
+  if (G.screen === 'event') V.ev = p.event ? Object.assign({}, p.event, { win: undefined, c: EVT }) : null;
   if (G.screen === 'actclear') V.ac = p.actclear;
   if (G.screen === 'duelend') V.win = G.duelWinner;
   return V;

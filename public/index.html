@@ -90,6 +90,13 @@ html.rm #cardzoom, html.rm #cardzoom.on { transition: none; }
 .card.rar-u .rlabel { color: #9CCBFF; } .card.rar-r .rlabel { color: var(--gold); }
 .card .price { margin-top: auto; font-family: var(--display); color: var(--gold); font-weight: 700; font-size: 18px; }
 .t-attack { --c: var(--blood); } .t-skill { --c: var(--skill); } .t-power { --c: var(--power); } .t-status { --c: var(--status); }
+.card.el-fire { --el: #FF9A3C; } .card.el-frost { --el: #7FE3FF; } .card.el-storm { --el: #FFE45C; } .card.el-stone { --el: #7BE08A; }
+.card.elf { border-color: var(--el); box-shadow: inset 0 0 0 1px var(--el), inset 0 -30px 26px -24px var(--el); }
+.card .elicon { position: absolute; right: 8px; bottom: 8px; width: 20px; height: 20px; color: var(--el); pointer-events: none; filter: drop-shadow(0 0 3px #000); }
+.card .elicon svg { width: 100%; height: 100%; display: block; }
+@keyframes qmpulse { 0%, 100% { box-shadow: 0 0 6px 1px #E8BE52, 0 0 14px 2px #7FE3FF66; } 50% { box-shadow: 0 0 14px 4px #FFE45C, 0 0 24px 6px #FF9A3C88; } }
+.qmglow { border-radius: 999px; color: #FFF4C2; box-shadow: 0 0 10px 3px #E8BE52, 0 0 18px 4px #7FE3FF66; animation: qmpulse 1.6s ease-in-out infinite; }
+html.rm .qmglow { animation: none; }
 /* Card types without relying on color: border style (cb + hc) and glyph (cb) */
 html.cb .card.t-attack, html.hc .card.t-attack { border-style: solid; }
 html.cb .card.t-skill, html.hc .card.t-skill { border-style: dashed; }
@@ -226,6 +233,7 @@ html.hc .burstfx { border-color: #fff; color: #fff; box-shadow: none; }
 @keyframes hostshake { 25% { transform: translateX(calc(var(--hs, 5px) * -1)); } 60% { transform: translateX(calc(var(--hs, 5px) * .8)); } }
 .hitshake { animation: hostshake .3s linear; }
 html.rm .hitshake { animation: none; }
+html.rm .hitstatic { outline: 3px solid #ff4a5e; outline-offset: 2px; }
 .battle.shake1 { animation: shake1 .35s linear; }
 .battle.shake2 { animation: shake2 .45s linear; }
 @keyframes shake1 { 10% { transform: translate(-4px, 2px); } 30% { transform: translate(4px, -2px); } 50% { transform: translate(-3px, 1px); } 70% { transform: translate(2px, -1px); } 100% { transform: none; } }
@@ -277,6 +285,7 @@ html.rm .hitshake { animation: none; }
 @keyframes flash { 20% { opacity: .45; } 100% { opacity: 0; } }
 @keyframes die { 0%, 55% { opacity: 1; } 100% { opacity: 0; transform: translateY(10px); } }
 @keyframes floatup { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.8); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -56px) scale(1); } }
+.cuebox { position: fixed; z-index: 61; pointer-events: none; border: 2px solid #ffd479; border-radius: 8px; box-shadow: 0 0 8px #ffd479; }
 .card.flyghost { position: fixed; margin: 0; z-index: 60; pointer-events: none; transition: none; transform-origin: 50% 50%; }
 @keyframes shufpulse { 0% { transform: scale(1); } 35% { transform: scale(1.25); color: #fff; } 100% { transform: scale(1); } }
 .piles span.shuf { display: inline-block; animation: shufpulse .6s ease-out; }
@@ -1019,6 +1028,7 @@ html.rm .me-hot { animation: none; }
 .node.t-rest { background: radial-gradient(circle at 35% 30%, #8A5A2A, #3A2210 78%); border-color: #E89A3A; }
 .node.t-shop { background: radial-gradient(circle at 35% 30%, #7A6A2A, #342A10 78%); border-color: #E8BE52; }
 .node.t-treasure { background: radial-gradient(circle at 35% 30%, #8A6A2A, #3A2A10 78%); border-color: #F0CE6A; }
+.node.t-event { background: radial-gradient(circle at 35% 30%, #6A4A9A, #251540 78%); border-color: #C9A8F0; }
 .mapcard .node.bossnode { width: 80px; height: 80px; border-width: 4px; background: radial-gradient(circle at 35% 30%, #2A4A6A, #0E1A2E 78%); border-color: #6FD0FF; box-shadow: 0 0 18px #6FD0FF66, 0 4px 10px #000A; }
 .act2 .node.bossnode { background: radial-gradient(circle at 35% 30%, #6A4A22, #2A1608 78%); border-color: #F0CE6A; box-shadow: 0 0 18px #E8BE5266, 0 4px 10px #000A; }
 .act3 .node.bossnode { background: radial-gradient(circle at 35% 30%, #4A2A8A, #150A2E 78%); border-color: #B49AFF; box-shadow: 0 0 20px #8A6AFF88, 0 4px 10px #000A; }
@@ -2005,7 +2015,8 @@ function rigSVG(inner, vw, vh, spec, o) {
 function enemyArt(e, st, cls) {
   const d = EN[e.key];
   const kind = d.idle || '';
-  let sp = RIGSPEC[e.key] || {};
+  const artKey = d.art || e.key;
+  let sp = RIGSPEC[artKey] || {};
   if (e.key === 'hound' && e.max <= 22) sp = rigMapSpec(sp, 18, 22, .7);
   if (e.key === 'ossuary' && e.split) sp = rigMapSpec(sp, 15, 18, .75);
   let ghost = '';
@@ -2016,7 +2027,7 @@ function enemyArt(e, st, cls) {
   }
   const over = ghost + (e.key === 'cog' ? '<path class="crack" d="M46 50 L54 60 L48 70 L58 82 L52 98 M74 52 L68 64 L78 74 L70 90 M56 24 L60 36 L55 44" stroke="#FFD27A" stroke-width="1.6" fill="none" filter="url(#glow)"/>' : '');
   const back = '<rect width="120" height="100" fill="' + d.bg + '"/><path d="M0 18 Q60 0 120 22 L120 0 L0 0Z" fill="#FFFFFF" opacity=".06"/>';
-  return rigSVG(ART[e.key](e), 120, 100, sp, { st: st, cls: cls || '', id: idleN(e.idx + 1), label: e.n, back: back, over: over });
+  return rigSVG(ART[artKey](e), 120, 100, sp, { st: st, cls: cls || '', id: idleN(e.idx + 1), label: e.n, back: back, over: over });
 }
 const HERO_ART = {
   duelist: '<rect width="120" height="144" fill="#1C6670"/><path d="M0 24 Q40 0 70 30 Q100 56 120 34 L120 0 L0 0Z" fill="#2A8590" opacity=".6"/>' +
@@ -2135,7 +2146,7 @@ const ICON = {
   floor: I('<path d="M3 17 L3 12 L7 12 L7 8 L11 8 L11 4 L17 4"/>'),
   check: I('<path d="M4 10 L8 14 L16 5"/>')
 };
-const NODE_LABEL = { fight: 'Fight', elite: 'Elite', rest: 'Rest site', shop: 'Merchant', treasure: 'Treasure', boss: 'Boss' };
+const NODE_LABEL = { fight: 'Fight', elite: 'Elite', rest: 'Rest site', shop: 'Merchant', treasure: 'Treasure', event: 'Event', boss: 'Boss' };
 
 
 /* ---------- Client UI state ---------- */
@@ -2650,7 +2661,12 @@ const SND = (function () {
     bad(V, t) { V.tone({ t, f: 180, f2: 120, d: 0.2, a: 0.01, r: 0.1, v: 0.08, type: 'square', lp: 700 }); },
     hover(V, t) { V.tone({ t, f: 880, d: 0.01, a: 0.003, r: 0.04, v: 0.025, type: 'triangle' }); },
     draw(V, t) { V.noise({ t, d: 0.06, a: 0.005, type: 'bp', f: 1400, f2: 3200, q: 1, v: 0.08, r: 0.05 }); },
-    heal(V, t) { V.tone({ t, f: 523, d: 0.04, r: 0.35, v: 0.06, parts: BELL }); V.tone({ t: t + 0.09, f: 784, d: 0.04, r: 0.5, v: 0.06, parts: BELL }); },
+    heal(V, t) { [523, 659, 784, 1047].forEach((f, k) => V.tone({ t: t + k * 0.07, f, d: 0.04, r: 0.55, v: 0.05, parts: BELL })); V.noise({ t, d: 0.3, a: 0.05, type: 'hp', f: 4000, f2: 7000, v: 0.02, r: 0.2 }); },
+    burn(V, t) { for (let k = 0; k < 4; k++) V.noise({ t: t + k * 0.05 + hs(k, 81) * 0.02, d: 0.02, type: 'hp', f: 2800 + hs(k, 82) * 2200, v: 0.06, r: 0.04 }); V.noise({ t, d: 0.22, a: 0.02, type: 'bp', f: 700, f2: 350, q: 0.8, v: 0.07, r: 0.15 }); },
+    burnup(V, t) { V.noise({ t, d: 0.3, a: 0.04, type: 'bp', f: 400, f2: 2200, q: 0.9, v: 0.09, r: 0.15 }); V.tone({ t, f: 180, f2: 420, d: 0.2, a: 0.02, r: 0.1, v: 0.04, type: 'sawtooth', lp: 900 }); V.noise({ t: t + 0.15, d: 0.02, type: 'hp', f: 3500, v: 0.05, r: 0.04 }); },
+    chill(V, t) { [2093, 2637, 3136].forEach((f, k) => V.tone({ t: t + k * 0.04, f, d: 0.03, r: 0.7, v: 0.035, parts: [[1, 1], [2.01, 0.3]] })); V.noise({ t, d: 0.15, type: 'hp', f: 6000, v: 0.04, r: 0.2 }); },
+    shock(V, t) { V.tone({ t, f: 1800, f2: 200, d: 0.09, a: 0.002, r: 0.05, v: 0.05, type: 'square', lp: 3500 }); V.noise({ t, d: 0.08, type: 'bp', f: 4500, q: 2, v: 0.07, r: 0.05 }); V.tone({ t: t + 0.07, f: 1400, f2: 300, d: 0.06, a: 0.002, r: 0.05, v: 0.04, type: 'square', lp: 3000 }); },
+    poison(V, t) { V.tone({ t, f: 260, f2: 140, d: 0.3, a: 0.03, r: 0.15, v: 0.06, type: 'sine', vib: [9, 60] }); for (let k = 0; k < 3; k++) V.tone({ t: t + 0.04 + k * 0.09, f: 300 + hs(k, 91) * 200, f2: 700, d: 0.05, a: 0.004, r: 0.06, v: 0.04, type: 'sine' }); },
     endturn(V, t) { V.tone({ t, f: 392, d: 0.05, r: 0.35, v: 0.08, parts: BELL }); V.tone({ t: t + 0.07, f: 262, d: 0.05, r: 0.5, v: 0.08, parts: BELL }); thump(V, t, 0.15, 100); },
     transition(V, t) { V.noise({ t, d: 0.22, a: 0.08, type: 'bp', f: 300, f2: 1800, q: 0.8, v: 0.05, r: 0.12 }); },
     cardatk(V, t) { V.noise({ t, d: 0.07, type: 'bp', f: 3000, f2: 900, q: 1.5, v: 0.07, r: 0.05 }); V.tone({ t, f: 180, f2: 110, d: 0.05, a: 0.003, r: 0.08, v: 0.05, type: 'sawtooth', lp: 900 }); },
@@ -2703,7 +2719,7 @@ const SND = (function () {
     try { sync(); } catch (e) {}
   }
   /* hit / block sound hooks: placeholders reuse existing hero sounds; overwrite HOOKS.hit / HOOKS.block to use real files later */
-  const HOOKS = { hit: (h, delay) => hero(h, 'hit', delay), block: (h, delay) => hero(h, 'guard', delay), hover: () => ui('hover'), click: () => ui('click'), card: () => ui('card'), cardplay: (ty, delay) => ui(ty === 'attack' ? 'cardatk' : ty === 'power' ? 'cardpow' : 'cardskl', delay), deathpop: () => ui('deathpop'), draw: delay => ui('draw', delay), endturn: () => ui('endturn'), transition: () => ui('transition'), reveal: (rar, delay) => { delay = delay || 0; ui('flip', delay); if (rar === 'r') ui('gleamr', delay + 0.25); else if (rar === 'u') ui('gleamu', delay + 0.25); } };
+  const HOOKS = { hit: (h, delay) => hero(h, 'hit', delay), block: (h, delay) => hero(h, 'guard', delay), hover: () => ui('hover'), click: () => ui('click'), card: () => ui('card'), cardplay: (ty, delay) => ui(ty === 'attack' ? 'cardatk' : ty === 'power' ? 'cardpow' : 'cardskl', delay), deathpop: () => ui('deathpop'), fanfare: won => stinger(won ? 'final' : 'defeat'), draw: delay => ui('draw', delay), endturn: () => ui('endturn'), transition: () => ui('transition'), reveal: (rar, delay) => { delay = delay || 0; ui('flip', delay); if (rar === 'r') ui('gleamr', delay + 0.25); else if (rar === 'u') ui('gleamu', delay + 0.25); } };
   function fire(name, a, b) { try { if (HOOKS[name]) HOOKS[name](a, b); } catch (e) {} }
   function hit(h, delay) { try { HOOKS.hit(h, delay); } catch (e) {} }
   function block(h, delay) { try { HOOKS.block(h, delay); } catch (e) {} }
@@ -2825,6 +2841,7 @@ const MAPICON = {
   rest: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 26 L27 21 M5 21 L27 26" stroke="#8A5A28" stroke-width="3.4" stroke-linecap="round"/><path d="M16 3 Q24 12 21 19 Q19 23 16 23 Q11 23 10 18 Q9 13 13 10 Q13 14 16 14 Q15 8 16 3Z" fill="#FF8A2A"/><path d="M16 12 Q20 17 18 20 Q17 22 15 22 Q12 21 13 17 Q15 18 16 12Z" fill="#FFE27A"/></svg>',
   shop: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 6 L21 6 L19 10 L13 10Z" fill="#8A6030"/><path d="M9 11 Q4 20 8 26 Q16 30 24 26 Q28 20 23 11Z" fill="#C9A060" stroke="#5A3A18" stroke-width="1.2"/><circle cx="16" cy="19" r="5" fill="#E8BE52" stroke="#8E6A20" stroke-width="1.2"/><path d="M16 16 L16 22 M14 17.5 Q16 16 18 17.5 Q18 19 16 19 Q14 19 14 20.5 Q16 22 18 20.5" stroke="#8E6A20" stroke-width="1.1" fill="none"/></svg>',
   treasure: '<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="15" width="24" height="12" rx="1.5" fill="#9A6A32" stroke="#4A2A10" stroke-width="1.2"/><path d="M4 15 Q4 6 16 6 Q28 6 28 15Z" fill="#B8823E" stroke="#4A2A10" stroke-width="1.2"/><path d="M10 7 L10 27 M22 7 L22 27" stroke="#D9D2C4" stroke-width="2"/><rect x="13.5" y="14" width="5" height="6" rx="1" fill="#E8BE52" stroke="#6A4A10"/></svg>',
+  event: '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12" fill="#6A4A9A" stroke="#2A1A4A" stroke-width="1.4"/><path d="M12 12.5 Q12 8 16 8 Q20 8 20 12 Q20 14.5 16 16 L16 18.5" fill="none" stroke="#F0E6FF" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="22.5" r="1.4" fill="#F0E6FF"/></svg>',
   boss1: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 L16 6 M16 6 Q8 8 8 17 L6 24 L26 24 L24 17 Q24 8 16 6Z" fill="#9FD8E8" stroke="#1D4A5A" stroke-width="1.4"/><circle cx="16" cy="27" r="2.6" fill="#E8BE52"/><path d="M12 12 Q12 9 16 9" stroke="#fff" stroke-width="1.4" fill="none" opacity=".6"/></svg>',
   boss2: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 14 L9 6 L13 12 L16 4 L19 12 L23 6 L27 14Z" fill="#E8BE52" stroke="#6A4A10" stroke-width="1.2"/><path d="' + gearP(16, 21, 9, 7.2, 8) + '" fill="#B8823E" stroke="#4A2A10" stroke-width="1"/><circle cx="16" cy="21" r="3.2" fill="#2A150C"/></svg>',
   boss3: '<svg viewBox="0 0 32 32" aria-hidden="true"><g transform="translate(16 16) scale(1.35)"><g fill="#EDE6FA" stroke="#3A2A5A" stroke-width="1">' + maskP + '</g>' + maskEyes + '</g><path d="M16 1 L16 4 M8 3 L10 6 M24 3 L22 6" stroke="#B49AFF" stroke-width="1.5" stroke-linecap="round"/></svg>'
@@ -3000,7 +3017,7 @@ function mapHTML(V) {
     '<div class="mapfx" aria-hidden="true">' + mapParticles(V.act) + '</div>' +
     '<svg class="edges" viewBox="0 0 400 ' + H + '" aria-hidden="true">' + edges + '<g class="mgate" transform="translate(' + ex + ' ' + ey + ')"><circle r="7" fill="#1A1424" stroke="#E8BE52" stroke-width="1.5"/></g></svg>' +
     '<div class="mapfog" style="height:' + f1(fogH) + '%" aria-hidden="true"></div>' + nodes + (!cur ? '<span class="startmark" style="left:50%;top:' + f1((y(0) + 38) / H * 100) + '%">Start here</span>' : '') + toks + '</div>' +
-    '<div class="legend">' + ['fight', 'elite', 'rest', 'shop', 'treasure'].map(k => '<span>' + MAPICON[k] + NODE_LABEL[k] + '</span>').join('') + '<span>' + MAPICON['boss' + V.act] + 'Boss</span><i class="lg-sep"></i>' +
+    '<div class="legend">' + ['fight', 'elite', 'rest', 'shop', 'treasure', 'event'].map(k => '<span>' + MAPICON[k] + NODE_LABEL[k] + '</span>').join('') + '<span>' + MAPICON['boss' + V.act] + 'Boss</span><i class="lg-sep"></i>' +
     '<span><i class="lg-ring"></i>You are here</span>' +
     '<span><svg class="lg-line" viewBox="0 0 28 8" aria-hidden="true"><path d="M1 4H27" class="me-hot"/></svg>Next path</span>' +
     '<span><svg class="lg-line" viewBox="0 0 28 8" aria-hidden="true"><path d="M1 4H27" class="me-lit"/></svg>Travelled</span>' +
@@ -3146,14 +3163,14 @@ function sndSync(V, prev) {
   if (was && was !== scr) {
     if (scr === 'reward') SND.stinger('win');
     else if (scr === 'actclear' || scr === 'duelend') SND.stinger('clear');
-    else if (scr === 'victory') SND.stinger('final');
-    else if (scr === 'defeat') SND.stinger('defeat');
+    else if (scr === 'victory') SND.fire('fanfare', true);
+    else if (scr === 'defeat') SND.fire('fanfare', false);
     else if (scr === 'combat') bossIntro(V);
-    else if (scr === 'treasure') SND.ui('thud');
+    else if (scr === 'treasure' || scr === 'event') SND.ui('thud');
     else if (scr === 'rest') SND.ui('crackle');
     else if (scr === 'shop') SND.ui('coin');
   }
-  if (!V.cb || scr !== 'combat') { CL.sndHand = null; return; }
+  if (!V.cb || scr !== 'combat') { CL.sndHand = null; CL.sndSt = null; return; }
   const c = V.cb, me = V.P[V.me].h;
   const hu = c.hand.map(x => x[0]);
   const fresh = CL.sndHand ? hu.filter(u => CL.sndHand.indexOf(u) < 0) : (was && was !== 'combat' ? hu : []);
@@ -3165,6 +3182,14 @@ function sndSync(V, prev) {
   c.en.forEach(e => {
     if (e.ac > prev) { if (!enemyActed && !c.duel) { enemyActed = true; SND.ui('enemyturn'); turnBanner('Enemy turn', true); } SND.enemy(e.key, 'atk'); }
     if (e.ds > prev) SND.enemy(e.key, 'die', 0.12);
+    CL.sndSt = CL.sndSt || {};
+    const stk = V.act + ':' + V.floor + ':' + e.idx, pst = CL.sndSt[stk];
+    CL.sndSt[stk] = [e.st[11], e.st[12], e.st[13]];
+    if (pst && !e.dead) {
+      if (e.st[11] > pst[0]) SND.ui('burnup', 0.05);
+      if (e.st[12] > pst[1]) SND.ui('chill', 0.1);
+      if (e.st[13] > pst[2]) SND.ui('shock', 0.15);
+    }
     const pk = V.act + ':' + V.floor + ':' + e.idx;
     CL.sndP2 = CL.sndP2 || {};
     if (e.p2 && !CL.sndP2[pk]) { CL.sndP2[pk] = 1; if (CL.seen && prev > 0) SND.ui('phase'); }
@@ -3186,7 +3211,9 @@ function sndSync(V, prev) {
   let n = 0;
   (V.fx || []).forEach(f => {
     if (f.s <= prev || !f.x) return;
-    if (f.k === 'heal' && f.t[0] === 'p') { SND.ui('heal', 0.05 * n); n++; return; }
+    if (f.k === 'heal') { SND.ui('heal', 0.05 * n); n++; return; }
+    if (/Poison/.test(f.x)) { SND.ui('poison', 0.05 * n); n++; return; }
+    if (/Burn/.test(f.x) && f.x[0] === '−') { SND.ui('burn', 0.05 * n); n++; return; }
     if (f.k === 'block') { SND.ui('blockup', 0.05 * n); n++; return; }
     if (f.k === 'buff' && /Weak|Vulnerable|Frail|Hushed|Reflecting|En Garde|Intangible|Ritual|Strength|Thorns|Erased|Energy next turn/.test(f.x)) { SND.ui('status', 0.05 * n); n++; return; }
     if (f.t[0] !== 'e') return;
@@ -3232,15 +3259,24 @@ function toast(msg) {
 
 /* ---------- Render helpers ---------- */
 function liveSide(V) { const c = V.cb; if (!c) return null; const s = c.S[V.me]; return s ? { flow: s.flow, block: s.block, rage: s.rage, energy: s.energy, stance: s.sn, sw: s.sw } : null; }
+const CARD_EL = { estrike: 'stone', eguard: 'stone', stonemask: 'stone', emberlash: 'fire', cinderbolt: 'fire', scorch: 'fire', rimespiral: 'frost', icelance: 'frost', frostward: 'frost', rimeshroud: 'frost', sparkjolt: 'storm', stormcrash: 'storm', tempest: 'storm', gust: 'storm' };
+const EL_NAME = { fire: 'Fire', frost: 'Frost', storm: 'Storm', stone: 'Stone' };
+const EL_ICON = {
+  fire: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 5 7 7 7 13a7 7 0 0 1-14 0c0-3 2-5 3-7 1 2 2 2 2 2 0-3 0-5 2-8z"/></svg>',
+  frost: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/></svg>',
+  storm: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>',
+  stone: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l9 7-3 12H6L3 9z"/></svg>'
+};
+function qmOn(V) { const c = V && V.cb, s = c && c.S[V.me]; return !!(s && s.eu >= 4); }
 function cardHTML(id, act, arg, opts) {
   opts = opts || {};
   const d = CARDS[id];
   const ls = opts.live;
   const live = d.live && ls ? '<span class="live">' + d.live(ls) + '</span>' : '';
   const rar = RAR[id];
-  const cls = 'card t-' + d.t + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '');
-  return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + (opts.rv != null ? ' style="--i:' + opts.rv + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
-    '<span class="cost">' + (d.c < 0 ? '–' : d.c) + '</span>' + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + '</span><span class="cname">' + esc(d.n) + '</span>' +
+  const el = CARD_EL[id]; const cls = 'card t-' + d.t + (el ? ' elf el-' + el : '') + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '');
+  return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + (opts.rv != null ? ' style="--i:' + opts.rv + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + (el ? EL_NAME[el] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
+    '<span class="cost">' + (d.c < 0 ? '–' : d.c) + '</span>' + (el ? '<span class="elicon" aria-hidden="true">' + EL_ICON[el] + '</span>' : '') + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + '</span><span class="cname">' + esc(d.n) + '</span>' +
     '<span class="cdesc">' + esc(d.d) + live + '</span>' + (opts.price != null ? '<span class="price">' + opts.price + ' gold</span>' : '') + (opts.kb ? '<span class="kbn" aria-hidden="true">' + opts.kb + '</span>' : '') + '</button>';
 }
 function vName(V, pi) {
@@ -3267,8 +3303,8 @@ function topbar(V) {
   return '<header class="topbar"><span class="name">' + esc(HEROES[me.h].n) + '</span>' +
     '<span class="stat" title="Health">' + ICON.heart + me.hp + ' / ' + me.mx + '</span>' +
     '<span class="stat" title="Gold">' + ICON.coin + me.g + '</span>' +
-    '<span class="stat" title="Act and floor">' + ICON.floor + 'Act ' + ROMAN[V.act - 1] + ' · Floor ' + floorNo(V.floor) + '/' + (ROWS + 1) + '</span>' + partner +
-    '<span class="relics">' + me.rl.map(r => '<span class="chip" title="' + esc(RELICS[r].d) + '">' + esc(RELICS[r].n) + '</span>').join('') + '</span>' +
+    '<span class="stat" title="Act and floor">' + ICON.floor + 'Act ' + ROMAN[V.act - 1] + ' · Floor ' + floorNo(V.floor) + '/' + (ROWS + 1) + '</span>' + partner + modChips(V.md || 0) +
+    '<span class="relics">' + me.rl.map(r => '<span class="chip' + (r === 'quadmask' && qmOn(V) ? ' qmglow' : '') + '" title="' + esc(RELICS[r].d) + '">' + esc(RELICS[r].n) + '</span>').join('') + '</span>' +
     '<span class="spacer"></span>' + (V.code ? '<span class="chip code" title="Room code">Room ' + esc(V.code.toUpperCase()) + '</span>' : '') +
     '<button type="button" class="btn snd" data-act="snd" aria-label="Sound settings">' + SND.SPK + ' Sound</button><button type="button" class="btn" data-act="deck">Deck (' + V.deck.length + ')</button></header>';
 }
@@ -3417,7 +3453,7 @@ function resourceHTML(hero, s) {
     return '<span class="stance st-' + (s.sn || 'none') + '" title="' + esc(st ? st.d : 'No stance. Play stance cards to enter Fury, Iron or Calm.') + '"><i></i>' + (st ? st.n : 'No stance') + '</span>' +
       (st ? '<span class="stancetip">' + esc(st.d) + '</span>' : '') + (s.sw ? '<span class="muted">' + s.sw + ' switch' + (s.sw > 1 ? 'es' : '') + ' this turn</span>' : '');
   }
-  if (hero === 'elementalist') return '<span class="shellhint" tabindex="0" data-tip="Quadrant Mask|Each Attack you play gives 1 Block. This ignores Frail.">Quadrant Mask: Attacks give 1 Block</span>';
+  if (hero === 'elementalist') return '<span class="shellhint' + (s.eu >= 4 ? ' qmglow' : '') + '" tabindex="0" data-tip="Quadrant Mask|Each Attack you play gives 1 Block. This ignores Frail.' + (s.eu >= 4 ? ' All four elements used this combat.' : '') + '">Quadrant Mask: Attacks give 1 Block</span>';
   return '<span class="shellhint" tabindex="0" data-tip="Iron Shell|Keep half your Block at the start of your turn.">Iron Shell keeps ' + s.kb + ' Block</span>';
 }
 function heroBoxHTML(V, s, prev, mini) {
@@ -3626,6 +3662,30 @@ function treasureHTML(V) {
     '<div class="row">' + doneBtn(V, 'Continue') + '</div>' + waitNote(V);
   return '<section class="panel victory"><h2>Treasure</h2>' + sceneBanner('treasure') + st.html + (st.open ? '<div class="reveal" style="--rc:' + f1(st.ce) + 's">' + details + '</div>' : '<p class="muted center">A dusty chest sits in the dark. Open it.</p>') + '</section>';
 }
+function eventHTML(V) {
+  const e = V.ev, me = V.P[V.me];
+  if (!e) return '<section class="panel"><h2>Event</h2><div class="row">' + doneBtn(V, 'Continue') + '</div>' + waitNote(V) + '</section>';
+  const c = e.c, used = e.used || me.dn;
+  let h = '', t = '', extra = '', btn = ['evt', 'Accept', true];
+  if (e.k === 'pact') {
+    h = 'Blood Pact'; t = 'A mask on an altar offers a relic, for a price in blood.' + (e.relic ? ' <b>' + esc(RELICS[e.relic].n) + '</b> · ' + esc(RELICS[e.relic].d) : '');
+    btn = ['evt', 'Lose ' + c.pactHp + ' HP: gain the relic', !e.relic || me.hp <= c.pactHp];
+  } else if (e.k === 'idol') {
+    h = "Gambler's Idol"; t = 'A grinning idol takes bets. Pay ' + c.idolCost + ' gold for a ' + Math.round(c.idolOdds * 100) + '% chance at ' + c.idolWin + ' gold. Lose, and it takes ' + c.idolLoss + ' HP.';
+    btn = ['evt', 'Bet ' + c.idolCost + ' gold', me.g < c.idolCost];
+  } else if (e.k === 'library') {
+    h = 'Cursed Library'; t = 'Give up a card and ' + c.libHp + ' max HP. In return you gain a rare card.';
+    extra = e.card ? '<div class="cards">' + cardHTML(e.card, 'noop', 0, {}) + '</div>' : '';
+    btn = ['eventremove', 'Remove a card, lose ' + c.libHp + ' max HP', !e.card || V.deck.length <= 5 || me.mx <= c.libHp];
+  } else {
+    h = 'Fevered Forge'; t = 'The forge burns you for ' + c.forgeHp + ' HP, then hands over 2 Uncommon cards.';
+    btn = ['evt', 'Lose ' + c.forgeHp + ' HP: gain 2 cards', !e.cards || !e.cards.length || me.hp <= c.forgeHp];
+  }
+  return '<section class="panel"><h2>' + esc(h) + '</h2><p class="muted">' + t + '</p>' + extra +
+    (e.msg ? '<p>' + esc(e.msg) + '</p>' : '') +
+    '<div class="choices"><button type="button" class="btn primary" data-act="' + btn[0] + '"' + (used || btn[2] ? ' disabled' : '') + '>' + esc(btn[1]) + '</button>' +
+    doneBtn(V, e.used ? 'Continue' : 'Leave') + '</div>' + waitNote(V) + '</section>';
+}
 function duelIntroHTML(V) {
   return '<section class="panel duelintro"><span class="actbanner">The Faceless Spire falls</span><h2>Only one mask may leave</h2>' +
     '<div class="trio duo">' + [0, 1].map(pi => portraitHTML(V.P[pi].h, '', true)).join('') + '</div>' +
@@ -3695,11 +3755,12 @@ function endHTMLBase(V, won) {
   const per = ROWS + 1;
   const floors = won ? 3 * per : Math.max(0, (V.act - 1) * per + V.floor - 1);
   const rs = V.rs || { cp: 0, dm: 0, tn: 0 };
+  if (E.G && E.G.seed && V.mode === 'solo') dailyRecord(E.G.seed, floors * 10 + V.P[V.me].k * 2 + Math.floor(V.P[V.me].g / 10) + (won ? 100 : 0));
   const stat = (label, to, i) => { to = Number(to) || 0; return '<li style="--i:' + i + '">' + label + ': <b class="cnt" data-to="' + to + '" data-i="' + i + '">' + endCountVal(to, i) + '</b></li>'; };
   const counts = {};
   V.deck.forEach(d => { const n = CARDS[d[1]].n; counts[n] = (counts[n] || 0) + 1; });
   const deck = '<div class="dchips">' + Object.keys(counts).sort().map((n, i) => '<span class="dchip" style="--i:' + i + '">' + esc(n) + (counts[n] > 1 ? ' ×' + counts[n] : '') + '</span>').join('') + '</div>';
-  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules">' + stat('Floors cleared', floors, 0) + stat('Turns', rs.tn, 1) + stat('Cards played', rs.cp, 2) + stat('Damage dealt', rs.dm, 3) + stat('Cards taken', V.deck.filter(d => CARDS[d[1]] && CARDS[d[1]].t !== 'status' && !((HEROES[V.P[V.me].h] || { starter: [] }).starter.indexOf(d[1]) >= 0)).length, 4) + stat('Gold', V.P[V.me].g, 5) + '</ul><p class="muted">Final deck (' + V.deck.length + ')</p>' + deck + '</div>';
+  const sum = '<div class="runsum"><p><b>Run summary</b></p><ul class="rules">' + stat('Floors cleared', floors, 0) + stat('Turns', rs.tn, 1) + stat('Cards played', rs.cp, 2) + stat('Damage dealt', rs.dm, 3) + stat('Cards taken', V.deck.filter(d => CARDS[d[1]] && CARDS[d[1]].t !== 'status' && !((HEROES[V.P[V.me].h] || { starter: [] }).starter.indexOf(d[1]) >= 0)).length, 4) + stat('Gold', V.P[V.me].g, 5) + '</ul><p class="muted">Relics (' + V.P[V.me].rl.length + ')</p><div class="dchips">' + V.P[V.me].rl.filter(r => RELICS[r]).map((r, i) => '<span class="dchip" style="--i:' + i + '" title="' + esc(RELICS[r].d) + '">' + esc(RELICS[r].n) + '</span>').join('') + '</div><p class="muted">Final deck (' + V.deck.length + ')</p>' + deck + '</div>';
   const again = V.mode === 'solo' ? '<button type="button" class="btn primary" data-act="again">Play again</button>' : rematchBtn(V);
   const marker = '<div class="row"><button type="button" class="btn primary" data-act="leave">';
   if (!REDUCE && !endTickOn) { endTickOn = true; requestAnimationFrame(endTick); }
@@ -3712,8 +3773,12 @@ function endHTML0(V, won) {
     '<p>' + (won ? esc(HEROES[me.h].n) + ' conquered all three acts of the Masked Spire.' : (V.n > 1 ? 'Your party fell' : 'You fell') + ' in Act ' + ROMAN[V.act - 1] + ', floor ' + V.floor + '.') + ' Enemies defeated: ' + me.k + '. Deck size: ' + V.deck.length + '.</p><p class="muted">Difficulty: ' + esc((E.DIFFS[V.df] || E.DIFFS[1]).n) + '</p>' +
     '<div class="row"><button type="button" class="btn primary" data-act="leave">Back to title</button></div></section>';
 }
+function dailySeed() { return new Date().toISOString().slice(0, 10); }
+function dailyBest() { try { return JSON.parse(localStorage.getItem('ms_daily_best') || 'null'); } catch (e) { return null; } }
+function dailyRecord(seed, score) { try { const b = dailyBest(); if (!b || b.date !== seed || score > b.score) localStorage.setItem('ms_daily_best', JSON.stringify({ date: seed, score })); } catch (e) {} }
 function titleHTML() {
   const saved = loadSave();
+  const db = dailyBest(), dToday = dailySeed();
   const sg = saved && saved.G && saved.G.mode === 'solo' && saved.G.P && saved.G.P[0] && saved.G.P[0].hero ? saved.G : null;
   const rooms = CL.roomOK;
   return '<section class="panel title"><div class="trio">' + ['duelist', 'bulwark', 'brute', 'elementalist'].map(k => portraitHTML(k, '', true)).join('') + '</div><div style="display:flex;flex-direction:column;gap:16px;min-width:0">' +
@@ -3721,10 +3786,12 @@ function titleHTML() {
     '<p>Climb through the Hollow Wood, the Rust Bazaar and the Faceless Crown. In co-op you fight side by side, and after the final boss the two of you duel for the last mask.</p>' +
     '<ul class="rules"><li><b>Energy:</b> 3 each turn. Cards cost Energy to play.</li><li><b>Block</b> absorbs damage. Each enemy shows its next move and, in co-op, who it is aiming at.</li><li>In co-op you both play at the same time; enemies act once you have both pressed End turn.</li></ul>' +
     '<div class="row"><button type="button" class="btn primary" data-act="solo">Solo run</button>' +
+    '<button type="button" class="btn" data-act="daily">Daily run · ' + dToday + '</button>' +
     '<button type="button" class="btn" data-act="host"' + (rooms === false ? ' disabled' : '') + '>Host co-op</button></div>' +
     '<form class="row joinrow" data-form="join"><label for="joincode">Join with code</label><input id="joincode" class="codein" maxlength="5" autocomplete="off" spellcheck="false" placeholder="ABCDE" value="' + esc(CL.joinCode) + '"' + (rooms === false ? ' disabled' : '') + '><button type="submit" class="btn"' + (rooms === false ? ' disabled' : '') + '>Join</button></form>' +
     
     (CL.err ? '<p class="waitnote">' + esc(CL.err) + '</p>' : '') +
+    '<p class="muted">Daily best: ' + (db ? db.score + ' (' + esc(db.date) + (db.date === dToday ? ', today' : '') + ')' : 'none yet') + '</p>' +
     '<div class="row"><button type="button" class="btn" data-act="ach">Achievements (' + ACH.count() + '/' + ACH.total + ')</button></div>' +
     (sg ? '<div class="row"><button type="button" class="btn" data-act="continue">Continue solo run · ' + esc(HEROES[sg.P[0].hero].n) + ', Act ' + ROMAN[sg.act - 1] + '</button></div>' : '') +
     '</div></section>';
@@ -3779,6 +3846,7 @@ function a11yState(V) {
       else if (scr === 'shop') out.push('Shop.');
       else if (scr === 'rest') out.push('Rest site.');
       else if (scr === 'treasure') out.push('Treasure.');
+      else if (scr === 'event') out.push('Event. Make a choice or leave.');
       else if (scr === 'duelintro') out.push('The duel is about to begin.');
       else if (scr === 'duelend') out.push('The duel is over.');
       else if (scr === 'victory') out.push('Victory. Your run is complete.');
@@ -3885,7 +3953,12 @@ function shakeScreen(level) {
   setTimeout(() => app.classList.remove('shake1', 'shake2'), 500);
 }
 function flashHit(host, dmg) {
-  if (REDUCE) return;
+  if (REDUCE) {
+    host.classList.add('hitstatic');
+    clearTimeout(host._hsT);
+    host._hsT = setTimeout(() => host.classList.remove('hitstatic'), 700);
+    return;
+  }
   const b = document.createElement('span');
   b.className = 'hitflash';
   b.style.opacity = String(Math.min(1, 0.4 + (dmg || 0) * 0.04));
@@ -4042,13 +4115,19 @@ function flushFx(V, prev) {
   }
 }
 function handFx(V, pv) {
-  if (REDUCE || !pv || !V || V.scr !== 'combat' || !V.cb || !pv.cb || pv.scr !== 'combat') return;
+  if (!pv || !V || V.scr !== 'combat' || !V.cb || !pv.cb || pv.scr !== 'combat') return;
   const old = {};
   pv.cb.hand.forEach(h => { old[h[0]] = 1; });
   const fresh = V.cb.hand.filter(h => !old[h[0]]).map(h => h[0]);
   if (!fresh.length) return;
   const pp = pv.cb.piles || [0, 0], cp = V.cb.piles || [0, 0];
   const shuffled = fresh.length > pp[0] || cp[0] > pp[0];
+  if (REDUCE) {
+    /* Reduce motion: static outline cues only, no movement. */
+    fresh.slice(0, 6).forEach(u => staticCue(document.querySelector('.hand .card[data-u="' + u + '"]')));
+    if (shuffled) document.querySelectorAll('.piles [data-pile="draw"], .piles [data-pile="discard"]').forEach(el => staticCue(el));
+    return;
+  }
   const src = document.querySelector('.piles [data-pile="draw"]');
   if (shuffled) document.querySelectorAll('.piles [data-pile="draw"], .piles [data-pile="discard"]').forEach(el => el.classList.add('shuf'));
   if (!src) return;
@@ -4083,6 +4162,10 @@ function pulsePile(name, delay) {
 function pileFx(V, pv) {
   const hs = CL.hs; CL.hs = null;
   cardSfx(V, pv, hs);
+  if (REDUCE && V && V.scr === 'combat' && V.cb && pv && pv.scr === 'combat' && pv.cb) {
+    const rp = pv.cb.piles || [0, 0, 0], rc = V.cb.piles || [0, 0, 0];
+    ['draw', 'discard', 'exhaust'].forEach((nm, i) => { if (rc[i] !== rp[i]) staticCue(document.querySelector('.piles [data-pile="' + nm + '"]')); });
+  }
   if (REDUCE || !V || V.scr !== 'combat' || !V.cb) return;
   if (hs && pv && pv.scr === 'combat' && pv.cb) {
     const cur = {};
@@ -4327,7 +4410,7 @@ function paint(V) {
   if (V && V.fx) V.fx.forEach(f => { if (f.k === 'coin' && f.s > prev && f.x) { try { window.coinFlipFx(f.x); } catch (e) { toast('🪙 ' + f.x); } } });
   const sk = V ? V.scr : (CL.role || 'title');
   if (CL.scrKey !== undefined && CL.scrKey !== sk) {
-    if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); if (['combat', 'map', 'reward', 'duelintro', 'duelend'].indexOf(sk) >= 0) { let w = document.getElementById('trwipe'); if (!w) { w = document.createElement('div'); w.id = 'trwipe'; w.setAttribute('aria-hidden', 'true'); w.addEventListener('animationend', () => w.classList.remove('go', 'duel', 'quick')); document.body.appendChild(w); } w.classList.remove('go', 'duel', 'quick'); void w.offsetWidth; w.classList.add('go'); if (sk === 'map' || sk === 'reward') w.classList.add('quick'); else if (sk !== 'combat') w.classList.add('duel'); setTimeout(() => w.classList.remove('go', 'duel', 'quick'), 1000); } clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
+    if (!REDUCE) { app.classList.remove('scr-in'); app.dataset.tr = sk; void app.offsetWidth; app.classList.add('scr-in'); if (['combat', 'map', 'reward', 'duelintro', 'duelend', 'rest', 'shop', 'treasure'].indexOf(sk) >= 0) { let w = document.getElementById('trwipe'); if (!w) { w = document.createElement('div'); w.id = 'trwipe'; w.setAttribute('aria-hidden', 'true'); w.addEventListener('animationend', () => w.classList.remove('go', 'duel', 'quick')); document.body.appendChild(w); } w.classList.remove('go', 'duel', 'quick'); void w.offsetWidth; w.classList.add('go'); if (sk === 'map' || sk === 'reward' || sk === 'rest' || sk === 'shop' || sk === 'treasure') w.classList.add('quick'); else if (sk !== 'combat') w.classList.add('duel'); setTimeout(() => w.classList.remove('go', 'duel', 'quick'), 1000); } clearTimeout(CL.trT); CL.trT = setTimeout(() => app.classList.remove('scr-in'), 800); }
     if (!REDUCE && ['reward', 'actclear', 'victory', 'defeat', 'duelend'].indexOf(sk) < 0) SND.fire('transition');
   }
   CL.scrKey = sk;
@@ -4350,6 +4433,7 @@ function paint(V) {
     else if (V.scr === 'rest') body += restHTML(V);
     else if (V.scr === 'shop') body += shopHTML(V);
     else if (V.scr === 'treasure') body += treasureHTML(V);
+    else if (V.scr === 'event') body += eventHTML(V);
     else if (V.scr === 'duelintro') body += duelIntroHTML(V);
     else if (V.scr === 'duelend') body += duelEndHTML(V);
     else if (V.scr === 'defeat') body += endHTML(V, false);
@@ -4451,8 +4535,15 @@ function diffPickHTML(cur, act, on) {
 const MODKEY = 'masked-spire-mods';
 function prefMods() { let m = 0; try { m = parseInt(localStorage.getItem(MODKEY), 10); } catch (e) {} return m >= 0 && m < (1 << E.MODS.length) ? m : 0; }
 function setPrefMods(m) { try { localStorage.setItem(MODKEY, String(m)); } catch (e) {} }
+function modActiveLine(cur, on, coop) {
+  const act = E.MODS.filter((m, i) => ((cur >> i) & 1) === 1).map(m => esc(m.n));
+  return '<p class="modactive" role="status" aria-live="polite" style="margin:4px 0 0;font-weight:700;color:#E8B84A">' + (act.length ? 'Active modifiers: ' + act.join(', ') : 'No modifiers active') + (coop && !on ? ' <span class="muted" style="font-weight:400">(set by the host)</span>' : '') + '</p>';
+}
+function modChips(md) {
+  return E.MODS.map((m, i) => ((md >> i) & 1) === 1 ? '<span class="chip modchip" style="border-color:#E8B84A;color:#E8B84A" title="' + esc(m.d) + '" aria-label="Modifier: ' + esc(m.n) + '. ' + esc(m.d) + '">⚠ ' + esc(m.n) + '</span>' : '').join('');
+}
 function modPickHTML(cur, act, on) {
-  return '<div role="group" aria-label="Modifiers"><div class="row"><span class="muted">Modifiers</span>' + E.MODS.map((m, i) => { const sel = ((cur >> i) & 1) === 1; return '<button type="button" class="btn' + (sel ? ' primary' : '') + '" data-act="' + act + '" data-arg="' + i + '" aria-pressed="' + (sel ? 'true' : 'false') + '" title="' + esc(m.d) + '"' + (on ? '' : ' disabled') + '>' + esc(m.n) + '</button>'; }).join('') + '</div><p class="muted" style="margin:0">' + E.MODS.map(m => esc(m.n) + ': ' + esc(m.d)).join(' · ') + '</p></div>';
+  return '<div role="group" aria-label="Modifiers"><div class="row"><span class="muted">Modifiers</span>' + E.MODS.map((m, i) => { const sel = ((cur >> i) & 1) === 1; return '<button type="button" class="btn' + (sel ? ' primary' : '') + '" data-act="' + act + '" data-arg="' + i + '" aria-pressed="' + (sel ? 'true' : 'false') + '" title="' + esc(m.d) + '"' + (on ? '' : ' disabled') + '>' + esc(m.n) + '</button>'; }).join('') + '</div><p class="muted" style="margin:0">' + E.MODS.map(m => esc(m.n) + ': ' + esc(act === 'hostmod' && m.dc ? m.dc : m.d)).join(' · ') + '</p>' + modActiveLine(cur, on, act === 'hostmod') + '</div>';
 }
 function soloView() { return E.G ? E.buildView(0) : null; }
 function render() {
@@ -4499,7 +4590,7 @@ function updateColdScreen() {
   }
   ov.style.display = show ? 'flex' : 'none';
 }
-const SERVER_ACTS = ['hero', 'start', 'node', 'card', 'enemy', 'end', 'reward', 'bossreward', 'done', 'restheal', 'buy', 'remove'];
+const SERVER_ACTS = ['hero', 'start', 'node', 'card', 'enemy', 'end', 'reward', 'bossreward', 'done', 'restheal', 'buy', 'remove', 'evt'];
 function wsConnected() { return !!(ws && ws.readyState === 1); }
 function retryNow() {
   if (CL.role !== 'online' || wsConnected()) return;
@@ -4712,6 +4803,18 @@ function goOnline(first) {
   if (!wsSend(first)) { if (!ws) connect(); }
   render();
 }
+/* Reduce-motion cue: a static outline box over el, removed after a moment. */
+function staticCue(el) {
+  if (!el || !el.getBoundingClientRect) return;
+  const r = el.getBoundingClientRect();
+  if (!r.width && !r.height) return;
+  const b = document.createElement('div');
+  b.className = 'cuebox'; b.setAttribute('aria-hidden', 'true');
+  b.style.left = (r.left - 3) + 'px'; b.style.top = (r.top - 3) + 'px';
+  b.style.width = (r.width + 6) + 'px'; b.style.height = (r.height + 6) + 'px';
+  document.body.appendChild(b);
+  setTimeout(() => { if (b.parentNode) b.remove(); }, 650);
+}
 function flyCard(el, targetKey) {
   if (REDUCE || !el || !el.animate) return null;
   const t = document.querySelector('[data-float="' + targetKey + '"]');
@@ -4752,6 +4855,7 @@ function sendCard(V, u, tgtIdx) {
     else if (d.t === 'attack') { const live = V.cb.en.filter(e => !e.dead); key = live.length ? 'e' + live[0].idx : 'p' + V.me; }
     else key = 'p' + V.me;
     g = flyCard(el, key);
+    if (REDUCE) staticCue(document.querySelector('[data-float="' + key + '"]'));
   }
   if (!send('card', u, tgtIdx) && g) g.remove();
 }
@@ -4838,9 +4942,10 @@ document.getElementById('app').addEventListener('click', ev => {
   const V = curView();
   switch (act) {
     case 'ach': ACH.open(); break;
-    case 'solo': CL.role = 'pick'; E.G = null; render(); break;
-    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const G = E.baseG('solo', prefDiff(), prefMods()); G.P = [E.newPlayer(h, CL.tok, G.mods)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; ENDFX = null; render(); saveSolo(); break; }
-    case 'solohero': { const G = E.baseG('solo', prefDiff(), prefMods()); G.P = [E.newPlayer(arg, CL.tok, G.mods)]; E.G = G; CL.role = 'solo'; CL.seen = false; render(); saveSolo(); break; }
+    case 'solo': CL.daily = false; CL.role = 'pick'; E.G = null; render(); break;
+    case 'daily': CL.daily = true; CL.role = 'pick'; E.G = null; render(); break;
+    case 'again': { const h = V && V.P[V.me] && V.P[V.me].h; if (!h || CL.role !== 'solo') break; const sd = E.G && E.G.seed ? E.G.seed : null; const G = E.baseG('solo', prefDiff(), prefMods(), sd); G.P = [E.newPlayer(h, CL.tok, G.mods)]; E.G = G; CL.sel = null; CL.overlay = null; CL.seen = false; ENDFX = null; render(); saveSolo(); break; }
+    case 'solohero': { const G = E.baseG('solo', prefDiff(), prefMods(), CL.daily ? dailySeed() : null); G.P = [E.newPlayer(arg, CL.tok, G.mods)]; E.G = G; CL.role = 'solo'; CL.seen = false; render(); saveSolo(); break; }
     case 'host': CL.err = ''; goOnline({ t: 'create', tok: CL.tok, diff: prefDiff(), mods: prefMods() }); break;
     case 'continue': {
       const s = loadSave();
@@ -4915,6 +5020,8 @@ document.getElementById('app').addEventListener('click', ev => {
     case 'restremove': CL.overlay = { mode: 'remove', from: 'rest' }; paint(V); break;
     case 'shopremove': CL.overlay = { mode: 'remove', from: 'shop' }; paint(V); break;
     case 'buy': send('buy', Number(arg)); break;
+    case 'evt': send('evt', 0); break;
+    case 'eventremove': CL.overlay = { mode: 'remove', from: 'event' }; paint(V); break;
     case 'deck': CL.overlay = { mode: 'view' }; paint(V); break;
     case 'pile': pileView(arg, b); break;
     case 'close': CL.overlay = null; paint(V); break;
@@ -4999,7 +5106,7 @@ document.getElementById('app').addEventListener('keydown', ev => {
   let opener = null, wasOpen = false;
   app.addEventListener('click', ev => {
     const b = ev.target.closest && ev.target.closest('[data-act]');
-    if (b && ['deck', 'restremove', 'shopremove'].includes(b.dataset.act)) opener = b.dataset.act;
+    if (b && ['deck', 'restremove', 'shopremove', 'eventremove'].includes(b.dataset.act)) opener = b.dataset.act;
   }, true);
   new MutationObserver(() => {
     const ov = app.querySelector('.overlay');
@@ -5322,6 +5429,7 @@ document.addEventListener('keydown', ev => {
     if (act === 'end') SND.fire('endturn');
     else if (act === 'card' && b.classList.contains('dim')) SND.ui('bad');
     else if (act === 'card' || act === 'enemy') SND.fire('card');
+    else if (act === 'node') SND.ui('node');
     else SND.fire('click');
   }, true);
 })();
