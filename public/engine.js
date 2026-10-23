@@ -427,10 +427,16 @@ function genMap(seed, act) {
   const rows = [];
   for (let r = 0; r < ROWS; r++) {
     const row = [];
+    const tre = [];
+    if (r === 4) {
+      const t1 = Math.floor(rng() * LANES);
+      tre.push(t1);
+      if (rng() < 0.5) tre.push((t1 + 1 + Math.floor(rng() * (LANES - 1))) % LANES);
+    }
     for (let l = 0; l < LANES; l++) {
       let type;
       if (r === 0) type = 'fight';
-      else if (r === 4) type = 'treasure';
+      else if (r === 4 && tre.includes(l)) type = 'treasure';
       else if (r === ROWS - 1) type = 'rest';
       else {
         const bag = ['fight', 'fight', 'fight', 'fight', 'fight', 'shop'];
@@ -699,6 +705,42 @@ function elSwitched() { const s = SF(); return !!s.elPrev && !!s.el && s.elPrev 
 function elRepeated() { const s = SF(); return !!s.elPrev && s.elPrev === s.el; }
 /* Card upgrade defaults (tune freely). Lv1: +dmg/+block/power draw. Lv2: refund energy. Lv3: Link bonus when the previous card this turn was a different type. */
 const UPG = { dmg: 2, block: 2, powerDraw: 1, refund: 1, linkDmg: 4, linkBlock: 4, linkDraw: 1, linkEnergy: 1 };
+/* Cards that cost 0 can't refund Energy, so their Lv2 repeats the Lv1 bonus instead. */
+/* Card-specific upgrades. CARD_UP[id][lv] replaces the generic bonus at that level. Fields (all optional):
+   d new card text, p new play function, c new cost, x exhaust (0/1), live new live text, pv damage preview s => [dmg, hits].
+   For each field the newest entry at or below the card's level wins. */
+const CARD_UP = {
+  flurry:      { 1: { d: 'Deal 2 damage 4 times.', p: e => hit(e, 2, 4), pv: () => [2, 4] } },
+  crescendo:   { 1: { d: 'Deal 4 damage, plus 6 for each Flow.', live: s => 'Now: ' + (4 + 6 * s.flow) + ' damage', p: e => hit(e, 4 + 6 * SF().flow), pv: s => [4 + 6 * (s.flow || 0)] } },
+  finale:      { 2: { d: 'Spend all Flow. Deal 5 damage to ALL enemies for each Flow spent, then get half of it back.', p: () => { const f = SF().flow; SF().flow = 0; if (f) foes().forEach(e => hit(e, 5 * f)); SF().flow = Math.floor(f / 2); } } },
+  bash:        { 1: { d: 'Deal damage equal to 3/4 of your Block.', live: s => 'Now: ' + Math.floor(s.block * 0.75) + ' damage', p: e => hit(e, Math.floor(SF().block * 0.75)), pv: s => [Math.floor((s.block || 0) * 0.75)] } },
+  reinforce:   { 1: { d: 'Double your Block.', x: 0 } },
+  bastion:     { 1: { c: 2 } },
+  eruption:    { 1: { c: 1 } },
+  frenzy:      { 1: { d: 'Deal 3 damage 5 times.', p: e => hit(e, 3, 5), pv: () => [3, 5] } },
+  feast:       { 1: { d: 'Deal 18 damage. If this kills, heal 12 HP. Exhaust.', p: e => { hit(e, 18); if (e.dead || e.down) heal(12); } } },
+  emberlash:   { 1: { d: 'Deal 4 damage. Apply 5 Burn.', p: e => { hit(e, 4); debuffEnemy(e, 'burn', 5); } } },
+  tempest:     { 1: { d: 'Apply 2 Shock to ALL enemies, then deal 6 damage to ALL enemies 3 times.', p: () => foes().forEach(e => { debuffEnemy(e, 'shock', 2); hit(e, 6, 3); }), pv: () => [6, 3] } },
+  convergence: { 1: { d: 'Deal 4 damage, plus 5 for each different element you have attacked with this combat.', live: s => 'Now: ' + (4 + 5 * ((s.elu || []).length)) + ' damage', p: e => hit(e, 4 + 5 * ((SF().elu || []).length)) } },
+  hollowreserve: { 1: { d: 'Gain 15 Block. Draw 2 cards.', x: 0 } }
+};
+function upgField(id, lv, f) { const u = CARD_UP[id]; if (!u) return undefined; let v; for (let l = 1; l <= (lv || 0); l++) if (u[l] && u[l][f] !== undefined) v = u[l][f]; return v; }
+const hasUp = (id, l) => !!(CARD_UP[id] && CARD_UP[id][l]);
+function cardCost(id, lv) { const c = upgField(id, lv, 'c'); return c !== undefined ? c : CARDS[id].c; }
+function cardExh(id, lv) { const x = upgField(id, lv, 'x'); return x !== undefined ? !!x : !!CARDS[id].x; }
+function cardLive(id, lv) { return upgField(id, lv, 'live') || CARDS[id].live || null; }
+/* The card's text at a level: t = main text, extra = the generic bonuses it also has (shown as a highlighted line). */
+function cardText(id, lv) {
+  const d = CARDS[id]; lv = lv || 0;
+  const t = upgField(id, lv, 'd') || d.d, extra = [];
+  if (!lv) return { t, extra };
+  const zero = cardCost(id, lv) < 1;
+  const one = d.t === 'attack' ? '+' + UPG.dmg + ' damage per hit' : d.t === 'skill' ? '+' + UPG.block + ' Block' : 'Draw ' + UPG.powerDraw + ' card';
+  if (lv >= 1 && !hasUp(id, 1)) extra.push(one);
+  if (lv >= 2 && !hasUp(id, 2)) extra.push(zero ? (d.t === 'attack' ? '+' + UPG.dmg + ' more damage per hit' : d.t === 'skill' ? '+' + UPG.block + ' more Block' : 'Draw 1 more card') : 'Refund ' + UPG.refund + ' Energy');
+  if (lv >= 3 && !hasUp(id, 3)) extra.push('Link (last card was another type): ' + (d.t === 'attack' ? '+' + UPG.linkDmg + ' damage per hit' : d.t === 'skill' ? '+' + UPG.linkBlock + ' Block, draw ' + UPG.linkDraw : '+' + UPG.linkEnergy + ' Energy'));
+  return { t, extra };
+}
 function gain(n, raw) {
   const s = A;
   if (!raw && s.frail > 0) n = Math.floor(n * 0.75);
@@ -911,7 +953,8 @@ function playCard(pi, uid, tgt) {
   const card = s.hand[i];
   const d = CARDS[card.id];
   if (d.c < 0) return note(pi, d.n + ' can’t be played.');
-  if (d.c > s.energy) return note(pi, 'Not enough Energy.');
+  const cost = cardCost(card.id, card.lv);
+  if (cost > s.energy) return note(pi, 'Not enough Energy.');
   if (d.t === 'power' && s.hushNow) return note(pi, 'Hushed: you can’t play Powers this turn.');
   A = s;
   let t = null;
@@ -923,7 +966,7 @@ function playCard(pi, uid, tgt) {
     if (!t || t.dead || t.down) return;
   }
   { const aE = aliveEnemies(); const pt = t ? tagOf(t) : d.t === 'attack' ? (c.duel ? 'p' + (1 - pi) : (aE[0] ? tagOf(aE[0]) : 'p' + pi)) : 'p' + pi; G.fxSeq = (G.fxSeq || 0) + 1; c.pl = [G.fxSeq, pi, card.id, pt]; }
-  s.energy -= d.c; s.hand.splice(i, 1); s.atkTotal = 0; s.played++; P(pi).cp = (P(pi).cp || 0) + 1;
+  s.energy -= cost; s.hand.splice(i, 1); s.atkTotal = 0; s.played++; P(pi).cp = (P(pi).cp || 0) + 1;
   log(heroName(pi) + ' plays ' + d.n + (t ? ' on ' + nameOf(t) : '') + '.');
   const b0 = s.block, hk = P(pi).hero;
   const elPrev = s.el; s.elPrev = elPrev;
@@ -932,23 +975,26 @@ function playCard(pi, uid, tgt) {
   if (d.t === 'attack') anim(s, hk === 'bulwark' ? 'slam' : hk === 'brute' ? 'smash' : hk === 'elementalist' ? 'cast' : 'lunge');
   const o = c.duel ? opp(s) : null;
   if (o) o.hurtNow = false;
+  // upgrades: card-specific ones (CARD_UP) replace the generic bonus at their level
   const lv = card.lv || 0, prevT = s.lastT, link = lv >= 3 && !!prevT && prevT !== d.t; s.lastT = d.t;
-  s.lvDmg = d.t === 'attack' ? (lv >= 1 ? UPG.dmg : 0) + (link ? UPG.linkDmg : 0) : 0;
-  if (d.p) d.p(t);
+  const g1 = lv >= 1 && !hasUp(card.id, 1), g2 = lv >= 2 && !hasUp(card.id, 2), g3 = link && !hasUp(card.id, 3), zero = cost < 1;
+  const nb = (g1 ? 1 : 0) + (g2 && zero ? 1 : 0);   // how many times the Lv1 bonus applies (0-cost cards get it again at Lv2)
+  s.lvDmg = d.t === 'attack' ? nb * UPG.dmg + (g3 ? UPG.linkDmg : 0) : 0;
+  { const play = upgField(card.id, lv, 'p') || d.p; if (play) play(t); }
   s.lvDmg = 0;
   if (!c.over) {
-    if (lv >= 1 && d.t === 'skill') gain(UPG.block, true);
-    if (lv >= 1 && d.t === 'power') draw(UPG.powerDraw);
-    if (lv >= 2 && d.c >= 1) s.energy += UPG.refund;
-    if (link && d.t === 'skill') { gain(UPG.linkBlock, true); draw(UPG.linkDraw); }
-    if (link && d.t === 'power') s.energy += UPG.linkEnergy;
-    if (link) log(d.n + ' links from ' + prevT + ' (+3 upgrade).');
+    if (nb && d.t === 'skill') gain(nb * UPG.block, true);
+    if (nb && d.t === 'power') draw(nb * UPG.powerDraw);
+    if (g2 && !zero) s.energy += UPG.refund;
+    if (g3 && d.t === 'skill') { gain(UPG.linkBlock, true); draw(UPG.linkDraw); }
+    if (g3 && d.t === 'power') s.energy += UPG.linkEnergy;
+    if (g3) log(d.n + ' links from ' + prevT + ' (+3 upgrade).');
   }
   if (d.t !== 'attack') anim(s, s.block > b0 ? 'guard' : 'buff');
   if (c.over) return render();
   if (d.t === 'attack') { if (P(pi).hero === 'elementalist') { A = s; gain(1, true); if (elPrev && s.el) { if (s.el === elPrev) { if (EL_COMBO.repeatBlock > 0) { gain(EL_COMBO.repeatBlock, true); log('Elemental echo: repeated ' + s.el + '.'); } } else if (EL_COMBO.switchDraw > 0) { draw(EL_COMBO.switchDraw); log('Elemental shift: ' + elPrev + ' to ' + s.el + ', draw ' + EL_COMBO.switchDraw + '.'); } } } if (P(pi).hero === 'duelist') s.flow++; if (s.atkTotal > 0) s.lastAttack = s.atkTotal; }
   if (d.t === 'skill' && !c.duel) aliveEnemies().filter(x => x.key === 'ogre').forEach(og => { og.str += 2; float(tagOf(og), '+2 Strength', 'buff'); log('The Ogre enrages: +2 Strength.'); });
-  if (d.t !== 'power') (d.x ? s.exhaust : s.discard).push(card); else (s.pwr || (s.pwr = [])).push(card.id);
+  if (d.t !== 'power') (cardExh(card.id, card.lv) ? s.exhaust : s.discard).push(card); else (s.pwr || (s.pwr = [])).push(card.id);
   if (!c.duel && !aliveEnemies().length) { c.busy = true; render(); setTimeout(win, isReduce() ? 100 : paceRow().win); return; }
   render();
 }
@@ -1387,7 +1433,8 @@ function simIncoming(me) {
 function enemyTotal(e) {
   return simIncoming(e.tg).tot[e.idx] || 0;
 }
-function previewCard(id, s, e) {
+function previewCard(id, s, e, lv) {
+  lv = lv || 0;
   const f = s.flow || 0, r = s.rage || 0, bl = s.block || 0, sw = s.sw || 0;
   const tbl = {
     strike: [7], lunge: [5], riposte: [5], flurry: [2, 3], needle: [3], crescendo: [4 + 4 * f], bladedance: [3, 2 + f],
@@ -1397,10 +1444,11 @@ function previewCard(id, s, e) {
     eruption: [9], wildswing: [8], formbreak: [6 + 6 * sw], avalanche: [7, 1 + sw],
     estrike: [6], sparkjolt: [5], emberlash: [4], rimespiral: [5], cinderbolt: [4], scorch: [9], icelance: [7], stormcrash: [11], tempest: [6, 2]
   };
-  const row = tbl[id];
+  const pvf = upgField(id, lv, 'pv'), row = pvf ? pvf(s) : tbl[id];
   if (!row || (id === 'finale' && !f)) return null;
   const hits = row[1] || 1, st = s.st || [], sx = s.sx || [];
   let d = row[0] + (s.sr || 0) + r + (s.wh || 0) + (st[7] || 0) * f;
+  d += UPG.dmg * ((lv >= 1 && !hasUp(id, 1) ? 1 : 0) + (lv >= 2 && !hasUp(id, 2) && cardCost(id, lv) < 1 ? 1 : 0));   // upgrade bonus per hit
   if (st[0] > 0) d = Math.floor(d * 0.75);
   if (s.sn === 'fury') d = Math.floor(d * 1.5);
   if (s.sn === 'iron' && !sx[2]) d = Math.floor(d * 0.75);
@@ -1488,7 +1536,7 @@ function fitView(V) {
 return {
   get G() { return G; }, set G(v) { G = v; },
   get uidN() { return uidN; }, set uidN(v) { uidN = v; },
-  dailyChallenge, doAction, buildView, previewCard, newPlayer, baseG, equipHero, startCombat, startDuel, win,
+  dailyChallenge, doAction, buildView, previewCard, cardCost, cardText, cardLive, cardExh, CARD_UP, UPG, newPlayer, baseG, equipHero, startCombat, startDuel, win,
   DIFFS, MODS, CARDS, RAR, RAR_NAME, HEROES, RELICS, EN, ACTS, BOSS_SIZE, STANCE, ROWS, LANES, PRICE, POTIONS, POT_MAX
 };
 }

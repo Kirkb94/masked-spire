@@ -463,9 +463,9 @@ html.rm .hcard .portrait, html.rm .hcard { animation: none; transition: none; }
 html.rm .hcard:hover { transform: none; }
 .hrelic { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--gold); border-radius: 8px; font-size: 16px; }
 .hrelic b { font-family: var(--display); font-size: 18px; color: var(--ink); }
-.trio { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-.trio .portrait { border-radius: 10px; }
-@media (max-width: 520px) { .trio { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.hero-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.hero-row .portrait { border-radius: 10px; }
+@media (max-width: 520px) { .hero-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .actbanner { font-family: var(--display); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 @media (max-width: 860px) { .heropick { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .heropick { grid-template-columns: 1fr; } }
@@ -538,6 +538,10 @@ html.rm .hcard:hover { transform: none; }
   .hcard .hrelic { height: 70px; padding: 4px 7px; font-size: 11.5px; }
   .hcard .btn { padding-top: 7px; padding-bottom: 7px; }
 }
+/* Relic box on hero cards: grow to fit, never clip title/description */
+.hcard .hrelic { height: auto; min-height: 0; overflow: visible; }
+.hcard .hrelic b { white-space: normal; overflow: visible; text-overflow: clip; }
+.hcard .hrelic span:last-child { display: block; -webkit-line-clamp: unset; overflow: visible; }
 
 
 /* Brute stances */
@@ -668,7 +672,7 @@ html.rm .chip.partner.re .pdot { animation: none; }
 .joinrow label { font-weight: 700; }
 .lobbyl { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 17px; }
 .hcard.chosen { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
-.trio.duo { grid-template-columns: repeat(2, minmax(0, 170px)); justify-content: center; }
+.hero-row.duo { grid-template-columns: repeat(2, minmax(0, 170px)); justify-content: center; }
 
 /* ---------- Puppet rig animation ----------
    --dir: -1 for enemies (face left), 1 for heroes (face right). --f: sign for "swing toward the front".
@@ -988,8 +992,8 @@ body.dragging, body.dragging * { user-select: none; -webkit-user-select: none; }
 .endconf label { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
 .endconf input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--gold); }
 .endconf .row { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
-.endconf-back.sheet { background: transparent; align-items: flex-end; padding: 0 8px calc(8px + env(safe-area-inset-bottom, 0px)); }
-.endconf-back.sheet .endconf { max-width: 520px; padding: 12px 16px; border-radius: 14px 14px 10px 10px; }
+.endconf-back.sheet { background: transparent; align-items: flex-start; padding: calc(8px + env(safe-area-inset-top, 0px)) 8px 0; }
+.endconf-back.sheet .endconf { max-width: 520px; padding: 10px 14px; border-radius: 10px 10px 14px 14px; }
 .endconf-back.sheet h3 { font-size: 1rem; margin-bottom: 4px; }
 .endconf-back.sheet p { margin-bottom: 6px; }
 .endconf-back.sheet label { margin-bottom: 8px; }
@@ -1078,10 +1082,10 @@ html.hc .card .rgem { outline: 2px solid #FFFFFF; }
 @keyframes startbob { 0%, 100% { margin-top: 0; } 50% { margin-top: -5px; } }
 html.rm .startmark { animation: none; }
 @media (prefers-reduced-motion: reduce) { html:not(.rm-off) .startmark { animation: none; } }
-#mapcue { position: fixed; left: 50%; transform: translateX(-50%); z-index: 50; display: none; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--gold); background: #1A1424EE; color: var(--ink); font-weight: 700; font-size: 13px; box-shadow: 0 4px 14px #000A; cursor: pointer; }
+#mapcue { position: fixed; right: 8px; z-index: 50; display: none; width: 44px; height: 44px; padding: 0; line-height: 42px; text-align: center; border-radius: 999px; border: 1px solid var(--gold); background: #1A1424EE; color: var(--ink); font-weight: 700; font-size: 13px; box-shadow: 0 4px 14px #000A; cursor: pointer; }
 #mapcue.show { display: block; }
-#mapcue.up { top: 64px; }
-#mapcue.down { bottom: 14px; }
+#mapcue.up { top: 72px; }
+#mapcue.down { bottom: 18px; }
 .act1 .mapfog { background: linear-gradient(to bottom, rgba(8, 23, 27, .8), rgba(8, 23, 27, .62) 75%, rgba(8, 23, 27, 0)); }
 .act2 .mapfog { background: linear-gradient(to bottom, rgba(23, 11, 8, .8), rgba(23, 11, 8, .62) 75%, rgba(23, 11, 8, 0)); }
 .act3 .mapfog { background: linear-gradient(to bottom, rgba(10, 6, 20, .8), rgba(10, 6, 20, .62) 75%, rgba(10, 6, 20, 0)); }
@@ -1601,7 +1605,7 @@ var STEPS = [
   ['Welcome to Masked Spire', 'Climb the Spire with a roster of four heroes, building your deck as you go. Play solo, or team up online with a partner; a co-op run ends in a duel after the final boss.'],
   ['Playing cards', 'Tap a card in your hand to play it. Cards that need a target ask you to tap an enemy. Tap the card again to cancel. When you are done, press End turn.'],
   ['Energy', 'The glowing counter by the End turn button is your Energy. Each card costs some, and it refills at the start of every turn. Unspent Energy is not saved.', '.energy'],
-  ['Block and HP', 'Block soaks up damage before your HP does, and it usually fades at the start of your next turn. If your HP hits zero, you fall.', '.shield'],
+  ['Block and HP', 'Block soaks up damage before your HP does, and it usually fades at the start of your next turn. Duelist Footwork Block is added at the end of your turn, from your Flow. If your HP hits zero, you fall.', '.shield'],
   ['Enemy intents', 'The bar above each enemy shows what it will do next turn: attack, defend, buff or debuff. Plan your Block and damage around it.', '.intentbar'],
   ['Keywords and help', 'Hover, focus or tap Energy, Block, intents, piles and status badges (like Weak or Vulnerable) for a quick explanation. Reopen this guide any time from the Sound menu, under How to play.']
 ];
@@ -1731,7 +1735,7 @@ function endTurnConfirm(n, energy, onYes, inc) {
   if (document.getElementById('endconf')) return;
   const back = document.createElement('div');
   back.id = 'endconf'; back.className = 'endconf-back sheet';
-  back.innerHTML = '<div class="endconf" role="alertdialog" aria-modal="true" aria-label="End turn?"><h3>End your turn?</h3><p>You still have ' + n + ' playable card' + (n === 1 ? '' : 's') + ' and ' + energy + ' energy left.</p>' + (inc ? '<p class="ecinc' + (Math.max(0, inc.tot - inc.guard) > 0 ? ' danger' : '') + '">Incoming ' + inc.tot + ', Block ' + inc.guard + ', you take ' + Math.max(0, inc.tot - inc.guard) + '</p>' : '') + '<label><input type="checkbox" data-ec="never"> Don’t ask again</label><div class="row"><button type="button" class="btn" data-ec="no">Keep playing</button><button type="button" class="btn primary" data-ec="yes">End turn</button></div></div>';
+  back.innerHTML = '<div class="endconf" role="alertdialog" aria-modal="true" aria-label="End turn?"><h3>End your turn?</h3><p>You still have ' + n + ' playable card' + (n === 1 ? '' : 's') + ' and ' + energy + ' energy left.</p>' + (inc ? '<p class="ecinc' + (Math.max(0, inc.tot - inc.guard) > 0 ? ' danger' : '') + '">Incoming ' + inc.tot + ' \u00B7 Block ' + inc.guard + ' (' + (function () { const bl = inc.parts && typeof inc.parts.bl === 'number' ? inc.parts.bl : inc.guard, extra = inc.guard - bl; return extra > 0 ? bl + ' already played + ' + extra + ' added at end of turn' : bl > 0 ? 'already-played block counted' : 'none played yet'; })() + ') \u00B7 you take ' + Math.max(0, inc.tot - inc.guard) + '</p>' : '') + '<label><input type="checkbox" data-ec="never"> Don’t ask again</label><div class="row"><button type="button" class="btn" data-ec="no">Keep playing</button><button type="button" class="btn primary" data-ec="yes">End turn</button></div></div>';
   const opener = document.activeElement;
   const close = () => {
     document.removeEventListener('keydown', onKey, true); back.remove();
@@ -3188,13 +3192,23 @@ function mapHTML(V) {
 }
 /* map scroll helpers: bring the current / first reachable row into view, and show a cue when rows are off-screen */
 function mapTarget() { return document.querySelector('.mapwrap .node.avail') || document.querySelector('.mapwrap .node.cur'); }
+/* scroll position that shows the target node plus the path toward the boss (boss node is at the top of the map) */
+function mapScrollTop(t) {
+  const tr = t.getBoundingClientRect(), tDoc = tr.bottom + scrollY;
+  const b = document.querySelector('.mapwrap .bossnode'), br = b && b.getBoundingClientRect();
+  if (br) {
+    const bDoc = br.top + scrollY, span = tDoc - bDoc;
+    if (span >= 0 && span <= innerHeight - 150) return Math.max(0, bDoc - (innerHeight - span) / 2);
+  }
+  return Math.max(0, tr.top + scrollY - innerHeight * .72);
+}
 function mapCue(hide) {
   let c = document.getElementById('mapcue');
   if (!c) {
     c = document.createElement('button'); c.type = 'button'; c.id = 'mapcue';
     c.addEventListener('click', () => {
       const t = mapTarget(), tr = t && t.getBoundingClientRect(), off = tr && (tr.bottom > innerHeight - 4 || tr.top < 60);
-      const top = off ? tr.top + scrollY - innerHeight * .55 : scrollY + (c.classList.contains('up') ? -1 : 1) * innerHeight * .7;
+      const top = off ? mapScrollTop(t) : scrollY + (c.classList.contains('up') ? -1 : 1) * innerHeight * .7;
       window.scrollTo({ top: Math.max(0, top), behavior: REDUCE ? 'auto' : 'smooth' });
     });
     document.body.appendChild(c);
@@ -3213,7 +3227,8 @@ function mapCue(hide) {
   c.classList.remove('up', 'down');
   if (dir) {
     c.classList.add(dir);
-    c.textContent = dir === 'up' ? '\u25B2 Map continues above' : '\u25BC Map continues below';
+    c.textContent = dir === 'up' ? '\u25B2' : '\u25BC';
+    c.title = dir === 'up' ? 'Map continues above' : 'Map continues below';
     c.setAttribute('aria-label', dir === 'up' ? 'Scroll up to see more of the map' : 'Scroll down to see more of the map');
   }
 }
@@ -3233,7 +3248,7 @@ function mapScrollTo(V) {
     const t = mapTarget(); if (!t) return;
     const tr = t.getBoundingClientRect();
     if (tr.top >= 70 && tr.bottom <= innerHeight - 40) { mapCue(); return; }
-    window.scrollTo({ top: Math.max(0, tr.top + scrollY - innerHeight * .55), behavior: REDUCE ? 'auto' : 'smooth' });
+    window.scrollTo({ top: mapScrollTop(t), behavior: REDUCE ? 'auto' : 'smooth' });
   };
   requestAnimationFrame(() => go(false));
   clearTimeout(CL.mapT);
@@ -3431,18 +3446,20 @@ const EL_ICON = {
   stone: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l9 7-3 12H6L3 9z"/></svg>'
 };
 function qmOn(V) { const c = V && V.cb, s = c && c.S[V.me]; return !!(s && s.eu >= 4); }
-(function () { var st = document.createElement('style'); st.textContent = '.card.upg{box-shadow:0 0 0 2px #e8c35a inset}.card.upg3{box-shadow:0 0 0 2px #ffd86b inset,0 0 10px 2px #ffd86b}'; document.head.appendChild(st); })();
+(function () { var st = document.createElement('style'); st.textContent = '.card.upg{box-shadow:0 0 0 2px #e8c35a inset}.card.upg3{box-shadow:0 0 0 2px #ffd86b inset,0 0 10px 2px #ffd86b}.card .upx{display:block;margin-top:4px;color:#e8c35a;font-weight:700}.card .cost.cdown{color:#8fe67f}.card.nextup .ctype{color:#e8c35a}'; document.head.appendChild(st); })();
 const CARD_HERO = (() => { const m = {}; Object.keys(HEROES).forEach(k => { (HEROES[k].starter || []).concat(HEROES[k].pool || []).forEach(c => { if (!m[c]) m[c] = k; }); }); return m; })();
 function cardHTML(id, act, arg, opts) {
   opts = opts || {};
   const d = CARDS[id];
   const ls = opts.live;
-  const live = d.live && ls ? '<span class="live">' + d.live(ls) + '</span>' : '';
+  const lvF = E.cardLive(id, opts.lv), ct = E.cardText(id, opts.lv), cost = E.cardCost(id, opts.lv);
+  const live = lvF && ls ? '<span class="live">' + lvF(ls) + '</span>' : '';
+  const upx = ct.extra.length ? '<span class="upx">' + ct.extra.map(esc).join(' · ') + '</span>' : '';
   const rar = RAR[id];
-  const el = CARD_EL[id]; const cls = 'card t-' + d.t + (CARD_HERO[id] ? ' hh-' + CARD_HERO[id] : '') + (el ? ' elf el-' + el : '') + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '') + (opts.lv ? ' upg upg' + opts.lv : '');
-  return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + (opts.rv != null ? ' style="--i:' + opts.rv + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + (el ? EL_NAME[el] + ' ' : '') + d.n + ', cost ' + (d.c < 0 ? 'unplayable' : d.c) + '. ' + d.d) + '">' +
-    '<span class="cost">' + (d.c < 0 ? '–' : d.c) + '</span>' + (el ? '<span class="elicon" aria-hidden="true">' + EL_ICON[el] + '</span>' : '') + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + (opts.lv ? ' · upgrade +' + opts.lv : '') + '</span><span class="cname">' + esc(d.n) + '</span>' +
-    '<span class="cdesc">' + esc(d.d) + live + '</span>' + (opts.price != null ? '<span class="price">' + opts.price + ' gold</span>' : '') + (opts.kb ? '<span class="kbn" aria-hidden="true">' + opts.kb + '</span>' : '') + '</button>';
+  const el = CARD_EL[id]; const cls = 'card t-' + d.t + (CARD_HERO[id] ? ' hh-' + CARD_HERO[id] : '') + (el ? ' elf el-' + el : '') + (rar ? ' rar-' + rar : '') + (opts.sel ? ' sel' : '') + (opts.dim ? ' dim' : '') + (opts.rv != null ? ' rv' : '') + (opts.lv ? ' upg upg' + opts.lv : '') + (opts.next ? ' nextup' : '');
+  return '<button type="button" class="' + cls + '"' + (opts.u != null ? ' data-u="' + opts.u + '"' : '') + (opts.rv != null ? ' style="--i:' + opts.rv + '"' : '') + ' data-act="' + act + '" data-arg="' + arg + '" aria-label="' + esc((rar ? RAR_NAME[rar] + ' ' : '') + (el ? EL_NAME[el] + ' ' : '') + d.n + (opts.lv ? ' +' + opts.lv : '') + ', cost ' + (cost < 0 ? 'unplayable' : cost) + '. ' + ct.t + (ct.extra.length ? ' ' + ct.extra.join('. ') + '.' : '')) + '">' +
+    '<span class="cost' + (cost >= 0 && cost < d.c ? ' cdown' : '') + '">' + (cost < 0 ? '–' : cost) + '</span>' + (el ? '<span class="elicon" aria-hidden="true">' + EL_ICON[el] + '</span>' : '') + (rar && rar !== 'c' ? '<span class="rgem r-' + rar + '"></span>' : '') + '<span class="ctype">' + (rar ? '<span class="rlabel">' + RAR_NAME[rar] + '</span> · ' : '') + (d.curse ? 'curse' : d.t) + (opts.lv ? (opts.next ? ' · becomes +' : ' · upgrade +') + opts.lv : '') + '</span><span class="cname">' + esc(d.n) + (opts.lv ? '+' : '') + '</span>' +
+    '<span class="cdesc">' + esc(ct.t) + upx + live + '</span>' + (opts.price != null ? '<span class="price">' + opts.price + ' gold</span>' : '') + (opts.kb ? '<span class="kbn" aria-hidden="true">' + opts.kb + '</span>' : '') + '</button>';
 }
 function vName(V, pi) {
   const h = V.P[pi].h; const base = h ? HEROES[h].n.replace('The ', '') : 'Player ' + (pi + 1);
@@ -3669,7 +3686,7 @@ function heroBoxHTML(V, s, prev, mini) {
   }
   return '<div class="herobox' + (mini ? ' mini' : '') + (s.dn ? ' isdown' : '') + '" data-float="p' + pi + '"><div class="pwrap">' + portraitHTML(hero, (animCls || '') + (hero === 'elementalist' && s.el ? ' hold-' + s.el : ''), true, hst, rcls) + (hero === 'elementalist' && s.el ? '<span class="elorb el-' + s.el + (hst && hst.k === 'cast' ? ' cast' : '') + '" style="' + (hst && hst.k === 'cast' ? '--as:' + hst.as + 'ms' : '') + '" tabindex="0" data-tip="Last element: ' + s.el + '|The element of the last Attack you played."></span>' : '') + bigShield(shownBlock(V, s), popH, 'shield-p' + pi) + '</div>' +
     '<div class="hstats"><span class="hname">' + esc(vName(V, pi)) + (V.n > 1 ? (you ? ' <span class="muted">(you)</span>' : '') : '') + ' ' + tag + '</span>' +
-    '<div class="hpline">' + (shownBlock(V, s) ? '<span class="shield"' + (shownBlock(V, s) > s.block ? ' title="Block ' + s.block + ' now, ' + shownBlock(V, s) + ' after end-of-turn effects"' : '') + '>' + ICON.shield + shownBlock(V, s) + '</span>' : '') + hpBar('p' + pi, s.hp, s.mx, s.block) + s.hp + '/' + s.mx + '</div>' +
+    '<div class="hpline">' + (shownBlock(V, s) ? '<span class="shield"' + (shownBlock(V, s) > s.block ? ' tabindex="0" data-tip="' + (hero === 'duelist' ? 'Block from Flow' : 'Block') + '|Block ' + s.block + ' now, ' + shownBlock(V, s) + ' after end-of-turn effects' + (hero === 'duelist' ? ' (Footwork: each Flow becomes 2 Block)' : '') + '"' : '') + '>' + ICON.shield + shownBlock(V, s) + '</span>' : '') + hpBar('p' + pi, s.hp, s.mx, s.block) + s.hp + '/' + s.mx + '</div>' +
     '<div class="row">' + resourceHTML(hero, s) + (!you ? '<span class="muted">' + s.hn + ' cards · ' + s.energy + ' energy</span>' : '') + '</div>' +
     (pb.length ? '<div class="badges">' + pb.join('') + '</div>' : '') + '</div></div>';
 }
@@ -3733,7 +3750,7 @@ function combatHTML(V, prev) {
     const taken = Math.max(0, t.tot - t.guard);
     const pr = t.parts || { bl: t.guard, fw: 0, rp: 0, ir: 0 };
     const bits = ['Block ' + pr.bl];
-    if (pr.fw) bits.push('Footwork ' + pr.fw + ' (' + pr.flow + ' Flow x 2)');
+    if (pr.fw) bits.push('<span class="tipterm" tabindex="0" style="text-decoration:underline dotted;cursor:help" data-tip="Footwork|Duelist passive. Each Attack you play gives 1 Flow. At end of turn, each Flow becomes 2 Block, added then.">Footwork ' + pr.fw + '</span> (<span class="tipterm" tabindex="0" style="text-decoration:underline dotted;cursor:help" data-tip="Flow|+1 for each Attack you play this turn. At end of turn, Footwork turns each Flow into 2 Block.">' + pr.flow + ' Flow</span> x 2)');
     if (pr.rp) bits.push('Rampart ' + pr.rp + ' (' + pr.rpn + ' x 3)');
     if (pr.ir) bits.push('Iron stance ' + pr.ir);
     const bd = bits.join(' + ') + (bits.length > 1 ? ' = ' + t.guard : '');
@@ -3741,7 +3758,7 @@ function combatHTML(V, prev) {
       : '<div class="big safe">' + ICON.check + 'No attacks at you next turn</div>';
   }
   const ls = liveSide(V);
-  const hand = cb.hand.map(([u, id, lv], i) => cardHTML(id, 'card', u, { lv: lv, u: u, kb: i < 20 ? (i < 10 ? '' : '⇧') + String((i + 1) % 10) : '', sel: CL.sel === u, dim: CARDS[id].c > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
+  const hand = cb.hand.map(([u, id, lv], i) => cardHTML(id, 'card', u, { lv: lv, u: u, kb: i < 20 ? (i < 10 ? '' : '⇧') + String((i + 1) % 10) : '', sel: CL.sel === u, dim: E.cardCost(id, lv) > s.energy || CARDS[id].c < 0 || (CARDS[id].t === 'power' && s.st[3]) || !myTurn, live: ls })).join('');
   const endLabel = duel ? (myTurn ? 'End turn' : 'Rival’s turn') : waiting ? 'Waiting for partner…' : 'End turn';
   const canEnd = !cb.busy && !s.dn && myTurn;
   const selCard = CL.sel != null ? cb.hand.find(h => h[0] === CL.sel) : null;
@@ -3984,7 +4001,7 @@ function eventHTMLLegacy(V) {
 }
 function duelIntroHTML(V) {
   return '<section class="panel duelintro"><span class="actbanner">The Faceless Spire falls</span><h2>Only one mask may leave</h2>' +
-    '<div class="trio duo">' + [0, 1].map(pi => portraitHTML(V.P[pi].h, '', true)).join('') + '</div>' +
+    '<div class="hero-row duo">' + [0, 1].map(pi => portraitHTML(V.P[pi].h, '', true)).join('') + '</div>' +
     '<p>You climbed together. Now you fight each other with the decks, relics and HP you leave the boss with. Turns alternate; every Attack hits your rival. From round 9, sudden death drains HP each turn.</p>' +
     '<div class="row">' + doneBtn(V, 'Ready to duel') + '</div>' + waitNote(V) + '</section>';
 }
@@ -4107,7 +4124,7 @@ function titleHTML() {
   const db = dailyBest(), dToday = dailySeed(), dc = E.dailyChallenge(dToday);
   const sg = saved && saved.G && saved.G.mode === 'solo' && saved.G.P && saved.G.P[0] && saved.G.P[0].hero ? saved.G : null;
   const rooms = CL.roomOK;
-  return '<section class="panel title"><div class="trio">' + ['duelist', 'bulwark', 'brute', 'elementalist'].map(k => portraitHTML(k, '', true)).join('') + '</div><div style="display:flex;flex-direction:column;gap:16px;min-width:0">' +
+  return '<section class="panel title"><div class="hero-row">' + ['duelist', 'bulwark', 'brute', 'elementalist'].map(k => portraitHTML(k, '', true)).join('') + '</div><div style="display:flex;flex-direction:column;gap:16px;min-width:0">' +
     '<h1>Masked Spire</h1><p class="muted">Prototype · Three acts · Four heroes · Solo or 2-player co-op</p>' +
     '<p>Climb through the Hollow Wood, the Rust Bazaar and the Faceless Crown. In co-op you fight side by side, and after the final boss the two of you duel for the last mask.</p>' +
     '<ul class="rules"><li><b>Energy:</b> 3 each turn. Cards cost Energy to play.</li><li><b>Block</b> absorbs damage. Each enemy shows its next move and, in co-op, who it is aiming at.</li><li>In co-op you both play at the same time; enemies act once you have both pressed End turn.</li></ul>' +
@@ -4266,7 +4283,7 @@ function overlayHTML(V) {
   const upg = o.mode === 'upgrade'; const remove = o.mode === 'remove' || upg;
   return '<div class="overlay" role="dialog" aria-modal="true" aria-label="' + (upg ? 'Upgrade a card' : remove ? 'Remove a card' : 'Your deck') + '"><section class="panel"><div class="row"><h2>' + (upg ? 'Choose a card to upgrade' : remove ? 'Choose a card to remove' : 'Your deck') + '</h2><span class="spacer"></span><button type="button" class="btn" data-act="close">' + (remove ? 'Cancel' : 'Close') + '</button></div>' +
     (V.deckCut ? '<p class="muted">Deck list unavailable right now.</p>' : '') +
-    '<div class="cards">' + V.deck.map(([u, id, lv]) => upg ? ((lv || 0) < 3 ? cardHTML(id, 'upgrade', u, { lv: lv }) : cardHTML(id, 'noop', u, { lv: lv, dim: true })) : cardHTML(id, remove ? 'remove' : 'noop', u, { lv: lv })).join('') + '</div>' +
+    '<div class="cards">' + V.deck.map(([u, id, lv]) => upg ? ((lv || 0) < 3 && CARDS[id].c >= 0 && !CARDS[id].curse ? cardHTML(id, 'upgrade', u, { lv: (lv || 0) + 1, next: true }) : cardHTML(id, 'noop', u, { lv: lv, dim: true })) : cardHTML(id, remove ? 'remove' : 'noop', u, { lv: lv })).join('') + '</div>' +
     (remove ? '' : '<h3>Relics</h3><div class="relicrow">' + V.P[V.me].rl.map(r => '<span>' + relicIcon(r) + '<b>' + esc(RELICS[r].n) + '</b> · ' + esc(RELICS[r].d) + '</span>').join('') + '</div>') + '</section></div>';
 }
 function shakeScreen(level) {
@@ -5972,7 +5989,7 @@ function showPreview(V) {
     if (e.dead) return;
     const el = app.querySelector('.pv[data-pv="' + e.idx + '"]');
     if (!el) return;
-    const r = E.previewCard(h[1], s, e);
+    const r = E.previewCard(h[1], s, e, h[2] || 0);
     if (!r) return;
     let t = (r.hits > 1 ? r.d + '×' + r.hits : '' + r.d) + ' dmg · ';
     t += r.lethal ? 'Lethal' : r.loss > 0 ? '−' + r.loss + ' HP → ' + r.hp : 'No HP damage';

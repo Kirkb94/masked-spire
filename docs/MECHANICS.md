@@ -41,7 +41,7 @@ Strength, Weak, Vulnerable, Frail, Thorns, Artifact, Rooted, Intangible, Reflect
 ## Rewards and economy
 - After fights: gold, a choice of 3 cards (elites also drop a relic). Bosses give a boss relic, a 40% heal of missing HP, gold and 3 cards (the first is Rare).
 - Shops: 4 cards (Common 45-55, Uncommon 68-82, Rare 130-150, +8 per act) and card removal for 60 gold.
-- Rest: heal 25% of max HP, or Smith: upgrade one card (max +3 per card; curses and unplayable cards cannot be upgraded). Lv1: +2 damage on attacks, +2 block on skills, powers draw 1. Lv2: refunds 1 energy on cards that cost 1 or more. Lv3: Link bonus when the previous card played this turn was a different type.
+- Rest: heal 25% of max HP, or Smith: upgrade one card (max +3 per card; curses and unplayable cards cannot be upgraded). Lv1: +2 damage on attacks, +2 block on skills, powers draw 1. Lv2: refunds 1 energy on cards that cost 1 or more. Lv3: Link bonus when the previous card played this turn was a different type. Cards that cost 0 get the Lv1 bonus again at Lv2 instead of a refund. Some cards have their own upgrade in place of the generic one at that level (CARD_UP in engine.js): Flurry and Frenzy hit one more time, Crescendo +6 per Flow, Grand Finale (Lv2) gives back half the Flow, Shield Bash uses 3/4 of Block, Reinforce and Hollow Reserve stop exhausting, Bastion and Eruption cost 1 less, Feast heals 12, Ember Lash applies 5 Burn, Tempest hits 3 times, Convergence +5 per element. Card text, cost and damage previews show the upgraded card; Smith shows each card as it will become.
 - After each fight everyone heals 2 HP (Ember Ring +5).
 - Shops also sell one non-boss relic you do not own (150-180 gold, +8 per act).
 
